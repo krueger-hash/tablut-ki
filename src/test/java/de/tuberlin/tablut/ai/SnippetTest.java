@@ -9,6 +9,6 @@ public class SnippetTest {
 	@Test
 	public void testAdd(){
 		Snippet s = new Snippet();
-		assertEquals(6,Snippet.add(2,3));
+		assertEquals(5,Snippet.add(2,3));
 	}
 }
