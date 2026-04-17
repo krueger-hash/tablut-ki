@@ -1,18 +1,21 @@
 package de.tuberlin.tablut.ai;
 
 //mit vordefinierter Größe 9x9, d.h. 81 Bits
+@Deprecated
 public class Bitboard81 {
+
+    /////////////////////////////////////////////////////////////////////////////
+    /// lokale Variablen
+    /////////////////////////////////////////////////////////////////////////////
 
     long low; // erste 0-63 Bits
     long high; // Bits 64-127, wobei 81 bis 127 ungenutzt
-
 
     /*
     Grundsätzliche Ideen im Code:
     - (1L << x) erzeugt ein 0...010...0, wobei die 1 an x-ter Stelle steht, also nur das xte Bit 1 ist.
     - & ist das bitweise AND, d.h. im Ergebnis bleibt nur eine 1, wenn beide operanden eine 1 am selben Bit haben.
     - Da 2 long nötig sind, um das Bitboard zu repräsentieren, muss immer eine Fallunterscheidung abhängig von Pos gemacht werden, um zu prüfen, welche Bits angesprochen werden.
-
     */
 
     /////////////////////////////////////////////////////////////////////////////
@@ -59,7 +62,6 @@ public class Bitboard81 {
         res.high = ~a.high;
         return res;
     }
-
     static Bitboard81 and(Bitboard81 a, Bitboard81 b){
         Bitboard81 res = new Bitboard81();
         res.high = a.high & b.high;
@@ -83,12 +85,35 @@ public class Bitboard81 {
     /// Shift Operationen
     /////////////////////////////////////////////////////////////////////////////
 
-//    void shiftUp(int n){
-//
-//    }
-//    void shiftLeft(int n){
-//
-//    }
+    //funktioniert so nur für nBits < 64 und nBits !=0
+    static Bitboard81 shiftLeft(Bitboard81 bb, int nBits){
+        Bitboard81 res = new Bitboard81();
+        res.low = bb.low << nBits;
+        long lowOverflow = bb.low >>> (64 - nBits);
+        res.high = (bb.high << nBits) | lowOverflow;
+        return res;
+    }
+    static Bitboard81 shiftRight(Bitboard81 bb, int nBits){
+        Bitboard81 res = new Bitboard81();
+        res.high = bb.high >>> nBits;
+        long highOverflow = bb.high << (64 - nBits);
+        res.low = (bb.low >>> nBits) | highOverflow;
+        return res;
+    }
+
+    //Die könnten alle ein Problem mit Overflow haben!!
+    static Bitboard81 shiftN(Bitboard81 bb){
+        return shiftRight(bb,9);
+    }
+    static Bitboard81 shiftS(Bitboard81 bb){
+        return shiftLeft(bb,9);
+    }
+    static Bitboard81 shiftE(Bitboard81 bb){
+        return shiftRight(bb,1);
+    }
+    static Bitboard81 shiftW(Bitboard81 bb){
+        return shiftLeft(bb,1);
+    }
 //    static Bitboard81 dilation(Bitboard81 a){
 //
 //    }
@@ -110,7 +135,6 @@ public class Bitboard81 {
         }
         return matrix;
     }
-
     static void printBBToConsole(Bitboard81 bb){
         char[][] matrix = bitBoardToMatrix(bb);
         System.out.println("Bitboard as Matrix");
@@ -123,35 +147,81 @@ public class Bitboard81 {
     }
 
     static void main() {
-        Bitboard81 x = new Bitboard81();
-        x.setBit(1);
-        x.setBit(8);
-        x.setBit(80);
 
-        Bitboard81 y = new Bitboard81();
-        y.setBit(0);
-        y.setBit(9);
-        y.setBit(80);
+        Bitboard81 z = new Bitboard81();
+        z.setBitAsMatrix(0,2);
+        z.setBitAsMatrix(1,5);
+        z.setBitAsMatrix(8,3);
+        z.setBitAsMatrix(3,0);
+        z.setBitAsMatrix(6,8);
 
-        System.out.println("Ausgangs-BB x:");
-        printBBToConsole(x);
+        System.out.println("Ausgangsboard z");
+        printBBToConsole(z);
 
-        System.out.println("Ausgangs-BB y:");
-        printBBToConsole(y);
+        System.out.println("shiftN");
+        printBBToConsole(shiftN(z));
 
-        System.out.println("NOT-x:");
-        printBBToConsole(not(x));
+        System.out.println("shiftS");
+        printBBToConsole(shiftS(z));
 
-        System.out.println("AND-x:");
-        printBBToConsole(and(x,y));
+        System.out.println("shiftE");
+        printBBToConsole(shiftE(z));
 
-        System.out.println("OR-x:");
-        printBBToConsole(or(x,y));
-
-        System.out.println("XOR-x:");
-        printBBToConsole(xor(x,y));
+        System.out.println("shiftW");
+        printBBToConsole(shiftW(z));
 
 
+        //Tests for Bit-Methods und Logische Operationen
+//        Bitboard81 x = new Bitboard81();
+//        x.setBit(1);
+//        x.setBit(8);
+//        x.setBit(80);
+//        x.setBitAsMatrix(1,5);
 
+//        Bitboard81 y = new Bitboard81();
+//        y.setBit(0);
+//        y.setBit(9);
+//        y.setBit(80);
+//
+//        System.out.println("Ausgangs-BB x:");
+//        printBBToConsole(x);
+//        System.out.println();
+//
+//        System.out.println("Ausgangs-BB y:");
+//        printBBToConsole(y);
+//        System.out.println();
+//
+//        System.out.println("NOT-x:");
+//        printBBToConsole(not(x));
+//        System.out.println();
+//
+//        System.out.println("AND-x:");
+//        printBBToConsole(and(x,y));
+//        System.out.println();
+//
+//        System.out.println("OR-x:");
+//        printBBToConsole(or(x,y));
+//        System.out.println();
+//
+//        System.out.println("XOR-x:");
+//        printBBToConsole(xor(x,y));
+//        System.out.println();
+//
+//        System.out.print("x.getBitAsMatrix(8,8):");
+//        System.out.println(x.getBitAsMatrix(8,8));
+//        System.out.print("x.getBitAsMatrix(1,5):");
+//        System.out.println(x.getBitAsMatrix(1,5));
+
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    /// Quality of Life Operationen
+    /////////////////////////////////////////////////////////////////////////////
+
+    boolean getBitAsMatrix(int row, int col){
+        return getBit(col+row*9);
+    }
+    void setBitAsMatrix(int row, int col){
+        setBit(col+row*9);
     }
 }
