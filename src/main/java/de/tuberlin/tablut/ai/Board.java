@@ -225,4 +225,18 @@ public class Board {
     //TODO:
     // Methode zum Überprüfen des Spielendes
 
+    static boolean hasBlackWon (){
+        if(whiteKing.high + whiteKing.low == 0) {return true;} //Ist kein König mehr auf dem Board, sind beide vom Zahlenwert 0
+        else {return false;}
+    }
+
+    static boolean hasWhiteWon(){
+        //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. der numerische wert ist != null
+        if (Bitboard90.and(whiteKing, blockedPieces).longValue() != 0) {
+            return true;
+        }
+        else {return false;}
+    }
+    
+
 }
