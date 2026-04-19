@@ -231,12 +231,22 @@ public class Board {
     }
 
     static boolean hasWhiteWon(){
-        //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. der numerische wert ist != null
-        if (Bitboard90.and(whiteKing, blockedPieces).longValue() != 0) {
+        //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. es existiert ein gesetztes Bit
+        int bitCount = Bitboard90.and(whiteKing, blockedPieces).bitCount();
+        if (bitCount == 1) {
             return true;
         }
         else {return false;}
     }
-    
+
+    static boolean isStalemate(){
+        //TODO:
+        // Implement:
+        // *50 Züge ohne geschlagene Figur;
+        // *wiederholte Stellung (Zyklenfreiheit),
+        // *kein Zug möglich
+        return false;
+    }
+
 
 }

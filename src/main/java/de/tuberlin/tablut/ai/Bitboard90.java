@@ -42,8 +42,8 @@ public class Bitboard90 {
         return mask;
     }
 
-    long longValue(){
-        return this.low + this.high;
+    int bitCount(){
+        return Long.bitCount(this.low) + Long.bitCount(this.high);
     }
 
 
