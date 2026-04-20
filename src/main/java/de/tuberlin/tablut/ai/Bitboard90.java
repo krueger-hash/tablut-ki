@@ -1,6 +1,8 @@
 package de.tuberlin.tablut.ai;
 
 
+import java.util.Objects;
+
 //mit vordefinierter Größe 9x9, d.h. 81 Bits + je Seperation am Ende der Zeile für 9x10 Bits d.h. 90 Bits
 public class Bitboard90 {
 
@@ -46,9 +48,19 @@ public class Bitboard90 {
         return Long.bitCount(this.low) + Long.bitCount(this.high);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Bitboard90 that = (Bitboard90) o;
+        return this.low == that.low && this.high == that.high;
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(low, high);
+    }
 
-/*
+    /*
 Grundsätzliche Ideen im Code:
 - (1L << x) erzeugt ein 0...010...0, wobei die 1 an x-ter Stelle steht, also nur das xte Bit 1 ist.
 - & ist das bitweise AND, d.h. im Ergebnis bleibt nur eine 1, wenn beide operanden eine 1 am selben Bit haben.
@@ -119,11 +131,11 @@ Grundsätzliche Ideen im Code:
         long resLow = a.low ^ b.low;
         return new Bitboard90(resLow,resHigh);
     }
-//
-//    /////////////////////////////////////////////////////////////////////////////
-//    /// Shift Operationen
-//    /////////////////////////////////////////////////////////////////////////////
-//
+
+    /////////////////////////////////////////////////////////////////////////////
+    /// Shift Operationen
+    /////////////////////////////////////////////////////////////////////////////
+
 //    //funktioniert so nur für nBits < 64 und nBits !=0
     static Bitboard90 shiftLeft(Bitboard90 bb, int nBits){
         long resLow = bb.low << nBits;
