@@ -3,9 +3,14 @@ package de.tuberlin.tablut.ai;
 import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -130,5 +135,80 @@ public class BoardTest {
     }
 
 
+
+    @Test
+    public void testPrintBoardShowsPiecesAndThrone() {
+        Board board = createBoard(
+                1L << 10, 0,      // white at 10
+                1L << 44, 0,      // king at throne
+                1L << 30, 0,      // black at 30
+                (1L << 0) | (1L << 8), (1L << 16) | (1L << 24) // blocked corners
+        );
+
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+        try {
+            board.printBoard();
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String output = outputStream.toString();
+        assertTrue(output.contains("0 | X . . . . . . . X |"));
+        assertTrue(output.contains("1 | W . . . . . . . . |"));
+        assertTrue(output.contains("3 | B . . . . . . . . |"));
+        assertTrue(output.contains("4 | . . . . K . . . . |"));
+    }
+
+    @Test
+    public void testGenerateLegalMovesKingFromCenter() {
+        Board board = createBoard(
+                0, 0,                     // white
+                1L << 44, 0,              // king at center
+                0, 0,                     // black
+                (1L << 0) | (1L << 8), (1L << 16) | (1L << 24) // blocked corners
+        );
+
+        Move[] moves = board.generateLegalMoves(board.whiteKing, Piece.KING);
+        assertEquals(16, moves.length, "King at center should have 16 rook-like moves");
+        assertTrue(Arrays.stream(moves).allMatch(m -> m.movedPiece == Piece.KING));
+        assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 4));   // north edge
+        assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 84));  // south edge
+        assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 40));  // west edge
+        assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 48));  // east edge
+    }
+
+    @Test
+    public void testIsPlayableSquareViaReflection() throws Exception {
+        Board board = new Board();
+        Method isPlayableSquare = Board.class.getDeclaredMethod("isPlayableSquare", int.class);
+        isPlayableSquare.setAccessible(true);
+
+        assertTrue((Boolean) isPlayableSquare.invoke(board, 0));
+        assertTrue((Boolean) isPlayableSquare.invoke(board, 88));
+        assertFalse((Boolean) isPlayableSquare.invoke(board, 9));   // separator column
+        assertFalse((Boolean) isPlayableSquare.invoke(board, 89));  // separator column
+        assertFalse((Boolean) isPlayableSquare.invoke(board, -1));  // below range
+        assertFalse((Boolean) isPlayableSquare.invoke(board, 90));  // above range
+    }
+
+    @Test
+    public void testIsStalemateWhenSideToMoveHasNoMoves() {
+        Board board = createBoard(
+                0, 0,                     // white
+                1L << 44, 0,              // king present, so black has not won
+                0, 0,                     // black side has no pieces, no legal move
+                (1L << 0) | (1L << 8), (1L << 16) | (1L << 24)
+        );
+
+        assertTrue("If side to move has no legal move, stalemate should be true", board.isStalemate());
+    }
+
+    @Test
+    public void testIsStalemateFalseInInitialPosition() {
+        Board board = new Board();
+        assertFalse(board.isStalemate(), "Initial position should not be stalemate");
+    }
 
 }
