@@ -5,27 +5,60 @@ import java.util.List;
 
 public class Board {
 
-    static long whiteLow = (1L << 24) | (1L << 34) | (1L << 42) | (1L << 43) | (1L << 45) | (1L << 46) | (1L << 54);
-    static long whiteHigh = (1L);
+    public long whiteLow = (1L << 24) | (1L << 34) | (1L << 42) | (1L << 43) | (1L << 45) | (1L << 46) | (1L << 54);
+    public long whiteHigh = (1L);
 
-    static long whiteKingLow = 1L << 44;
-    static long whiteKingHigh = 0L;
+    public long whiteKingLow = 1L << 44;
+    public long whiteKingHigh = 0L;
 
-    static long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) |
+    public long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) |
             (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
-    static long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
+    public long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
 
-    static long blockedLow = (1L << 0) | (1L << 8);
-    static long blockedHigh = (1L << 16) | (1L << 24);
+    public long blockedLow = (1L << 0) | (1L << 8);
+    public long blockedHigh = (1L << 16) | (1L << 24);
 
-    static Bitboard90 white = new Bitboard90(whiteLow, whiteHigh);
-    static Bitboard90 whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
-    static Bitboard90 black = new Bitboard90(blackLow, blackHigh);
-    static Bitboard90 blockedPieces = new Bitboard90(blockedLow, blockedHigh);
-    static Bitboard90 throne = new Bitboard90((1L << 44), 0L);
+    public Bitboard90 white = new Bitboard90(whiteLow, whiteHigh);
+    public Bitboard90 whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
+    public Bitboard90 black = new Bitboard90(blackLow, blackHigh);
+    public Bitboard90 blockedPieces = new Bitboard90(blockedLow, blockedHigh);
+    public Bitboard90 throne = new Bitboard90((1L << 44), 0L);
+
+    //Konstruktoren:
+    //Startaufstellung:
+    public Board() {
+        this.white = new Bitboard90(whiteLow, whiteHigh);
+        this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
+        this.black = new Bitboard90(blackLow, blackHigh);
+        this.blockedPieces = new Bitboard90(blockedLow, blockedHigh);
+        this.throne = new Bitboard90(1L << 44, 0L);
+    }
+
+    //Beliebige Aufstellungen:
+    public Board(Bitboard90 white,
+                 Bitboard90 whiteKing,
+                 Bitboard90 black,
+                 Bitboard90 blockedPieces,
+                 Bitboard90 throne) {
+
+        this.white = new Bitboard90(white.low, white.high);
+        this.whiteKing = new Bitboard90(whiteKing.low, whiteKing.high);
+        this.black = new Bitboard90(black.low, black.high);
+        this.blockedPieces = new Bitboard90(blockedPieces.low, blockedPieces.high);
+        this.throne = new Bitboard90(throne.low, throne.high);
+    }
+
+    //anderes Board kopieren:
+    public Board(Board other) {
+        this.white = new Bitboard90(other.white.low, other.white.high);
+        this.whiteKing = new Bitboard90(other.whiteKing.low, other.whiteKing.high);
+        this.black = new Bitboard90(other.black.low, other.black.high);
+        this.blockedPieces = new Bitboard90(other.blockedPieces.low, other.blockedPieces.high);
+        this.throne = new Bitboard90(other.throne.low, other.throne.high);
+    }
 
 
-    static void main() {
+    void main() {
         Bitboard90.printBBToConsole(white);
         System.out.println();
         Bitboard90.printBBToConsole(whiteKing);
@@ -41,11 +74,13 @@ public class Board {
 
     //bestimmt der Art des Steins an einer gegebenen Position
     //basierend auf dem Enum Pieces mit den Möglichkeiten KING, WHITE, BLACK, BLOCKED
-    static Piece getPieceAt(int pos) {
+    public Piece getPieceAt(int pos) {
         if (Bitboard90.getBit(whiteKing, pos)) return Piece.KING;
         if (Bitboard90.getBit(white, pos)) return Piece.WHITE;
         if (Bitboard90.getBit(black, pos)) return Piece.BLACK;
         if (Bitboard90.getBit(blockedPieces, pos)) return Piece.BLOCKED;
+        if (Bitboard90.getBit(throne, pos)) return Piece.THRONE;
+
         return Piece.EMPTY;
     }
 
@@ -53,74 +88,139 @@ public class Board {
     //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
     public void applyMove(Move move) {
         if (move.movedPiece == Piece.KING) {
-            Bitboard90.removeBit(whiteKing, move.from);
-            Bitboard90.setBit(whiteKing, move.to);
+            if (getPieceAt(move.from) == Piece.KING && getPieceAt(move.to) == Piece.EMPTY) {
+                Bitboard90.removeBit(whiteKing, move.from);
+                Bitboard90.setBit(whiteKing, move.to);
+            }
 
             return;
         }
-        if (move.movedPiece == Piece.WHITE) {
+        if (move.movedPiece == Piece.WHITE && getPieceAt(move.from) == Piece.WHITE && getPieceAt(move.to) == Piece.EMPTY) {
             Bitboard90.removeBit(white, move.from);
             Bitboard90.setBit(white, move.to);
             return;
         }
-        if (move.movedPiece == Piece.BLACK) {
+        if (move.movedPiece == Piece.BLACK && getPieceAt(move.from) == Piece.BLACK && getPieceAt(move.to) == Piece.EMPTY) {
             Bitboard90.removeBit(black, move.from);
             Bitboard90.setBit(black, move.to);
             return;
         }
     }
 
-    public boolean checkHit(Move move) {
+    //gibt den geschlagenen Piece zurück
+    //gibt EMPTY zurück, wenn keine Figur geschlagen werden kann
+    public ArrayList <Piece> checkHit(Move move) {
         int pos = move.to;
+        ArrayList<Piece> hitPiece = new ArrayList<Piece>();
 
         //überprüfung der Standardsituation zum schlagen
         //entweder rechts und linkt oder oben und unten vom Gegner
-        if (move.movedPiece == Piece.WHITE) {
-            if ((getPieceAt(pos - 1) == Piece.BLACK) && (getPieceAt(pos - 2) == Piece.WHITE)) {
+        if (move.movedPiece == Piece.WHITE || move.movedPiece == Piece.KING) {
+            if ((getPieceAt(pos - 1) == Piece.BLACK) &&
+                    (getPieceAt(pos - 2) == Piece.WHITE || getPieceAt(pos - 2) == Piece.KING)) {
                 Bitboard90.removeBit(black, pos - 1);
-                return true;
+                hitPiece.add(Piece.BLACK);
             }
 
-            if ((getPieceAt(pos + 1) == Piece.BLACK) && (getPieceAt(pos + 2) == Piece.WHITE)) {
+            if ((getPieceAt(pos + 1) == Piece.BLACK) &&
+                    (getPieceAt(pos + 2) == Piece.WHITE || getPieceAt(pos + 2) == Piece.KING)) {
                 Bitboard90.removeBit(black, pos + 1);
-                return true;
+                hitPiece.add(Piece.BLACK);
             }
-            if ((getPieceAt(pos - 10) == Piece.BLACK) && (getPieceAt(pos - 20) == Piece.WHITE)) {
+
+            if ((getPieceAt(pos - 10) == Piece.BLACK) &&
+                    (getPieceAt(pos - 20) == Piece.WHITE || getPieceAt(pos - 20) == Piece.KING)) {
                 Bitboard90.removeBit(black, pos - 10);
-                return true;
+                hitPiece.add(Piece.BLACK);
             }
-            if ((getPieceAt(pos + 10) == Piece.BLACK) && (getPieceAt(pos + 10) == Piece.WHITE)) {
+
+            if ((getPieceAt(pos + 10) == Piece.BLACK) &&
+                    (getPieceAt(pos + 20) == Piece.WHITE || getPieceAt(pos + 20) == Piece.KING)) {
                 Bitboard90.removeBit(black, pos + 10);
-                return true;
+                hitPiece.add(Piece.BLACK);
             }
+
+
+            
         } else if (move.movedPiece == Piece.BLACK) {
+
+            //Randfelder überprüfen
+            if ((pos == 11 || pos == 21 || pos == 31 || pos == 41 || pos == 51 || pos == 61 || pos == 71) && getPieceAt(pos - 1) == Piece.WHITE) {
+                Bitboard90.removeBit(white, pos - 1);
+                hitPiece.add(Piece.WHITE);
+            }
+            if ((pos == 18 || pos == 28 || pos == 38 || pos == 48 || pos == 58 || pos == 68 || pos == 78) && getPieceAt(pos + 1) == Piece.WHITE) {
+                Bitboard90.removeBit(white, pos - 1);
+                hitPiece.add(Piece.WHITE);
+            }
+
+            //König auf Thron geschlagen?
+            if ((pos == 34 && getPieceAt(43) == Piece.BLACK && getPieceAt(54) == Piece.BLACK && getPieceAt(45) == Piece.BLACK && getPieceAt(44) == Piece.KING) ||
+                    (pos == 43 && getPieceAt(34) == Piece.BLACK && getPieceAt(54) == Piece.BLACK && getPieceAt(45) == Piece.BLACK && getPieceAt(44) == Piece.KING) ||
+                    (pos == 54 && getPieceAt(43) == Piece.BLACK && getPieceAt(34) == Piece.BLACK && getPieceAt(45) == Piece.BLACK && getPieceAt(44) == Piece.KING) ||
+                    (pos == 45 && getPieceAt(43) == Piece.BLACK && getPieceAt(54) == Piece.BLACK && getPieceAt(34) == Piece.BLACK && getPieceAt(44) == Piece.KING)) {
+                Bitboard90.removeBit(whiteKing, 44);
+                hitPiece.add(Piece.KING);
+            }
+
+            //König angrenzend zum Thron geschlagen?
+            if ((pos == 34 && getPieceAt(33) == Piece.BLACK && getPieceAt(35) == Piece.BLACK && getPieceAt(24) == Piece.BLACK && getPieceAt(34) == Piece.KING)
+                    || (pos == 43 && getPieceAt(33) == Piece.BLACK && getPieceAt(42) == Piece.BLACK && getPieceAt(53) == Piece.BLACK && getPieceAt(43) == Piece.KING)
+                    || (pos == 45 && getPieceAt(35) == Piece.BLACK && getPieceAt(46) == Piece.BLACK && getPieceAt(55) == Piece.BLACK && getPieceAt(45) == Piece.KING)
+                    || (pos == 54 && getPieceAt(43) == Piece.BLACK && getPieceAt(53) == Piece.BLACK && getPieceAt(64) == Piece.BLACK && getPieceAt(54) == Piece.KING)) {
+                Bitboard90.removeBit(whiteKing, pos);
+                hitPiece.add(Piece.KING);
+            }
+            //klassisches Schlagen des Königs zwischen 2 Steinen
+            if ((getPieceAt(pos - 1) == Piece.KING) && (getPieceAt(pos - 2) == Piece.BLACK) && (pos-1 != 34 && pos-1 != 43 && pos-1 != 44 && pos-1 != 45 && pos-1 != 54)) {
+
+                Bitboard90.removeBit(whiteKing, pos - 1);
+                hitPiece.add(Piece.KING);
+            }
+            if ((getPieceAt(pos + 1) == Piece.KING) && (getPieceAt(pos + 2) == Piece.BLACK) && (pos+1 != 34 && pos+1 != 43 && pos+1 != 44 && pos+1 != 45 && pos+1 != 54)) {
+                Bitboard90.removeBit(whiteKing, pos + 1);
+                hitPiece.add(Piece.KING);
+            }
+            if ((getPieceAt(pos - 10) == Piece.KING) && (getPieceAt(pos - 20) == Piece.BLACK) && (pos-10 != 34 && pos-10 != 43 && pos-10 != 44 && pos-10 != 45 && pos-10 != 54)) {
+                Bitboard90.removeBit(whiteKing, pos - 10);
+                hitPiece.add(Piece.KING);
+            }
+            if ((getPieceAt(pos + 10) == Piece.KING) && (getPieceAt(pos + 10) == Piece.BLACK) && (pos+10 != 34 && pos+10 != 43 && pos+10 != 44 && pos+10 != 45 && pos+10 != 54)) {
+                Bitboard90.removeBit(whiteKing, pos + 10);
+                hitPiece.add(Piece.KING);
+            }
+
+
+            //normales Schlagen von Steinen
             if ((getPieceAt(pos - 1) == Piece.WHITE) && (getPieceAt(pos - 2) == Piece.BLACK)) {
                 Bitboard90.removeBit(white, pos - 1);
-                return true;
+                hitPiece.add(Piece.WHITE);
             }
             if ((getPieceAt(pos + 1) == Piece.WHITE) && (getPieceAt(pos + 2) == Piece.BLACK)) {
                 Bitboard90.removeBit(white, pos + 1);
-                return true;
+                hitPiece.add(Piece.WHITE);
             }
             if ((getPieceAt(pos - 10) == Piece.WHITE) && (getPieceAt(pos - 20) == Piece.BLACK)) {
                 Bitboard90.removeBit(white, pos - 10);
-                return true;
+                hitPiece.add(Piece.WHITE);
             }
             if ((getPieceAt(pos + 10) == Piece.WHITE) && (getPieceAt(pos + 10) == Piece.BLACK)) {
                 Bitboard90.removeBit(white, pos + 10);
-                return true;
+                hitPiece.add(Piece.WHITE);
             }
+
+
+
+            // hier muss später noch die Logik zum Überprüfen, ob ein Stein am rand geschlagen wird eingefügt werden
+            // Logik zum Überprüfen, ob der König geschlagen wird
         }
-
-
-        // hier muss später noch die Logik zum Überprüfen, ob ein Stein am rand geschlagen wird eingefügt werden
-        // Logik zum Überprüfen, ob der König geschlagen wird
-
-        return false;
+                return hitPiece;
+            
     }
 
+
     // Prints labeled 9x9 board visualizing pieces and throne
-    public static void printBoard() {
+    public  void printBoard() {
         System.out.println("    0 1 2 3 4 5 6 7 8");
         for (int row = 0; row < 9; row++) {
             StringBuilder line = new StringBuilder();
@@ -156,7 +256,7 @@ public class Board {
 
     // Calculates all possible moves for a given bitboard and player type.
     // This uses current global board occupancy (white/black/king/blocked).
-    public static Move[] generateLegalMoves(Bitboard90 board, Piece player) {
+    public  Move[] generateLegalMoves(Bitboard90 board, Piece player) {
         if (board == null) {
             throw new IllegalArgumentException("Board bitboard must not be null");
         }
@@ -199,7 +299,7 @@ public class Board {
     }
 
     // Checks if index points to a real board cell, not outside the board and not into the separator column of 9x10 bit layout
-    private static boolean isPlayableSquare(int pos) {
+    private  boolean isPlayableSquare(int pos) {
         // reject out-of-range indices (<0 or >=90)
         if (pos < 0 || pos >= Bitboard90.rows * Bitboard90.cols) {
             return false;
@@ -209,7 +309,7 @@ public class Board {
         return (pos % Bitboard90.cols) < (Bitboard90.cols - 1);
     }
 
-    private static Piece resolveMovedPiece(Piece player, int from) {
+    private  Piece resolveMovedPiece(Piece player, int from) {
         if (player == Piece.BLACK) {
             return Piece.BLACK;
         }
@@ -225,12 +325,12 @@ public class Board {
     //TODO:
     // Methode zum Überprüfen des Spielendes
 
-    static boolean hasBlackWon (){
+     boolean hasBlackWon (){
         if(whiteKing.high + whiteKing.low == 0) {return true;} //Ist kein König mehr auf dem Board, sind beide vom Zahlenwert 0
         else {return false;}
     }
 
-    static boolean hasWhiteWon(){
+     boolean hasWhiteWon(){
         //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. es existiert ein gesetztes Bit
         int bitCount = Bitboard90.and(whiteKing, blockedPieces).bitCount();
         if (bitCount == 1) {
@@ -239,7 +339,7 @@ public class Board {
         else {return false;}
     }
 
-    static boolean isStalemate(){
+     boolean isStalemate(){
         //TODO:
         // Implement:
         // *50 Züge ohne geschlagene Figur;
