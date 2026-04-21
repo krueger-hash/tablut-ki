@@ -1,7 +1,9 @@
 package de.tuberlin.tablut.ai;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Board {
 
@@ -24,6 +26,30 @@ public class Board {
     public Bitboard90 blockedPieces = new Bitboard90(blockedLow, blockedHigh);
     public Bitboard90 throne = new Bitboard90((1L << 44), 0L);
 
+    private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
+    private static final int STALEMATE_REPETITION_LIMIT = 3;
+
+    // In Tablut black (attackers) starts.
+    private Piece sideToMove = Piece.BLACK;
+    private int movesWithoutCapture = 0;
+    private boolean stalemateTrackingInitialized = false;
+    private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
+
+    private record PositionKey(
+            long whiteLow,
+            long whiteHigh,
+            long whiteKingLow,
+            long whiteKingHigh,
+            long blackLow,
+            long blackHigh,
+            long blockedLow,
+            long blockedHigh,
+            long throneLow,
+            long throneHigh,
+            Piece sideToMove
+    ) {
+    }
+
     //Konstruktoren:
     //Startaufstellung:
     public Board() {
@@ -32,6 +58,7 @@ public class Board {
         this.black = new Bitboard90(blackLow, blackHigh);
         this.blockedPieces = new Bitboard90(blockedLow, blockedHigh);
         this.throne = new Bitboard90(1L << 44, 0L);
+        resetStalemateTracking();
     }
 
     //Beliebige Aufstellungen:
@@ -46,6 +73,7 @@ public class Board {
         this.black = new Bitboard90(black.low, black.high);
         this.blockedPieces = new Bitboard90(blockedPieces.low, blockedPieces.high);
         this.throne = new Bitboard90(throne.low, throne.high);
+        resetStalemateTracking();
     }
 
     //anderes Board kopieren:
@@ -55,6 +83,10 @@ public class Board {
         this.black = new Bitboard90(other.black.low, other.black.high);
         this.blockedPieces = new Bitboard90(other.blockedPieces.low, other.blockedPieces.high);
         this.throne = new Bitboard90(other.throne.low, other.throne.high);
+        this.sideToMove = other.sideToMove;
+        this.movesWithoutCapture = other.movesWithoutCapture;
+        this.stalemateTrackingInitialized = other.stalemateTrackingInitialized;
+        this.positionCounts.putAll(other.positionCounts);
     }
 
 
@@ -214,8 +246,9 @@ public class Board {
             // hier muss später noch die Logik zum Überprüfen, ob ein Stein am rand geschlagen wird eingefügt werden
             // Logik zum Überprüfen, ob der König geschlagen wird
         }
-                return hitPiece;
-            
+        registerMoveForStalemate(move, hitPiece);
+        return hitPiece;
+
     }
 
 
@@ -339,14 +372,90 @@ public class Board {
         else {return false;}
     }
 
-     boolean isStalemate(){
-        //TODO:
-        // Implement:
-        // *50 Züge ohne geschlagene Figur;
+    // Repetion and 50-move Rule probably should be counted by the main loop, not within the board class
+    boolean isStalemate() {
+        if (hasBlackWon() || hasWhiteWon()) {
+            return false;
+        }
+
+        ensureStalemateTrackingInitialized();
+
+        // *50 Zuege ohne geschlagene Figur;
+        if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
+            return true;
+        }
+
         // *wiederholte Stellung (Zyklenfreiheit),
-        // *kein Zug möglich
-        return false;
+        if (positionCounts.getOrDefault(currentPositionKey(), 0) >= STALEMATE_REPETITION_LIMIT) {
+            return true;
+        }
+
+        // *kein Zug moeglich
+        return hasNoLegalMovesForSideToMove();
     }
 
+    public void resetStalemateTracking() {
+        resetStalemateTracking(Piece.BLACK);
+    }
 
+    public void resetStalemateTracking(Piece sideToMove) {
+        this.sideToMove = toSide(sideToMove);
+        this.movesWithoutCapture = 0;
+        this.stalemateTrackingInitialized = false;
+        this.positionCounts.clear();
+    }
+
+    private void ensureStalemateTrackingInitialized() {
+        if (stalemateTrackingInitialized) {
+            return;
+        }
+        positionCounts.put(currentPositionKey(), 1);
+        stalemateTrackingInitialized = true;
+    }
+
+    private void registerMoveForStalemate(Move move, List<Piece> hitPieces) {
+        if (move == null) {
+            return;
+        }
+
+        ensureStalemateTrackingInitialized();
+
+        boolean captureOccurred = hitPieces != null && !hitPieces.isEmpty();
+        movesWithoutCapture = captureOccurred ? 0 : movesWithoutCapture + 1;
+        sideToMove = oppositeSide(toSide(move.movedPiece));
+
+        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+    }
+
+    private boolean hasNoLegalMovesForSideToMove() {
+        if (toSide(sideToMove) == Piece.BLACK) {
+            return generateLegalMoves(black, Piece.BLACK).length == 0;
+        }
+        Bitboard90 whiteSide = Bitboard90.or(white, whiteKing);
+        return generateLegalMoves(whiteSide, Piece.WHITE).length == 0;
+    }
+
+    private PositionKey currentPositionKey() {
+        return new PositionKey(
+                white.low,
+                white.high,
+                whiteKing.low,
+                whiteKing.high,
+                black.low,
+                black.high,
+                blockedPieces.low,
+                blockedPieces.high,
+                throne.low,
+                throne.high,
+                toSide(sideToMove)
+        );
+    }
+
+    private Piece toSide(Piece side) {
+        return side == Piece.BLACK ? Piece.BLACK : Piece.WHITE;
+    }
+
+    private Piece oppositeSide(Piece side) {
+        return toSide(side) == Piece.BLACK ? Piece.WHITE : Piece.BLACK;
+    }
 }
