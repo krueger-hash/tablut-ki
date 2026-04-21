@@ -136,18 +136,40 @@ Grundsätzliche Ideen im Code:
     /// Shift Operationen
     /////////////////////////////////////////////////////////////////////////////
 
-//    //funktioniert so nur für nBits < 64 und nBits !=0
+    // es gibt auch geschicktere Varianten, die ohne Branches auskommen, aber das vllt eher später...
     static Bitboard90 shiftLeft(Bitboard90 bb, int nBits){
-        long resLow = bb.low << nBits;
-        long lowOverflow = bb.low >>> (64 - nBits);
-        long resHigh = (bb.high << nBits) | lowOverflow;
-        return new Bitboard90(resLow,resHigh);
+        if (nBits == 0){
+            return bb;
+        }
+        if (nBits < 64){
+            long resLow = bb.low << nBits;
+
+            long lowOverflow = bb.low >>> (64 - nBits); //Overflow-Bits berechnen, die bei resHigh "vorgehängt werden"
+            long resHigh = (bb.high << nBits) | lowOverflow;
+            return new Bitboard90(resLow,resHigh);
+        }
+        else {
+            long resLow = 0; // alles in low wird "geleert", da es kleiner 64 Bit ist
+            long resHigh = (bb.low << (nBits-64)); // resHigh dann das um nBits-64 geshiftete low (musste es mir aufmalen...)
+            return new Bitboard90(resLow,resHigh);
+        }
+
     }
     static Bitboard90 shiftRight(Bitboard90 bb, int nBits){
-        long resHigh = bb.high >>> nBits;
-        long highOverflow = bb.high << (64 - nBits);
-        long resLow = (bb.low >>> nBits) | highOverflow;
-        return new Bitboard90(resLow,resHigh);
+        if(nBits==0){
+            return bb;
+        }
+        if(nBits<64){
+            long resHigh = bb.high >>> nBits;
+            long highOverflow = bb.high << (64 - nBits);
+            long resLow = (bb.low >>> nBits) | highOverflow;
+            return new Bitboard90(resLow,resHigh);
+        }
+        else {
+            long resHigh = 0;
+            long resLow = (bb.high >>> (nBits-64));
+            return new Bitboard90(resLow,resHigh);
+        }
     }
 
     //Shift jeweils um 1 Feld
@@ -237,6 +259,7 @@ Grundsätzliche Ideen im Code:
             }
             System.out.print("\n");
         }
+        System.out.print("\n");
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -244,46 +267,60 @@ Grundsätzliche Ideen im Code:
     /////////////////////////////////////////////////////////////////////////////
     static void main() {
 
+//        Bitboard90 testBB = new Bitboard90();
+//        Bitboard90.setBitAsMatrix(testBB,8,8);
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,10));
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,20));
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,30));
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,40));
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,50));
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,60));
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,70));
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,80));
+//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,90));
 
-        //Tests for Shift
-        Bitboard90 z = new Bitboard90();
-        setBitAsMatrix(z,0,2);
-        setBitAsMatrix(z,1,5);
-        setBitAsMatrix(z,3,0);
-        setBitAsMatrix(z,6,8);
-        setBitAsMatrix(z,8,3);
 
-        System.out.println("Ausgangsboard z");
-        printBBToConsole(z);
+//        //Tests for Shift
+//        Bitboard90 z = new Bitboard90();
+//        setBitAsMatrix(z,0,2);
+//        setBitAsMatrix(z,1,5);
+//        setBitAsMatrix(z,3,0);
+//        setBitAsMatrix(z,6,8);
+//        setBitAsMatrix(z,8,3);
+//
+//        System.out.println("Ausgangsboard z");
+//        printBBToConsole(z);
+//
+//        System.out.println("shiftN");
+//        printBBToConsole(shiftN(z));
+//
+//        System.out.println("shiftS");
+//        printBBToConsole(shiftS(z));
+//
+//        System.out.println("shiftE");
+//        printBBToConsole(shiftE(z));
+//
+//        System.out.println("shiftW");
+//        printBBToConsole(shiftW(z));
+//
+//        System.out.println("dilation");
+//        printBBToConsole(dilation(z));
+//
+//        System.out.println("erosion-test");
+//        Bitboard90 et = new Bitboard90();
+//        for(int row = 0; row <5; row++){
+//            for(int col = 0; col <5; col++) {
+//                if (!(row == 2 && (col == 1 || col == 3))) {
+//                    setBitAsMatrix(et, row, col);
+//                }
+//            }
+//        }
+//        System.out.println("Ausgangs-BB et:");
+//        printBBToConsole(et);
+//        System.out.println("Erosion et:");
+//        printBBToConsole(erosion(et));
 
-        System.out.println("shiftN");
-        printBBToConsole(shiftN(z));
 
-        System.out.println("shiftS");
-        printBBToConsole(shiftS(z));
-
-        System.out.println("shiftE");
-        printBBToConsole(shiftE(z));
-
-        System.out.println("shiftW");
-        printBBToConsole(shiftW(z));
-
-        System.out.println("dilation");
-        printBBToConsole(dilation(z));
-
-        System.out.println("erosion-test");
-        Bitboard90 et = new Bitboard90();
-        for(int row = 0; row <5; row++){
-            for(int col = 0; col <5; col++) {
-                if (!(row == 2 && (col == 1 || col == 3))) {
-                    setBitAsMatrix(et, row, col);
-                }
-            }
-        }
-        System.out.println("Ausgangs-BB et:");
-        printBBToConsole(et);
-        System.out.println("Erosion et:");
-        printBBToConsole(erosion(et));
         //Tests for Bit-Methods und Logische Operationen
 //        Bitboard90 x = new Bitboard90();
 //        setBitAsMatrix(x,0,1);

@@ -2,6 +2,9 @@ package de.tuberlin.tablut.ai;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class Bitboard90Test {
@@ -142,12 +145,54 @@ class Bitboard90Test {
 
     @Test
     void shiftLeft() {
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,6,3);
+        Bitboard90.setBitAsMatrix(testBB,6,4);
+        Bitboard90.setBitAsMatrix(testBB,8,8);
+
+        // n=0
+        assertEquals(testBB,Bitboard90.shiftLeft(testBB,0));
+
+        //n<64
+        Bitboard90 a = new Bitboard90();
+        Bitboard90.setBitAsMatrix(a,0,5);
+        Bitboard90.setBitAsMatrix(a,6,8);
+        Bitboard90.setBitAsMatrix(a,6,9);
+        Bitboard90.setBitAsMatrix(a,9,3); // hier sieht man, das auch aus dem Spielfeld herausgeshiftet werden kann!
+        assertEquals(a,Bitboard90.shiftLeft(testBB,5));
+
+        // n>64
+        Bitboard90 b = new Bitboard90();
+        Bitboard90.setBitAsMatrix(b,8,8);
+        assertEquals(b,Bitboard90.shiftLeft(new Bitboard90(0b1,0),88));
+
     }
 
     @Test
     void shiftRight() {
-    }
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,6,3);
+        Bitboard90.setBitAsMatrix(testBB,6,4);
+        Bitboard90.setBitAsMatrix(testBB,8,8);
 
+        // n=0
+        assertEquals(testBB,Bitboard90.shiftRight(testBB,0));
+
+        //n<64
+        Bitboard90 a = new Bitboard90();
+        Bitboard90.setBitAsMatrix(a,5,8);
+        Bitboard90.setBitAsMatrix(a,5,9);
+        Bitboard90.setBitAsMatrix(a,8,3);
+        assertEquals(a,Bitboard90.shiftRight(testBB,5));
+
+        // n>64
+        Bitboard90 b = new Bitboard90();
+        Bitboard90.setBitAsMatrix(b,0,0);
+        assertEquals(b,Bitboard90.shiftRight(testBB,88));
+
+    }
 
     @Test
     void shiftN() {
@@ -217,8 +262,8 @@ class Bitboard90Test {
 
         Bitboard90.setBitAsMatrix(expected,6,4);
         Bitboard90.setBitAsMatrix(expected,6,7);
-        Bitboard90.setBitAsMatrix(expected,7,2);
-        Bitboard90.setBitAsMatrix(expected,7,7);
+        Bitboard90.setBitAsMatrix(expected,8,2);
+        Bitboard90.setBitAsMatrix(expected,8,7);
 
         assertEquals(expected,Bitboard90.shiftE(z));
     }
@@ -246,25 +291,106 @@ class Bitboard90Test {
 
     @Test
     void dilation() {
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,1,1);
+
+        Bitboard90 expected = new Bitboard90();
+        Bitboard90.setBitAsMatrix(expected,0,1);
+        Bitboard90.setBitAsMatrix(expected,1,0);
+        Bitboard90.setBitAsMatrix(expected,1,1);
+        Bitboard90.setBitAsMatrix(expected,1,2);
+        Bitboard90.setBitAsMatrix(expected,2,1);
+
+        assertEquals(expected,Bitboard90.dilation(testBB));
     }
 
     @Test
     void erosion() {
+
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,1);
+        Bitboard90.setBitAsMatrix(testBB,1,0);
+        Bitboard90.setBitAsMatrix(testBB,1,1);
+        Bitboard90.setBitAsMatrix(testBB,1,2);
+        Bitboard90.setBitAsMatrix(testBB,2,1);
+
+        Bitboard90 expected = new Bitboard90();
+        Bitboard90.setBitAsMatrix(expected,1,1);
+
+        assertEquals(expected,Bitboard90.erosion(testBB));
     }
 
     @Test
     void getBitAsMatrix() {
+        Bitboard90 testBB = new Bitboard90();
+        testBB.low = 0b1;
+        testBB.high = 0b11;
+        assertTrue(Bitboard90.getBitAsMatrix(testBB,0,0));
+        assertFalse(Bitboard90.getBitAsMatrix(testBB,6,3));
+        assertTrue(Bitboard90.getBitAsMatrix(testBB,6,4));
+        assertTrue(Bitboard90.getBitAsMatrix(testBB,6,5));
+        assertFalse(Bitboard90.getBitAsMatrix(testBB,6,6));
     }
 
     @Test
     void setBitAsMatrix() {
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,4,3);
+        Bitboard90.setBitAsMatrix(testBB,6,4);
+        Bitboard90.setBitAsMatrix(testBB,7,9);
+        assertTrue(Bitboard90.getBitAsMatrix(testBB,0,0));
+        assertTrue(Bitboard90.getBitAsMatrix(testBB,4,3));
+        assertTrue(Bitboard90.getBitAsMatrix(testBB,6,4));
+        assertTrue(Bitboard90.getBitAsMatrix(testBB,7,9));
+        assertFalse(Bitboard90.getBitAsMatrix(testBB,6,6));
     }
 
     @Test
     void bbToMatrix() {
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,6,4);
+        assertEquals('1',Bitboard90.bbToMatrix(testBB)[0][0]);
+        assertEquals('_',Bitboard90.bbToMatrix(testBB)[4][3]);
+        assertEquals('1',Bitboard90.bbToMatrix(testBB)[6][4]);
+        assertEquals('_',Bitboard90.bbToMatrix(testBB)[7][9]);
     }
 
     @Test
     void printBBToConsole() {
+        // Originalen Output sichern
+        PrintStream originalOut = System.out;
+
+        // Neuen Stream zum Abfangen erstellen
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outputStream));
+
+        // Methode aufrufen, die etwas ausgibt
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,4,3);
+        Bitboard90.setBitAsMatrix(testBB,6,4);
+        Bitboard90.setBitAsMatrix(testBB,7,9);
+        Bitboard90.printBBToConsole(testBB);
+
+        // Output zurückholen
+        String output = outputStream.toString();
+
+        // Wiederherstellen!
+        System.setOut(originalOut);
+
+        // Test
+        String expected =
+                "[1][_][_][_][_][_][_][_][_]<_>\n" +
+                "[_][_][_][_][_][_][_][_][_]<_>\n" +
+                "[_][_][_][_][_][_][_][_][_]<_>\n" +
+                "[_][_][_][_][_][_][_][_][_]<_>\n" +
+                "[_][_][_][1][_][_][_][_][_]<_>\n" +
+                "[_][_][_][_][_][_][_][_][_]<_>\n" +
+                "[_][_][_][_][1][_][_][_][_]<_>\n" +
+                "[_][_][_][_][_][_][_][_][_]<1>\n" +
+                "[_][_][_][_][_][_][_][_][_]<_>\n\n";
+        assertEquals(expected, output);
     }
 }
