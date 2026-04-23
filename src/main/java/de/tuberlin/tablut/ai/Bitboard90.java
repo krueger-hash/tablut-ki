@@ -106,6 +106,7 @@ Grundsätzliche Ideen im Code:
         }
     }
 
+
     /////////////////////////////////////////////////////////////////////////////
     /// Logische Operationen
     /////////////////////////////////////////////////////////////////////////////
@@ -223,12 +224,24 @@ Grundsätzliche Ideen im Code:
     /////////////////////////////////////////////////////////////////////////////
     /// Quality of Life Operationen
     /////////////////////////////////////////////////////////////////////////////
-
     static boolean getBitAsMatrix(Bitboard90 bb, int row, int col){
         return getBit(bb,col+row*cols);
     }
     static void setBitAsMatrix(Bitboard90 bb,int row, int col){
         setBit(bb,col+row*cols);
+    }
+    //Prüfe Bits auf benachbarten Feldern: NESW, Ausgangsfeld als Matrix
+    static boolean getBitAsMatrix_N(Bitboard90 bb, int row, int col){
+        return getBit(bb,col+row*cols - cols);
+    }
+    static boolean getBitAsMatrix_E(Bitboard90 bb, int row, int col){
+        return getBit(bb,col+row*cols + 1);
+    }
+    static boolean getBitAsMatrix_S(Bitboard90 bb, int row, int col){
+        return getBit(bb,col+row*cols + cols);
+    }
+    static boolean getBitAsMatrix_W(Bitboard90 bb, int row, int col){
+        return getBit(bb,col+row*cols - 1);
     }
 
     static char[][] bbToMatrix(Bitboard90 bb){

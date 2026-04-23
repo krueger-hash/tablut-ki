@@ -65,6 +65,18 @@ public class Board {
     public Board(Bitboard90 white,
                  Bitboard90 whiteKing,
                  Bitboard90 black,
+                 Piece sideToMove) {
+
+        this.white = white;
+        this.whiteKing = whiteKing;
+        this.black = black;
+        this.sideToMove=sideToMove;
+        resetStalemateTracking();
+    }
+
+    public Board(Bitboard90 white,
+                 Bitboard90 whiteKing,
+                 Bitboard90 black,
                  Bitboard90 blockedPieces,
                  Bitboard90 throne) {
 
@@ -432,7 +444,7 @@ public class Board {
             return true;
         }
 
-        // *wiederholte Stellung (Zyklenfreiheit),
+        // *wiederholte Stellung (strenge Zyklenfreiheit nur bei keiner erlaubten Wiederholung),
         if (positionCounts.getOrDefault(currentPositionKey(), 0) >= STALEMATE_REPETITION_LIMIT) {
             return true;
         }
@@ -505,4 +517,57 @@ public class Board {
     private Piece oppositeSide(Piece side) {
         return toSide(side) == Piece.BLACK ? Piece.WHITE : Piece.BLACK;
     }
+
+    static Board fenToBoard(String fen){
+        String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist)
+
+        //Boardzustand bauen
+        Bitboard90 white = new Bitboard90();
+        Bitboard90 whiteKing = new Bitboard90();
+        Bitboard90 black = new Bitboard90();
+
+        String positions = parts[0]; // Boardzustand ist erster Teil des FEN-Strings
+        String[] rows = positions.split("/"); // Split um die Zeilentrenner
+        for(int row = 0; row <9;row++){
+            String rowString = rows[row];
+            int col = 0;
+            for (char c : rowString.toCharArray()){ // Schleife über alle Zeichen in rowString
+                if (c == 'K' || c=='k'){
+                    Bitboard90.setBitAsMatrix(whiteKing,row,col);
+                    col++;
+                }
+                else if (c == 'w' || c == 'W'){
+                    Bitboard90.setBitAsMatrix(white,row,col);
+                    col++;
+                }
+                else if (c == 'b' || c == 'B' || c=='s'|| c=='S'){
+                    Bitboard90.setBitAsMatrix(black,row,col);
+                    col++;
+                }
+                else if (Character.isDigit(c)){
+                    col += (c-'0'); // wenn c eine Zahl ist, dann kann col einfach um die Anzahl lehrer Spalten weitergeschoben werden; c-'0' um den tatsächlichen Zahlenwert zu kriegen
+                }
+                else {
+                    throw new IllegalArgumentException("undefiniertes Symbol im FEN: "+ c);
+                }
+            }
+        }
+
+        // Zugspieler auslesen
+        Piece sideToMove;
+        String side = parts[1];
+        if (side.equals("b") || side.equals("B") || side.equals("s") || side.equals("S")){
+            sideToMove = Piece.BLACK;
+        }
+        else if (side.equals("w") || side.equals("W")){
+            sideToMove = Piece.WHITE;
+        }
+        else {
+            throw new IllegalArgumentException ("undefinierter Symbol für Startseite: "+ side);
+        }
+        return new Board(white,whiteKing,black,sideToMove);
+    }
+
+
 }
+
