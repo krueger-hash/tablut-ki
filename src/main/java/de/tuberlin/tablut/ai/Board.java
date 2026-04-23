@@ -20,11 +20,11 @@ public class Board {
     public long blockedLow = (1L << 0) | (1L << 8);
     public long blockedHigh = (1L << 16) | (1L << 24);
 
-    public Bitboard90 white = new Bitboard90(whiteLow, whiteHigh);
-    public Bitboard90 whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
-    public Bitboard90 black = new Bitboard90(blackLow, blackHigh);
-    public Bitboard90 blockedPieces = new Bitboard90(blockedLow, blockedHigh);
-    public Bitboard90 throne = new Bitboard90((1L << 44), 0L);
+    public Bitboard90 white;
+    public Bitboard90 whiteKing;
+    public Bitboard90 black;
+    public Bitboard90 blockedPieces;
+    public Bitboard90 throne;
 
     private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
     private static final int STALEMATE_REPETITION_LIMIT = 3;
@@ -61,13 +61,23 @@ public class Board {
         resetStalemateTracking();
     }
 
-    //Beliebige Aufstellungen:
     public Board(Bitboard90 white,
                  Bitboard90 whiteKing,
                  Bitboard90 black,
                  Bitboard90 blockedPieces,
                  Bitboard90 throne) {
+        // Set the side to move to black
+        this(white, whiteKing, black, blockedPieces, throne, Player.BLACK);
+    }
 
+    //Beliebige Aufstellungen:
+    public Board(Bitboard90 white,
+                 Bitboard90 whiteKing,
+                 Bitboard90 black,
+                 Bitboard90 blockedPieces,
+                 Bitboard90 throne,
+                 Player sideToMove) {
+        this.sideToMove = sideToMove;
         this.white = new Bitboard90(white.low, white.high);
         this.whiteKing = new Bitboard90(whiteKing.low, whiteKing.high);
         this.black = new Bitboard90(black.low, black.high);
@@ -75,20 +85,6 @@ public class Board {
         this.throne = new Bitboard90(throne.low, throne.high);
         resetStalemateTracking();
     }
-
-    //anderes Board kopieren:
-    public Board(Board other) {
-        this.white = new Bitboard90(other.white.low, other.white.high);
-        this.whiteKing = new Bitboard90(other.whiteKing.low, other.whiteKing.high);
-        this.black = new Bitboard90(other.black.low, other.black.high);
-        this.blockedPieces = new Bitboard90(other.blockedPieces.low, other.blockedPieces.high);
-        this.throne = new Bitboard90(other.throne.low, other.throne.high);
-        this.sideToMove = other.sideToMove;
-        this.movesWithoutCapture = other.movesWithoutCapture;
-        this.stalemateTrackingInitialized = other.stalemateTrackingInitialized;
-        this.positionCounts.putAll(other.positionCounts);
-    }
-
 
     void main() {
         Bitboard90.printBBToConsole(white);
@@ -101,6 +97,22 @@ public class Board {
         System.out.println();
         Bitboard90.printBBToConsole(throne);
         printBoard();
+    }
+
+    // This method creates a new deep copy of a given board
+    public static Board deepCopy(Board board){
+        Board copy = new Board(
+                new Bitboard90(board.white.low, board.white.high),
+                new Bitboard90(board.whiteKing.low, board.whiteKing.high),
+                new Bitboard90(board.black.low, board.black.high),
+                new Bitboard90(board.blockedPieces.low, board.blockedPieces.high),
+                new Bitboard90(board.throne.low, board.throne.high),
+                board.sideToMove
+        );
+        copy.movesWithoutCapture = board.movesWithoutCapture;
+        copy.stalemateTrackingInitialized = board.stalemateTrackingInitialized;
+        copy.positionCounts.putAll(board.positionCounts);
+        return copy;
     }
 
 
