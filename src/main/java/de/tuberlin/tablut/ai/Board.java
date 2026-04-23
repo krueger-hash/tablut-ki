@@ -17,15 +17,17 @@ public class Board {
             (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
     public long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
 
-    public long blockedLow = (1L << 0) | (1L << 8);
-    public long blockedHigh = (1L << 16) | (1L << 24);
+    public static final long BLOCKED_LOW = (1L << 0) | (1L << 8);
+    public static final long BLOCKED_HIGH = (1L << 16) | (1L << 24);
+
 
     public Bitboard90 white;
     public Bitboard90 whiteKing;
     public Bitboard90 black;
-    public Bitboard90 blockedPieces;
-    public Bitboard90 throne;
 
+
+    public static final Bitboard90 BLOCKED_PIECES = new Bitboard90(BLOCKED_LOW, BLOCKED_HIGH);
+    public static final  Bitboard90 THRONE = new Bitboard90(1L << 44, 0L);
     private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
     private static final int STALEMATE_REPETITION_LIMIT = 3;
 
@@ -42,10 +44,6 @@ public class Board {
             long whiteKingHigh,
             long blackLow,
             long blackHigh,
-            long blockedLow,
-            long blockedHigh,
-            long throneLow,
-            long throneHigh,
             Player sideToMove
     ) {
     }
@@ -56,33 +54,25 @@ public class Board {
         this.white = new Bitboard90(whiteLow, whiteHigh);
         this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
         this.black = new Bitboard90(blackLow, blackHigh);
-        this.blockedPieces = new Bitboard90(blockedLow, blockedHigh);
-        this.throne = new Bitboard90(1L << 44, 0L);
         resetStalemateTracking();
     }
 
     public Board(Bitboard90 white,
                  Bitboard90 whiteKing,
-                 Bitboard90 black,
-                 Bitboard90 blockedPieces,
-                 Bitboard90 throne) {
+                 Bitboard90 black) {
         // Set the side to move to black
-        this(white, whiteKing, black, blockedPieces, throne, Player.BLACK);
+        this(white, whiteKing, black, Player.BLACK);
     }
 
     //Beliebige Aufstellungen:
     public Board(Bitboard90 white,
                  Bitboard90 whiteKing,
                  Bitboard90 black,
-                 Bitboard90 blockedPieces,
-                 Bitboard90 throne,
                  Player sideToMove) {
         this.sideToMove = sideToMove;
         this.white = new Bitboard90(white.low, white.high);
         this.whiteKing = new Bitboard90(whiteKing.low, whiteKing.high);
         this.black = new Bitboard90(black.low, black.high);
-        this.blockedPieces = new Bitboard90(blockedPieces.low, blockedPieces.high);
-        this.throne = new Bitboard90(throne.low, throne.high);
         resetStalemateTracking();
     }
 
@@ -93,9 +83,9 @@ public class Board {
         System.out.println();
         Bitboard90.printBBToConsole(black);
         System.out.println();
-        Bitboard90.printBBToConsole(blockedPieces);
+        Bitboard90.printBBToConsole(BLOCKED_PIECES);
         System.out.println();
-        Bitboard90.printBBToConsole(throne);
+        Bitboard90.printBBToConsole(THRONE);
         printBoard();
     }
 
@@ -105,8 +95,6 @@ public class Board {
                 new Bitboard90(board.white.low, board.white.high),
                 new Bitboard90(board.whiteKing.low, board.whiteKing.high),
                 new Bitboard90(board.black.low, board.black.high),
-                new Bitboard90(board.blockedPieces.low, board.blockedPieces.high),
-                new Bitboard90(board.throne.low, board.throne.high),
                 board.sideToMove
         );
         copy.movesWithoutCapture = board.movesWithoutCapture;
@@ -122,8 +110,8 @@ public class Board {
         if (Bitboard90.getBit(whiteKing, pos)) return Piece.KING;
         if (Bitboard90.getBit(white, pos)) return Piece.WHITE;
         if (Bitboard90.getBit(black, pos)) return Piece.BLACK;
-        if (Bitboard90.getBit(blockedPieces, pos)) return Piece.BLOCKED;
-        if (Bitboard90.getBit(throne, pos)) return Piece.THRONE;
+        if (Bitboard90.getBit(BLOCKED_PIECES, pos)) return Piece.BLOCKED;
+        if (Bitboard90.getBit(THRONE, pos)) return Piece.THRONE;
 
         return Piece.EMPTY;
     }
@@ -166,32 +154,32 @@ public class Board {
 
             if (getPieceAt(pos - 1) == Piece.BLACK &&
                     (getPieceAt(pos - 2) == Piece.WHITE || getPieceAt(pos - 2) == Piece.KING
-                            || Bitboard90.getBit(blockedPieces, pos - 2)
-                            || (Bitboard90.getBit(throne, pos - 2) && throneEmpty))) {
+                            || Bitboard90.getBit(BLOCKED_PIECES, pos - 2)
+                            || (Bitboard90.getBit(THRONE, pos - 2) && throneEmpty))) {
                 Bitboard90.removeBit(black, pos - 1);
                 hitPiece.add(Piece.BLACK);
             }
 
             if (getPieceAt(pos + 1) == Piece.BLACK &&
                     (getPieceAt(pos + 2) == Piece.WHITE || getPieceAt(pos + 2) == Piece.KING
-                            || Bitboard90.getBit(blockedPieces, pos + 2)
-                            || (Bitboard90.getBit(throne, pos + 2) && throneEmpty))) {
+                            || Bitboard90.getBit(BLOCKED_PIECES, pos + 2)
+                            || (Bitboard90.getBit(THRONE, pos + 2) && throneEmpty))) {
                 Bitboard90.removeBit(black, pos + 1);
                 hitPiece.add(Piece.BLACK);
             }
 
             if (getPieceAt(pos - 10) == Piece.BLACK &&
                     (getPieceAt(pos - 20) == Piece.WHITE || getPieceAt(pos - 20) == Piece.KING
-                            || Bitboard90.getBit(blockedPieces, pos - 20)
-                            || (Bitboard90.getBit(throne, pos - 20) && throneEmpty))) {
+                            || Bitboard90.getBit(BLOCKED_PIECES, pos - 20)
+                            || (Bitboard90.getBit(THRONE, pos - 20) && throneEmpty))) {
                 Bitboard90.removeBit(black, pos - 10);
                 hitPiece.add(Piece.BLACK);
             }
 
             if (getPieceAt(pos + 10) == Piece.BLACK &&
                     (getPieceAt(pos + 20) == Piece.WHITE || getPieceAt(pos + 20) == Piece.KING
-                            || Bitboard90.getBit(blockedPieces, pos + 20)
-                            || (Bitboard90.getBit(throne, pos + 20) && throneEmpty))) {
+                            || Bitboard90.getBit(BLOCKED_PIECES, pos + 20)
+                            || (Bitboard90.getBit(THRONE, pos + 20) && throneEmpty))) {
                 Bitboard90.removeBit(black, pos + 10);
                 hitPiece.add(Piece.BLACK);
             }
@@ -201,32 +189,32 @@ public class Board {
             //normale weiße Steine
             if (getPieceAt(pos - 1) == Piece.WHITE &&
                     (getPieceAt(pos - 2) == Piece.BLACK
-                            || Bitboard90.getBit(blockedPieces, pos - 2)
-                            || (Bitboard90.getBit(throne, pos - 2) && throneEmpty))) {
+                            || Bitboard90.getBit(BLOCKED_PIECES, pos - 2)
+                            || (Bitboard90.getBit(THRONE, pos - 2) && throneEmpty))) {
                 Bitboard90.removeBit(white, pos - 1);
                 hitPiece.add(Piece.WHITE);
             }
 
             if (getPieceAt(pos + 1) == Piece.WHITE &&
                     (getPieceAt(pos + 2) == Piece.BLACK
-                            || Bitboard90.getBit(blockedPieces, pos + 2)
-                            || (Bitboard90.getBit(throne, pos + 2) && throneEmpty))) {
+                            || Bitboard90.getBit(BLOCKED_PIECES, pos + 2)
+                            || (Bitboard90.getBit(THRONE, pos + 2) && throneEmpty))) {
                 Bitboard90.removeBit(white, pos + 1);
                 hitPiece.add(Piece.WHITE);
             }
 
             if (getPieceAt(pos - 10) == Piece.WHITE &&
                     (getPieceAt(pos - 20) == Piece.BLACK
-                            || Bitboard90.getBit(blockedPieces, pos - 20)
-                            || (Bitboard90.getBit(throne, pos - 20) && throneEmpty))) {
+                            || Bitboard90.getBit(BLOCKED_PIECES, pos - 20)
+                            || (Bitboard90.getBit(THRONE, pos - 20) && throneEmpty))) {
                 Bitboard90.removeBit(white, pos - 10);
                 hitPiece.add(Piece.WHITE);
             }
 
             if (getPieceAt(pos + 10) == Piece.WHITE &&
                     (getPieceAt(pos + 20) == Piece.BLACK
-                            || Bitboard90.getBit(blockedPieces, pos + 20)
-                            || (Bitboard90.getBit(throne, pos + 20) && throneEmpty))) {
+                            || Bitboard90.getBit(BLOCKED_PIECES, pos + 20)
+                            || (Bitboard90.getBit(THRONE, pos + 20) && throneEmpty))) {
                 Bitboard90.removeBit(white, pos + 10);
                 hitPiece.add(Piece.WHITE);
             }
@@ -253,8 +241,8 @@ public class Board {
             //klassisches Schlagen des Königs zwischen 2 Steinen
             if (getPieceAt(pos - 1) == Piece.KING
                     && (getPieceAt(pos - 2) == Piece.BLACK
-                    || Bitboard90.getBit(blockedPieces, pos - 2)
-                    || (Bitboard90.getBit(throne, pos - 2) && throneEmpty))
+                    || Bitboard90.getBit(BLOCKED_PIECES, pos - 2)
+                    || (Bitboard90.getBit(THRONE, pos - 2) && throneEmpty))
                     && (pos - 1 != 34 && pos - 1 != 43 && pos - 1 != 44 && pos - 1 != 45 && pos - 1 != 54)) {
                 Bitboard90.removeBit(whiteKing, pos - 1);
                 hitPiece.add(Piece.KING);
@@ -262,8 +250,8 @@ public class Board {
 
             if (getPieceAt(pos + 1) == Piece.KING
                     && (getPieceAt(pos + 2) == Piece.BLACK
-                    || Bitboard90.getBit(blockedPieces, pos + 2)
-                    || (Bitboard90.getBit(throne, pos + 2) && throneEmpty))
+                    || Bitboard90.getBit(BLOCKED_PIECES, pos + 2)
+                    || (Bitboard90.getBit(THRONE, pos + 2) && throneEmpty))
                     && (pos + 1 != 34 && pos + 1 != 43 && pos + 1 != 44 && pos + 1 != 45 && pos + 1 != 54)) {
                 Bitboard90.removeBit(whiteKing, pos + 1);
                 hitPiece.add(Piece.KING);
@@ -271,8 +259,8 @@ public class Board {
 
             if (getPieceAt(pos - 10) == Piece.KING
                     && (getPieceAt(pos - 20) == Piece.BLACK
-                    || Bitboard90.getBit(blockedPieces, pos - 20)
-                    || (Bitboard90.getBit(throne, pos - 20) && throneEmpty))
+                    || Bitboard90.getBit(BLOCKED_PIECES, pos - 20)
+                    || (Bitboard90.getBit(THRONE, pos - 20) && throneEmpty))
                     && (pos - 10 != 34 && pos - 10 != 43 && pos - 10 != 44 && pos - 10 != 45 && pos - 10 != 54)) {
                 Bitboard90.removeBit(whiteKing, pos - 10);
                 hitPiece.add(Piece.KING);
@@ -280,8 +268,8 @@ public class Board {
 
             if (getPieceAt(pos + 10) == Piece.KING
                     && (getPieceAt(pos + 20) == Piece.BLACK
-                    || Bitboard90.getBit(blockedPieces, pos + 20)
-                    || (Bitboard90.getBit(throne, pos + 20) && throneEmpty))
+                    || Bitboard90.getBit(BLOCKED_PIECES, pos + 20)
+                    || (Bitboard90.getBit(THRONE, pos + 20) && throneEmpty))
                     && (pos + 10 != 34 && pos + 10 != 43 && pos + 10 != 44 && pos + 10 != 45 && pos + 10 != 54)) {
                 Bitboard90.removeBit(whiteKing, pos + 10);
                 hitPiece.add(Piece.KING);
@@ -330,7 +318,7 @@ public class Board {
                     symbol = 'B';
                 } else if (piece == Piece.BLOCKED) {
                     symbol = 'X';
-                } else if (Bitboard90.getBit(throne, pos)) {
+                } else if (Bitboard90.getBit(THRONE, pos)) {
                     symbol = 'T';
                 } else {
                     symbol = '.';
@@ -358,7 +346,7 @@ public class Board {
 
         Bitboard90 occupied = Bitboard90.or(
                 Bitboard90.or(white, whiteKing),
-                Bitboard90.or(black, blockedPieces)
+                Bitboard90.or(black, BLOCKED_PIECES)
         );
 
         List<Move> moves = new ArrayList<>();
@@ -421,7 +409,7 @@ public class Board {
 
      boolean hasWhiteWon(){
         //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. es existiert ein gesetztes Bit
-        int bitCount = Bitboard90.and(whiteKing, blockedPieces).bitCount();
+        int bitCount = Bitboard90.and(whiteKing, BLOCKED_PIECES).bitCount();
         if (bitCount == 1) {
             return true;
         }
@@ -499,10 +487,6 @@ public class Board {
                 whiteKing.high,
                 black.low,
                 black.high,
-                blockedPieces.low,
-                blockedPieces.high,
-                throne.low,
-                throne.high,
                 sideToMove
         );
     }

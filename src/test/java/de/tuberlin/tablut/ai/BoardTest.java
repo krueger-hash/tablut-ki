@@ -27,7 +27,7 @@ public class BoardTest {
         Bitboard90 blocked = new Bitboard90(bloLow, bloHigh);
         Bitboard90 throne = new Bitboard90(1L << 44, 0);
 
-        return new Board(white, king, black, blocked, throne);
+        return new Board(white, king, black);
     }
 
 
@@ -50,7 +50,8 @@ public class BoardTest {
         assertEquals(Piece.BLACK, board.getPieceAt(65), "Black stone expected at pos 20");
         assertEquals(Piece.KING, board.getPieceAt(30), "King expected at pos 30");
         assertEquals(Piece.BLOCKED, board.getPieceAt(80), "Blocked field expected at pos 40");
-        assertEquals(Piece.EMPTY, board.getPieceAt(0), "Empty field expected at pos 0");
+        // 2026-04-23 changed from 0 to 1, since blockedPieces is now a static field
+        assertEquals(Piece.EMPTY, board.getPieceAt(1), "Empty field expected at pos 0");
         assertEquals(Piece.THRONE, board.getPieceAt(44), "Throne field expected at pos 0");
     }
 
