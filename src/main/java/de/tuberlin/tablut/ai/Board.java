@@ -188,7 +188,7 @@ public class Board {
 
             //normale weiße Steine
             if (getPieceAt(pos - 1) == Piece.WHITE &&
-                    (getPieceAt(pos - 2) == Piece.BLACK || getPieceAt(pos - 2) == Piece.KING
+                    (getPieceAt(pos - 2) == Piece.BLACK
                             || Bitboard90.getBit(blockedPieces, pos - 2)
                             || (Bitboard90.getBit(throne, pos - 2) && throneEmpty))) {
                 Bitboard90.removeBit(white, pos - 1);
@@ -196,7 +196,7 @@ public class Board {
             }
 
             if (getPieceAt(pos + 1) == Piece.WHITE &&
-                    (getPieceAt(pos + 2) == Piece.BLACK || getPieceAt(pos + 2) == Piece.KING
+                    (getPieceAt(pos + 2) == Piece.BLACK
                             || Bitboard90.getBit(blockedPieces, pos + 2)
                             || (Bitboard90.getBit(throne, pos + 2) && throneEmpty))) {
                 Bitboard90.removeBit(white, pos + 1);
@@ -204,7 +204,7 @@ public class Board {
             }
 
             if (getPieceAt(pos - 10) == Piece.WHITE &&
-                    (getPieceAt(pos - 20) == Piece.BLACK || getPieceAt(pos - 20) == Piece.KING
+                    (getPieceAt(pos - 20) == Piece.BLACK
                             || Bitboard90.getBit(blockedPieces, pos - 20)
                             || (Bitboard90.getBit(throne, pos - 20) && throneEmpty))) {
                 Bitboard90.removeBit(white, pos - 10);
@@ -212,7 +212,7 @@ public class Board {
             }
 
             if (getPieceAt(pos + 10) == Piece.WHITE &&
-                    (getPieceAt(pos + 20) == Piece.BLACK || getPieceAt(pos + 20) == Piece.KING
+                    (getPieceAt(pos + 20) == Piece.BLACK
                             || Bitboard90.getBit(blockedPieces, pos + 20)
                             || (Bitboard90.getBit(throne, pos + 20) && throneEmpty))) {
                 Bitboard90.removeBit(white, pos + 10);
@@ -276,19 +276,19 @@ public class Board {
             }
 
             //normales Schlagen von Steinen
-            if (getPieceAt(pos - 1) == Piece.WHITE && (getPieceAt(pos - 2) == Piece.BLACK || getPieceAt(pos - 2) == Piece.KING)) {
+            if (getPieceAt(pos - 1) == Piece.WHITE && (getPieceAt(pos - 2) == Piece.BLACK)) {
                 Bitboard90.removeBit(white, pos - 1);
                 hitPiece.add(Piece.WHITE);
             }
-            if (getPieceAt(pos + 1) == Piece.WHITE && (getPieceAt(pos + 2) == Piece.BLACK || getPieceAt(pos + 2) == Piece.KING)) {
+            if (getPieceAt(pos + 1) == Piece.WHITE && (getPieceAt(pos + 2) == Piece.BLACK)) {
                 Bitboard90.removeBit(white, pos + 1);
                 hitPiece.add(Piece.WHITE);
             }
-            if (getPieceAt(pos - 10) == Piece.WHITE && (getPieceAt(pos - 20) == Piece.BLACK || getPieceAt(pos - 20) == Piece.KING)) {
+            if (getPieceAt(pos - 10) == Piece.WHITE && (getPieceAt(pos - 20) == Piece.BLACK)) {
                 Bitboard90.removeBit(white, pos - 10);
                 hitPiece.add(Piece.WHITE);
             }
-            if (getPieceAt(pos + 10) == Piece.WHITE && (getPieceAt(pos + 20) == Piece.BLACK || getPieceAt(pos + 20) == Piece.KING)) {
+            if (getPieceAt(pos + 10) == Piece.WHITE && (getPieceAt(pos + 20) == Piece.BLACK)) {
                 Bitboard90.removeBit(white, pos + 10);
                 hitPiece.add(Piece.WHITE);
             }
