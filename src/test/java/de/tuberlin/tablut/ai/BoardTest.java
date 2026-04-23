@@ -381,7 +381,7 @@ public class BoardTest {
                 (1L << 0) | (1L << 8), (1L << 16) | (1L << 24) // blocked corners
         );
 
-        Move[] moves = board.generateLegalMoves(board.whiteKing, Piece.KING);
+        Move[] moves = board.generateLegalMoves(board.whiteKing, Player.WHITE);
         assertEquals(16, moves.length, "King at center should have 16 rook-like moves");
         assertTrue(Arrays.stream(moves).allMatch(m -> m.movedPiece == Piece.KING));
         assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 4));   // north edge

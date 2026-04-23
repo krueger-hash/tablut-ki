@@ -30,7 +30,7 @@ public class Board {
     private static final int STALEMATE_REPETITION_LIMIT = 3;
 
     // In Tablut black (attackers) starts.
-    private Piece sideToMove = Piece.BLACK;
+    private Player sideToMove = Player.BLACK;
     private int movesWithoutCapture = 0;
     private boolean stalemateTrackingInitialized = false;
     private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
@@ -46,7 +46,7 @@ public class Board {
             long blockedHigh,
             long throneLow,
             long throneHigh,
-            Piece sideToMove
+            Player sideToMove
     ) {
     }
 
@@ -336,11 +336,11 @@ public class Board {
 
     // Calculates all possible moves for a given bitboard and player type.
     // This uses current global board occupancy (white/black/king/blocked).
-    public  Move[] generateLegalMoves(Bitboard90 board, Piece player) {
+    public  Move[] generateLegalMoves(Bitboard90 board, Player player) {
         if (board == null) {
             throw new IllegalArgumentException("Board bitboard must not be null");
         }
-        if (player == null || player == Piece.EMPTY || player == Piece.BLOCKED) {
+        if (player == null) {
             throw new IllegalArgumentException("Player must be WHITE, BLACK or KING");
         }
 
@@ -389,12 +389,9 @@ public class Board {
         return (pos % Bitboard90.cols) < (Bitboard90.cols - 1);
     }
 
-    private  Piece resolveMovedPiece(Piece player, int from) {
-        if (player == Piece.BLACK) {
+    private  Piece resolveMovedPiece(Player player, int from) {
+        if (player == Player.BLACK) {
             return Piece.BLACK;
-        }
-        if (player == Piece.KING) {
-            return Piece.KING;
         }
         if (Bitboard90.getBit(whiteKing, from)) {
             return Piece.KING;
@@ -442,11 +439,11 @@ public class Board {
     }
 
     public void resetStalemateTracking() {
-        resetStalemateTracking(Piece.BLACK);
+        resetStalemateTracking(Player.BLACK);
     }
 
-    public void resetStalemateTracking(Piece sideToMove) {
-        this.sideToMove = toSide(sideToMove);
+    public void resetStalemateTracking(Player sideToMove) {
+        this.sideToMove = sideToMove;
         this.movesWithoutCapture = 0;
         this.stalemateTrackingInitialized = false;
         this.positionCounts.clear();
@@ -469,17 +466,17 @@ public class Board {
 
         boolean captureOccurred = hitPieces != null && !hitPieces.isEmpty();
         movesWithoutCapture = captureOccurred ? 0 : movesWithoutCapture + 1;
-        sideToMove = oppositeSide(toSide(move.movedPiece));
+        sideToMove = oppositeSide(move.movedPiece==Piece.BLACK?Player.BLACK:Player.WHITE);
 
         positionCounts.merge(currentPositionKey(), 1, Integer::sum);
     }
 
     private boolean hasNoLegalMovesForSideToMove() {
-        if (toSide(sideToMove) == Piece.BLACK) {
-            return generateLegalMoves(black, Piece.BLACK).length == 0;
+        if (sideToMove == Player.BLACK) {
+            return generateLegalMoves(black, Player.BLACK).length == 0;
         }
         Bitboard90 whiteSide = Bitboard90.or(white, whiteKing);
-        return generateLegalMoves(whiteSide, Piece.WHITE).length == 0;
+        return generateLegalMoves(whiteSide, Player.WHITE).length == 0;
     }
 
     private PositionKey currentPositionKey() {
@@ -494,15 +491,11 @@ public class Board {
                 blockedPieces.high,
                 throne.low,
                 throne.high,
-                toSide(sideToMove)
+                sideToMove
         );
     }
 
-    private Piece toSide(Piece side) {
-        return side == Piece.BLACK ? Piece.BLACK : Piece.WHITE;
-    }
-
-    private Piece oppositeSide(Piece side) {
-        return toSide(side) == Piece.BLACK ? Piece.WHITE : Piece.BLACK;
+    private Player oppositeSide(Player side) {
+        return side == Player.BLACK ? Player.WHITE : Player.BLACK;
     }
 }
