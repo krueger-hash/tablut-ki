@@ -83,13 +83,13 @@ public class TablutRandomGameLoop {
         }
     }
 
-    private static void parseConfig (String message) {
-        if(message.startsWith("set time_account")){
-
-        }else(message.startsWith("set start_pos")){
-
-        }
-    }
+//    private static void parseConfig (String message) {
+//        if(message.startsWith("set time_account")){
+//
+//        }else(message.startsWith("set start_pos")){
+//
+//        }
+//    }
 
     public static void run(String[] args) {
         try {
