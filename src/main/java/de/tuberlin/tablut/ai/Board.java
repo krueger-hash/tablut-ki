@@ -432,6 +432,18 @@ public class Board {
                 for (int direction : directions) {
                     int to = from + direction;
                     while (isLegalMoveTarget(from, to, direction)) {
+                        // Only the empty throne may be crossed.
+                        if (Bitboard90.getBit(THRONE, to) && !Bitboard90.getBit(board.whiteKing, to)) {
+                            to += direction;
+                            continue;
+                        }
+                        // King is allowed to go to one of the four blocked edge squares
+                        if (Bitboard90.getBit(BLOCKED_PIECES, to)) {
+                            if (movedPiece == Piece.KING) {
+                                moves.add(new Move(from, to, movedPiece));
+                            }
+                            break;
+                        }
                         if (Bitboard90.getBit(occupied, to)) {
                             break;
                         }
