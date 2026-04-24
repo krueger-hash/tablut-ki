@@ -68,10 +68,8 @@ public class BoardTest {
                 0, 1L << 16            // blocked
         );
 
-        ArrayList<Hit> hit = new ArrayList<Hit>();
-
         Move move = new Move(10, 20, Piece.WHITE);
-        board.applyMove(move, hit);
+        board.applyMove(move);
 
         // Prüfen: alter Platz leer
         assertEquals(Piece.EMPTY, board.getPieceAt(10), "Old position should be empty");
@@ -96,7 +94,7 @@ public class BoardTest {
 
 
         Move move = new Move(44, 54, Piece.KING);
-        board.applyMove(move, hit);
+        board.applyMove(move);
 
         // Prüfen: alter Platz leer
         assertEquals(Piece.THRONE, board.getPieceAt(44), "Throne should be empty after king moves");
@@ -119,7 +117,7 @@ public class BoardTest {
         ArrayList<Hit> hit = new ArrayList<Hit>();
 
         Move move = new Move(30, 40, Piece.BLACK);
-        board.applyMove(move, hit);
+        board.applyMove(move);
 
         assertEquals(Piece.EMPTY, board.getPieceAt(30));
         assertEquals(Piece.BLACK, board.getPieceAt(40));

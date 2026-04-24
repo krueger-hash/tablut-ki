@@ -118,7 +118,8 @@ public class Board {
 
 
     //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
-    public void applyMove(Move move, ArrayList<Hit> hits) {
+    public void applyMove(Move move) {
+        ArrayList<Hit> hits = checkHit(move);
         if (move.movedPiece == Piece.KING) {
             if (getPieceAt(move.from) == Piece.KING && getPieceAt(move.to) == Piece.EMPTY) {
                 Bitboard90.removeBit(whiteKing, move.from);
@@ -570,7 +571,7 @@ public class Board {
         );
     }
 
-    private static Player oppositeSide(Player side) {
+    public static Player oppositeSide(Player side) {
         return side == Player.BLACK ? Player.WHITE : Player.BLACK;
     }
 }
