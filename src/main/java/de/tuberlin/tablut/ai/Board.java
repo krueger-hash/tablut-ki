@@ -508,7 +508,7 @@ public class Board {
         );
     }
 
-    private Player oppositeSide(Player side) {
+    private static Player oppositeSide(Player side) {
         return side == Player.BLACK ? Player.WHITE : Player.BLACK;
     }
 }
