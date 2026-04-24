@@ -393,4 +393,42 @@ class Bitboard90Test {
                 "[_][_][_][_][_][_][_][_][_]<_>\n\n";
         assertEquals(expected, output);
     }
+
+    @Test
+    void getBitAsMatrix_N(){
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,4,3);
+        assertTrue(Bitboard90.getBitAsMatrix_N(testBB,1,0));
+        assertTrue(Bitboard90.getBitAsMatrix_N(testBB,5,3));
+        assertFalse(Bitboard90.getBitAsMatrix_N(testBB,0,0));
+        assertFalse(Bitboard90.getBitAsMatrix_N(testBB,5,2));
+    }
+    @Test
+    void getBitAsMatrix_E(){
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,4,3);
+        assertTrue(Bitboard90.getBitAsMatrix_E(testBB,4,2));
+        assertFalse(Bitboard90.getBitAsMatrix_E(testBB,0,0));
+        assertFalse(Bitboard90.getBitAsMatrix_E(testBB,4,8));
+    }
+    @Test
+    void getBitAsMatrix_S(){
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,4,3);
+        assertTrue(Bitboard90.getBitAsMatrix_S(testBB,3,3));
+        assertFalse(Bitboard90.getBitAsMatrix_S(testBB,0,0));
+        assertFalse(Bitboard90.getBitAsMatrix_S(testBB,8,2));
+    }
+    @Test
+    void getBitAsMatrix_W(){
+        Bitboard90 testBB = new Bitboard90();
+        Bitboard90.setBitAsMatrix(testBB,0,0);
+        Bitboard90.setBitAsMatrix(testBB,4,3);
+        assertTrue(Bitboard90.getBitAsMatrix_W(testBB,0,1));
+        assertTrue(Bitboard90.getBitAsMatrix_W(testBB,4,4));
+        assertFalse(Bitboard90.getBitAsMatrix_W(testBB,0,0));
+    }
 }

@@ -69,10 +69,11 @@ public class Board {
                  Bitboard90 whiteKing,
                  Bitboard90 black,
                  Player sideToMove) {
-        this.sideToMove = sideToMove;
-        this.white = new Bitboard90(white.low, white.high);
-        this.whiteKing = new Bitboard90(whiteKing.low, whiteKing.high);
-        this.black = new Bitboard90(black.low, black.high);
+
+        this.white = white;
+        this.whiteKing = whiteKing;
+        this.black = black;
+        this.sideToMove=sideToMove;
         resetStalemateTracking();
     }
 
@@ -574,4 +575,61 @@ public class Board {
     public static Player oppositeSide(Player side) {
         return side == Player.BLACK ? Player.WHITE : Player.BLACK;
     }
+
+    private Piece oppositeSide(Piece side) {
+        return side == Piece.BLACK ? Piece.WHITE : Piece.BLACK;
+    }
+
+    static Board fenToBoard(String fen){
+        String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist)
+
+        //Boardzustand bauen
+        Bitboard90 white = new Bitboard90();
+        Bitboard90 whiteKing = new Bitboard90();
+        Bitboard90 black = new Bitboard90();
+
+        String positions = parts[0]; // Boardzustand ist erster Teil des FEN-Strings
+        String[] rows = positions.split("/"); // Split um die Zeilentrenner
+        for(int row = 0; row <9;row++){
+            String rowString = rows[row];
+            int col = 0;
+            for (char c : rowString.toCharArray()){ // Schleife über alle Zeichen in rowString
+                if (c == 'K' || c=='k'){
+                    Bitboard90.setBitAsMatrix(whiteKing,row,col);
+                    col++;
+                }
+                else if (c == 'w' || c == 'W'){
+                    Bitboard90.setBitAsMatrix(white,row,col);
+                    col++;
+                }
+                else if (c == 'b' || c == 'B' || c=='s'|| c=='S'){
+                    Bitboard90.setBitAsMatrix(black,row,col);
+                    col++;
+                }
+                else if (Character.isDigit(c)){
+                    col += (c-'0'); // wenn c eine Zahl ist, dann kann col einfach um die Anzahl lehrer Spalten weitergeschoben werden; c-'0' um den tatsächlichen Zahlenwert zu kriegen
+                }
+                else {
+                    throw new IllegalArgumentException("undefiniertes Symbol im FEN: "+ c);
+                }
+            }
+        }
+
+        // Zugspieler auslesen
+        Player sideToMove;
+        String side = parts[1];
+        if (side.equals("b") || side.equals("B") || side.equals("s") || side.equals("S")){
+            sideToMove = Player.BLACK;
+        }
+        else if (side.equals("w") || side.equals("W")){
+            sideToMove = Player.WHITE;
+        }
+        else {
+            throw new IllegalArgumentException ("undefinierter Symbol für Startseite: "+ side);
+        }
+        return new Board(white,whiteKing,black,sideToMove);
+    }
+
+
 }
+
