@@ -32,7 +32,7 @@ public class Board {
     private static final int STALEMATE_REPETITION_LIMIT = 3;
 
     // In Tablut black (attackers) starts.
-    private Player sideToMove = Player.BLACK;
+    public Player sideToMove = Player.BLACK;
     private int movesWithoutCapture = 0;
     private boolean stalemateTrackingInitialized = false;
     private final Map<PositionKey, Integer> positionCounts = new HashMap<>();

@@ -1,0 +1,22 @@
+package de.tuberlin.tablut.ai;
+
+import org.junit.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+
+public class PerftTest {
+    @Test
+    public void testIsPerftCorrectForStartPositionBlack() {
+        String transformedFen = "3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0 1".replace("r","s").replace("R","w");
+        Board board = Board.fenToBoard(transformedFen);
+        assertEquals(72, PerformanceTest.perft(board,1, board.sideToMove), "Perft(1) should be 72 for base position black");
+    }
+
+    @Test
+    public void testIsPerftCorrectForStartPositionWhite() {
+        String transformedFen = "3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 w 0 1".replace("r","s").replace("R","w");
+        Board board = Board.fenToBoard(transformedFen);
+        assertEquals(56, PerformanceTest.perft(board,1, Player.WHITE), "Perft(1) should be 56 for base position white");
+    }
+}
