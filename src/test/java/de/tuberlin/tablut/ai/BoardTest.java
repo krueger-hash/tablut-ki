@@ -136,6 +136,7 @@ public class BoardTest {
 
         Move move = new Move(22, 12, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
         boolean containsBlack = false;
         for (Hit h : hits) {
@@ -158,6 +159,8 @@ public class BoardTest {
         Move move = new Move(22, 12, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
 
+        board.hit(hits);
+
         boolean containsBlack = false;
         for (Hit h : hits) {
             if (h.piece() == Piece.BLACK) containsBlack = true;
@@ -177,6 +180,8 @@ public class BoardTest {
 
         Move move = new Move(24, 34, Piece.BLACK);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         boolean containsKing = false;
         for (Hit h : hits) {
@@ -197,6 +202,8 @@ public class BoardTest {
 
         Move move = new Move(43, 33, Piece.BLACK);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         boolean containsKing = false;
         for (Hit h : hits) {
@@ -217,6 +224,8 @@ public class BoardTest {
 
         Move move = new Move(22, 12, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         assertEquals(2, hits.size());
         assertEquals(Piece.EMPTY, board.getPieceAt(11));
@@ -234,6 +243,8 @@ public class BoardTest {
 
         Move move = new Move(3, 2, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         boolean containsBlack = false;
         for (Hit h : hits) {
@@ -255,6 +266,8 @@ public class BoardTest {
 
         Move move = new Move(41, 42, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         boolean containsBlack = false;
         for (Hit h : hits) {
@@ -275,6 +288,8 @@ public class BoardTest {
 
         Move move = new Move(23, 22, Piece.BLACK);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         boolean containsKing = false;
         for (Hit h : hits) {
@@ -295,6 +310,8 @@ public class BoardTest {
 
         Move move = new Move(40, 30, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         boolean containsBlack = false;
         for (Hit h : hits) {
@@ -316,6 +333,8 @@ public class BoardTest {
 
         Move move = new Move(12, 11, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         assertTrue(hits.isEmpty());
         assertEquals(Piece.BLACK, board.getPieceAt(10));
@@ -332,6 +351,8 @@ public class BoardTest {
 
         Move move = new Move(13, 12, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         assertTrue(hits.isEmpty());
         assertEquals(Piece.BLACK, board.getPieceAt(11));
@@ -348,6 +369,8 @@ public class BoardTest {
 
         Move move = new Move(47, 46, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         boolean containsBlack = false;
         for (Hit h : hits) {
@@ -369,6 +392,8 @@ public class BoardTest {
 
         Move move = new Move(47, 46, Piece.BLACK);
         ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
 
         assertTrue(hits.isEmpty());
         assertEquals(Piece.WHITE, board.getPieceAt(45));
