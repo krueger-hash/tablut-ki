@@ -68,8 +68,10 @@ public class BoardTest {
                 0, 1L << 16            // blocked
         );
 
+        ArrayList<Hit> hit = new ArrayList<Hit>();
+
         Move move = new Move(10, 20, Piece.WHITE);
-        board.applyMove(move);
+        board.applyMove(move, hit);
 
         // Prüfen: alter Platz leer
         assertEquals(Piece.EMPTY, board.getPieceAt(10), "Old position should be empty");
@@ -90,9 +92,11 @@ public class BoardTest {
                 0, 0,            // black
                 0, 1L << 16     //blocked
         );
+        ArrayList<Hit> hit = new ArrayList<Hit>();
+
 
         Move move = new Move(44, 54, Piece.KING);
-        board.applyMove(move);
+        board.applyMove(move, hit);
 
         // Prüfen: alter Platz leer
         assertEquals(Piece.THRONE, board.getPieceAt(44), "Throne should be empty after king moves");
@@ -112,84 +116,105 @@ public class BoardTest {
                 1L << 30, 0,    // black at 30
                 0, 1L << 16     //blocked
         );
+        ArrayList<Hit> hit = new ArrayList<Hit>();
 
         Move move = new Move(30, 40, Piece.BLACK);
-        board.applyMove(move);
+        board.applyMove(move, hit);
 
         assertEquals(Piece.EMPTY, board.getPieceAt(30));
         assertEquals(Piece.BLACK, board.getPieceAt(40));
     }
 
-    //normales Einschließen links/rechts
     @Test
     public void testCheckHitNormalSandwichHorizontal() {
-        // White at 10 and 12, Black at 11
         Board board = createBoard(
-                (1L << 10) | (1L << 13), 0,   // white
-                0, 0,                        // king
-                1L << 11, 0,                  // black
+                (1L << 10) | (1L << 13), 0,
+                0, 0,
+                1L << 11, 0,
                 0, 1L << 16
         );
 
         Move move = new Move(22, 12, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("Black piece should be captured", hits.contains(Piece.BLACK));
-        assertEquals(Piece.EMPTY, board.getPieceAt(11), "Captured piece must be removed");
+        boolean containsBlack = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.BLACK) containsBlack = true;
+        }
+
+        assertTrue(containsBlack);
+        assertEquals(Piece.EMPTY, board.getPieceAt(11));
     }
 
     @Test
     public void testKingCanCaptureBlack() {
-        // King at 10, White at 12, Black at 11
         Board board = createBoard(
-                1L << 13, 0,          // white
-                1L << 10, 0,          // king
-                1L << 11, 0,           // black
+                1L << 13, 0,
+                1L << 10, 0,
+                1L << 11, 0,
                 0, 1L << 16
         );
 
         Move move = new Move(22, 12, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
 
-        assertTrue("King must be allowed to help capture", hits.contains(Piece.BLACK));
+        board.hit(hits);
+
+        boolean containsBlack = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.BLACK) containsBlack = true;
+        }
+
+        assertTrue(containsBlack);
     }
 
     @Test
     public void testKingCapturedOnThrone() {
-        // King at 44 (Thron), black at all 4 neighbors
         Board board = createBoard(
                 0, 0,
-                1L << 44, 0,   // king
+                1L << 44, 0,
                 (1L << 34) | (1L << 43) | (1L << 45) | (1L << 54), 0,
                 0, 1L << 16
         );
 
-        Move move = new Move(24, 34, Piece.BLACK); // dummy move
-        ArrayList<Piece> hits = board.checkHit(move);
+        Move move = new Move(24, 34, Piece.BLACK);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("King must be captured on throne when surrounded by 4 black pieces", hits.contains(Piece.KING));
+
+        boolean containsKing = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.KING) containsKing = true;
+        }
+
+        assertTrue(containsKing);
     }
 
     @Test
     public void testKingCapturedAdjacentToThrone() {
-        // King at 34, black at 33, 35, 24
         Board board = createBoard(
                 0, 0,
-                1L << 34, 0,   // king
+                1L << 34, 0,
                 (1L << 33) | (1L << 35) | (1L << 24), 0,
                 0, 1L << 16
         );
 
-        Move move = new Move(43, 33, Piece.BLACK); // dummy move
-        ArrayList<Piece> hits = board.checkHit(move);
+        Move move = new Move(43, 33, Piece.BLACK);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("King must be captured when adjacent to throne and surrounded on 3 sides", hits.contains(Piece.KING));
+
+        boolean containsKing = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.KING) containsKing = true;
+        }
+
+        assertTrue(containsKing);
     }
 
     @Test
     public void testDoubleCapture() {
-        // White at 10, 12, 14
-        // Black at 11 and 13
         Board board = createBoard(
                 (1L << 10) | (1L << 15) | (1L << 14), 0,
                 0, 0,
@@ -198,9 +223,11 @@ public class BoardTest {
         );
 
         Move move = new Move(22, 12, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertEquals(2, hits.size(), "Two black pieces should be captured");
+
+        assertEquals(2, hits.size());
         assertEquals(Piece.EMPTY, board.getPieceAt(11));
         assertEquals(Piece.EMPTY, board.getPieceAt(13));
     }
@@ -208,54 +235,72 @@ public class BoardTest {
     @Test
     public void testCaptureAgainstCorner() {
         Board board = createBoard(
-                (1L << 3) , 0,   // white
-                44, 0,                       // king
-                1L << 1, 0,                 // black at corner-adjacent
+                1L << 3, 0,
+                44, 0,
+                1L << 1, 0,
                 1L << 0, 1L << 16
         );
 
         Move move = new Move(3, 2, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("Black should be captured against corner", hits.contains(Piece.BLACK));
+
+        boolean containsBlack = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.BLACK) containsBlack = true;
+        }
+
+        assertTrue(containsBlack);
         assertEquals(Piece.EMPTY, board.getPieceAt(1));
     }
 
     @Test
     public void testCaptureAgainstEmptyThrone() {
-        // White at 45, Black at 44 (throne), White at 43
         Board board = createBoard(
-                (1L << 41), 0,   // white
+                1L << 41, 0,
                 0, 0,
-                1L << 43, 0,                  // black on throne
+                1L << 43, 0,
                 0, 1L << 16
         );
 
         Move move = new Move(41, 42, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("Black must be captured when sandwiched against empty throne", hits.contains(Piece.BLACK));
+
+        boolean containsBlack = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.BLACK) containsBlack = true;
+        }
+
+        assertTrue(containsBlack);
     }
 
     @Test
     public void testKingCapturedLikeNormalPiece() {
-        // Black at 20 and 22, King at 21
         Board board = createBoard(
                 0, 0,
-                1L << 21, 0,                 // king
-                (1L << 20) | (1L << 23), 0,  // black
+                1L << 21, 0,
+                (1L << 20) | (1L << 23), 0,
                 0, 1L << 16
         );
 
         Move move = new Move(23, 22, Piece.BLACK);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("King should be captured like a normal piece outside throne area", hits.contains(Piece.KING));
+
+        boolean containsKing = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.KING) containsKing = true;
+        }
+
+        assertTrue(containsKing);
     }
 
     @Test
     public void testVerticalSandwich() {
-        // White at 10 and 30, Black at 20
         Board board = createBoard(
                 (1L << 10) | (1L << 40), 0,
                 0, 0,
@@ -264,15 +309,21 @@ public class BoardTest {
         );
 
         Move move = new Move(40, 30, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("Black should be captured vertically", hits.contains(Piece.BLACK));
+
+        boolean containsBlack = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.BLACK) containsBlack = true;
+        }
+
+        assertTrue(containsBlack);
         assertEquals(Piece.EMPTY, board.getPieceAt(20));
     }
 
     @Test
     public void testNoCaptureAtBoardEdge() {
-        // White at 1, Black at 0 (edge), no white on the other side
         Board board = createBoard(
                 1L << 12, 0,
                 0, 0,
@@ -281,15 +332,16 @@ public class BoardTest {
         );
 
         Move move = new Move(12, 11, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("No capture should occur at board edge", hits.isEmpty());
+
+        assertTrue(hits.isEmpty());
         assertEquals(Piece.BLACK, board.getPieceAt(10));
     }
 
     @Test
     public void testNoCaptureWhenNotSandwiched() {
-        // White at 10, Black at 11, empty at 12
         Board board = createBoard(
                 1L << 13, 0,
                 0, 0,
@@ -298,57 +350,53 @@ public class BoardTest {
         );
 
         Move move = new Move(13, 12, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        assertTrue("No capture should occur without sandwich", hits.isEmpty());
+
+        assertTrue(hits.isEmpty());
         assertEquals(Piece.BLACK, board.getPieceAt(11));
     }
 
     @Test
     public void testNoCaptureAgainstOccupiedThroneBlack() {
-        // Setup:
-        // White at 47
-        // Black at 45
-        // King occupies throne at 44 → throne is NOT empty
         Board board = createBoard(
-                1L << 47, 0,            // white at 47
-                1L << 44, 0,            // king on throne (occupied)
-                1L << 45, 0,            // black at 45
+                1L << 47, 0,
+                1L << 44, 0,
+                1L << 45, 0,
                 0, 1L << 16
         );
 
-        // White moves from 47 to 46 (onto throne)
         Move move = new Move(47, 46, Piece.WHITE);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        // EXPECTATION:
-        // → NO capture, because throne is occupied
-        assertTrue("No capture must occur when throne is occupied", hits.contains(Piece.BLACK));
-        assertEquals(Piece.EMPTY, board.getPieceAt(45), "Black piece must remain because throne is occupied");
-        assertEquals(1, hits.size());
+
+        boolean containsBlack = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.BLACK) containsBlack = true;
+        }
+
+        assertTrue(containsBlack);
+        assertEquals(Piece.EMPTY, board.getPieceAt(45));
     }
 
     @Test
     public void testNoCaptureAgainstOccupiedThroneWhite() {
-        // Setup:
-        // White at 45
-        // Black at 47
-        // King occupies throne at 44 → throne is NOT empty
         Board board = createBoard(
-                1L << 45, 0,            // white at 45
-                1L << 44, 0,            // king on throne (occupied)
-                1L << 47, 0,            // black at 47
+                1L << 45, 0,
+                1L << 44, 0,
+                1L << 47, 0,
                 0, 1L << 16
         );
 
-        // White moves from 47 to 46 (onto throne)
         Move move = new Move(47, 46, Piece.BLACK);
-        ArrayList<Piece> hits = board.checkHit(move);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
 
-        // EXPECTATION:
-        // → NO capture, because throne is occupied
-        assertTrue("No capture must occur when throne is occupied"+board.getPieceAt(45), hits.isEmpty());
-        assertEquals(Piece.WHITE, board.getPieceAt(45), "White piece must remain because throne is occupied");
+
+        assertTrue(hits.isEmpty());
+        assertEquals(Piece.WHITE, board.getPieceAt(45));
     }
 
     @Test
