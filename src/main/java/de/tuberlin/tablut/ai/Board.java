@@ -353,6 +353,52 @@ public class Board {
                 hits.add(new Hit(Piece.KING, pos + 10));
                 hitPieces.add(Piece.KING);
             }
+
+
+            // König auf dem Thron: Weißer Stein kann geschlagen werden, wenn er zwischen König und 3 Schwarzen steht
+            if (getPieceAt(44) == Piece.KING) {
+
+                // Weiß oben (34)
+                if (pos == 24 && getPieceAt(34) == Piece.WHITE
+                        && getPieceAt(43) == Piece.BLACK
+                        && getPieceAt(45) == Piece.BLACK
+                        && getPieceAt(54) == Piece.BLACK) {
+
+                    hits.add(new Hit(Piece.WHITE, pos+10));
+                    hitPieces.add(Piece.WHITE);
+                }
+
+                // Weiß links (43)
+                if (pos == 42 && getPieceAt(43) == Piece.WHITE
+                        && getPieceAt(34) == Piece.BLACK
+                        && getPieceAt(45) == Piece.BLACK
+                        && getPieceAt(54) == Piece.BLACK) {
+
+                    hits.add(new Hit(Piece.WHITE, pos+1));
+                    hitPieces.add(Piece.WHITE);
+                }
+
+                // Weiß rechts (45)
+                if (pos == 46 && getPieceAt(45) == Piece.WHITE
+                        && getPieceAt(34) == Piece.BLACK
+                        && getPieceAt(43) == Piece.BLACK
+                        && getPieceAt(54) == Piece.BLACK) {
+
+                    hits.add(new Hit(Piece.WHITE, pos-1));
+                    hitPieces.add(Piece.WHITE);
+                }
+
+                // Weiß unten (54)
+                if (pos == 64 && getPieceAt(54) == Piece.WHITE
+                        && getPieceAt(34) == Piece.BLACK
+                        && getPieceAt(43) == Piece.BLACK
+                        && getPieceAt(45) == Piece.BLACK) {
+
+                    hits.add(new Hit(Piece.WHITE, pos-10));
+                    hitPieces.add(Piece.WHITE);
+                }
+            }
+
         }
 
         // wichtig: beide Listen weitergeben
