@@ -8,7 +8,10 @@ import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
+import static de.tuberlin.tablut.ai.Board.generateLegalMoves;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -374,35 +377,42 @@ public class BoardTest {
     }
 
     @Test
-    public void testGenerateLegalMovesKingFromCenter() {
-        Board board = createBoard(
-                0, 0,                     // white
-                1L << 44, 0,              // king at center
-                0, 0,                     // black
-                (1L << 0) | (1L << 8), (1L << 16) | (1L << 24) // blocked corners
-        );
+    public void testIsLegalMoveTargetViaReflection() throws Exception {
+        Board board = new Board();
+        Method isLegalMoveTarget = Board.class.getDeclaredMethod("isLegalMoveTarget", int.class, int.class, int.class);
+        isLegalMoveTarget.setAccessible(true);
 
-        Move[] moves = board.generateLegalMoves(board.whiteKing, Player.WHITE);
-        assertEquals(16, moves.length, "King at center should have 16 rook-like moves");
-        assertTrue(Arrays.stream(moves).allMatch(m -> m.movedPiece == Piece.KING));
-        assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 4));   // north edge
-        assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 84));  // south edge
-        assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 40));  // west edge
-        assertTrue(Arrays.stream(moves).anyMatch(m -> m.from == 44 && m.to == 48));  // east edge
+        assertTrue((Boolean) isLegalMoveTarget.invoke(board, 21, 22, 1));
+        assertTrue((Boolean) isLegalMoveTarget.invoke(board, 22, 32, 10));
+        assertFalse((Boolean) isLegalMoveTarget.invoke(board, 21, 19, -1));  // horizontal wrap into previous row
+        assertFalse((Boolean) isLegalMoveTarget.invoke(board, 8, 9, 1));      // separator column
+        assertFalse((Boolean) isLegalMoveTarget.invoke(board, 88, 98, 10));   // above range
+        assertFalse((Boolean) isLegalMoveTarget.invoke(board, 0, -10, -10));  // below range
     }
 
     @Test
-    public void testIsPlayableSquareViaReflection() throws Exception {
-        Board board = new Board();
-        Method isPlayableSquare = Board.class.getDeclaredMethod("isPlayableSquare", int.class);
-        isPlayableSquare.setAccessible(true);
+    public void testGenerateLegalMovesForWhitePiece() {
+        Board board = createBoard(
+                1L << 22, 0,                  // white at 22
+                0, 0,                         // no king
+                (1L << 12) | (1L << 24), 0,   // black blocks north and east
+                0, 1L << 16
+        );
 
-        assertTrue((Boolean) isPlayableSquare.invoke(board, 0));
-        assertTrue((Boolean) isPlayableSquare.invoke(board, 88));
-        assertFalse((Boolean) isPlayableSquare.invoke(board, 9));   // separator column
-        assertFalse((Boolean) isPlayableSquare.invoke(board, 89));  // separator column
-        assertFalse((Boolean) isPlayableSquare.invoke(board, -1));  // below range
-        assertFalse((Boolean) isPlayableSquare.invoke(board, 90));  // above range
+        ArrayList<Move> legalMoves = generateLegalMoves(board, Player.WHITE);
+
+        Set<String> expectedMoves = new HashSet<>(Arrays.asList(
+                "22-20", "22-21", "22-23",
+                "22-32", "22-42", "22-52", "22-62", "22-72", "22-82"
+        ));
+
+        Set<String> actualMoves = new HashSet<>();
+        for (Move move : legalMoves) {
+            assertEquals(Piece.WHITE, move.movedPiece, "Generated move should belong to a white piece");
+            actualMoves.add(move.from + "-" + move.to);
+        }
+
+        assertEquals(expectedMoves, actualMoves, "generateLegalMoves should return exactly the reachable moves");
     }
 
     @Test

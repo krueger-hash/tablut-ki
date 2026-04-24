@@ -336,7 +336,7 @@ public class Board {
 
     // Calculates all possible moves for a given bitboard and player type.
     // This uses current global board occupancy (white/black/king/blocked).
-    public  Move[] generateLegalMoves(Bitboard90 board, Player player) {
+    public static ArrayList<Move> generateLegalMoves(Board board, Player player) {
         if (board == null) {
             throw new IllegalArgumentException("Board bitboard must not be null");
         }
@@ -345,26 +345,29 @@ public class Board {
         }
 
         Bitboard90 occupied = Bitboard90.or(
-                Bitboard90.or(white, whiteKing),
-                Bitboard90.or(black, BLOCKED_PIECES)
+                Bitboard90.or(board.white, board.whiteKing),
+                Bitboard90.or(board.black, BLOCKED_PIECES)
         );
 
-        List<Move> moves = new ArrayList<>();
+        ArrayList<Move> moves = new ArrayList<>();
         // one row up, one row down, one column left, one column right (n,s,w,e)
         int[] directions = {-Bitboard90.cols, Bitboard90.cols, -1, 1};
 
         for (int row = 0; row < Bitboard90.rows; row++) {
             for (int col = 0; col < Bitboard90.cols - 1; col++) {
                 int from = row * Bitboard90.cols + col;
-                if (!Bitboard90.getBit(board, from)) {
+                // Select target bitboard based on player
+                // If a piece from target player is found go further, otherwise continue to the next loop
+                if (!belongsToPlayer(board, player, from)) {
                     continue;
                 }
 
-                Piece movedPiece = resolveMovedPiece(player, from);
+                // Get the piece type of current position: BLACK; WHITE; WHITE_KING
+                Piece movedPiece = resolveMovedPiece(board, player, from);
 
                 for (int direction : directions) {
                     int to = from + direction;
-                    while (isPlayableSquare(to)) {
+                    while (isLegalMoveTarget(from, to, direction)) {
                         if (Bitboard90.getBit(occupied, to)) {
                             break;
                         }
@@ -374,26 +377,40 @@ public class Board {
                 }
             }
         }
-
-        return moves.toArray(new Move[0]);
+        return moves;
     }
 
-    // Checks if index points to a real board cell, not outside the board and not into the separator column of 9x10 bit layout
-    private  boolean isPlayableSquare(int pos) {
-        // reject out-of-range indices (<0 or >=90)
-        if (pos < 0 || pos >= Bitboard90.rows * Bitboard90.cols) {
+    private static boolean belongsToPlayer(Board board, Player player, int pos) {
+        if (player == Player.BLACK) {
+            return Bitboard90.getBit(board.black, pos);
+        }
+        return Bitboard90.getBit(board.white, pos) || Bitboard90.getBit(board.whiteKing, pos);
+    }
+
+    private static boolean isLegalMoveTarget(int from, int to, int direction) {
+        // Reject indices outside the 9x10 encoded board.
+        if (to < 0 || to >= Bitboard90.rows * Bitboard90.cols) {
             return false;
         }
-        // only valid playable columns 0 - 8, not 9 (separator bit)
-        // e.g. 19 % 10 < 10 -1 => false (separator column)
-        return (pos % Bitboard90.cols) < (Bitboard90.cols - 1);
+
+        // Reject the separator column in the 9x10 layout.
+        if ((to % Bitboard90.cols) >= (Bitboard90.cols - 1)) {
+            return false;
+        }
+
+        // Horizontal moves must stay in the same encoded row.
+        if (direction == -1 || direction == 1) {
+            return (from / Bitboard90.cols) == (to / Bitboard90.cols);
+        }
+
+        return true;
     }
 
-    private  Piece resolveMovedPiece(Player player, int from) {
+    private static Piece resolveMovedPiece(Board board, Player player, int from) {
         if (player == Player.BLACK) {
             return Piece.BLACK;
         }
-        if (Bitboard90.getBit(whiteKing, from)) {
+        if (Bitboard90.getBit(board.whiteKing, from)) {
             return Piece.KING;
         }
         return Piece.WHITE;
@@ -473,10 +490,10 @@ public class Board {
 
     private boolean hasNoLegalMovesForSideToMove() {
         if (sideToMove == Player.BLACK) {
-            return generateLegalMoves(black, Player.BLACK).length == 0;
+            return generateLegalMoves(this, Player.BLACK).isEmpty();
         }
         Bitboard90 whiteSide = Bitboard90.or(white, whiteKing);
-        return generateLegalMoves(whiteSide, Player.WHITE).length == 0;
+        return generateLegalMoves(this, Player.WHITE).isEmpty();
     }
 
     private PositionKey currentPositionKey() {
