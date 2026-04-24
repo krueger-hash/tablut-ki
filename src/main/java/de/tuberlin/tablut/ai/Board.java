@@ -255,23 +255,59 @@ public class Board {
             }
 
             // König auf dem Thron
-            if (getPieceAt(44) == Piece.KING
-                    && getPieceAt(34) == Piece.BLACK
-                    && getPieceAt(43) == Piece.BLACK
-                    && getPieceAt(45) == Piece.BLACK
-                    && getPieceAt(54) == Piece.BLACK) {
+            if (pos == 34 || pos == 43 || pos == 45 || pos == 54) {
+                if (getPieceAt(44) == Piece.KING
+                        && getPieceAt(34) == Piece.BLACK
+                        && getPieceAt(43) == Piece.BLACK
+                        && getPieceAt(45) == Piece.BLACK
+                        && getPieceAt(54) == Piece.BLACK) {
 
-                hits.add(new Hit(Piece.KING, 44));
+                    hits.add(new Hit(Piece.KING, 44));
+                    hitPieces.add(Piece.KING);
+                }
+            }
+
+            // König oben am Thron (34)
+            if (getPieceAt(34) == Piece.KING
+                    && getPieceAt(33) == Piece.BLACK
+                    && getPieceAt(35) == Piece.BLACK
+                    && getPieceAt(24) == Piece.BLACK
+                    && (move.to == 33 || move.to == 35 || move.to == 24)) {
+
+                hits.add(new Hit(Piece.KING, 34));
                 hitPieces.add(Piece.KING);
             }
 
-            // König angrenzend zum Thron
-            if ((getPieceAt(34) == Piece.KING && getPieceAt(33) == Piece.BLACK && getPieceAt(35) == Piece.BLACK && getPieceAt(24) == Piece.BLACK)
-                    || (getPieceAt(43) == Piece.KING && getPieceAt(33) == Piece.BLACK && getPieceAt(42) == Piece.BLACK && getPieceAt(53) == Piece.BLACK)
-                    || (getPieceAt(45) == Piece.KING && getPieceAt(35) == Piece.BLACK && getPieceAt(46) == Piece.BLACK && getPieceAt(55) == Piece.BLACK)
-                    || (getPieceAt(54) == Piece.KING && getPieceAt(43) == Piece.BLACK && getPieceAt(53) == Piece.BLACK && getPieceAt(64) == Piece.BLACK)) {
+            // König links am Thron (43)
+            if (getPieceAt(43) == Piece.KING
+                    && getPieceAt(33) == Piece.BLACK
+                    && getPieceAt(42) == Piece.BLACK
+                    && getPieceAt(53) == Piece.BLACK
+                    && (move.to == 33 || move.to == 42 || move.to == 53)) {
 
-                hits.add(new Hit(Piece.KING, pos));
+                hits.add(new Hit(Piece.KING, 43));
+                hitPieces.add(Piece.KING);
+            }
+
+            // König rechts am Thron (45)
+            if (getPieceAt(45) == Piece.KING
+                    && getPieceAt(35) == Piece.BLACK
+                    && getPieceAt(46) == Piece.BLACK
+                    && getPieceAt(55) == Piece.BLACK
+                    && (move.to == 35 || move.to == 46 || move.to == 55)) {
+
+                hits.add(new Hit(Piece.KING, 45));
+                hitPieces.add(Piece.KING);
+            }
+
+            // König unten am Thron (54)
+            if (getPieceAt(54) == Piece.KING
+                    && getPieceAt(55) == Piece.BLACK
+                    && getPieceAt(53) == Piece.BLACK
+                    && getPieceAt(64) == Piece.BLACK
+                    && (move.to == 43 || move.to == 55 || move.to == 64)) {
+
+                hits.add(new Hit(Piece.KING, 54));
                 hitPieces.add(Piece.KING);
             }
 
