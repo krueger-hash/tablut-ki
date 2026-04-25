@@ -688,6 +688,14 @@ public class Board {
         return new Board(white,whiteKing,black,sideToMove);
     }
 
+    //Funktion gibt ein das Board zurück, das nach einem Move entsteht. ZugSpieler werden durch Auslesen der Klassenattribute geupdatet.
+    static Board boardAfterMove(Board board, Move move){
+        Board newBoard = deepCopy(board);
+        newBoard.applyMove(move);
+        newBoard.sideToMove = Board.oppositeSide(board.sideToMove);
+        return newBoard;
+    }
+
 
 }
 
