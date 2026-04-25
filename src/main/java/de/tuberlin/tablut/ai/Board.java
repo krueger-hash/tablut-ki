@@ -638,6 +638,52 @@ public class Board {
         return side == Piece.BLACK ? Piece.WHITE : Piece.BLACK;
     }
 
+    static Board transformPointString(String pointString) {
+        return transformPointString(pointString, Player.BLACK);
+    }
+
+    static Board transformPointString(String pointString, Player sideToMove) {
+        if (pointString == null) {
+            throw new IllegalArgumentException("pointString must not be null");
+        }
+        if (sideToMove == null) {
+            throw new IllegalArgumentException("sideToMove must not be null");
+        }
+        if (pointString.length() != 81) {
+            throw new IllegalArgumentException("pointString must contain exactly 81 characters");
+        }
+
+        Bitboard90 white = new Bitboard90();
+        Bitboard90 whiteKing = new Bitboard90();
+        Bitboard90 black = new Bitboard90();
+
+        for (int index = 0; index < pointString.length(); index++) {
+            int row = index / 9;
+            int col = index % 9;
+            char c = pointString.charAt(index);
+
+            if (c == '.') {
+                continue;
+            }
+            if (c == 'K' || c == 'k') {
+                Bitboard90.setBitAsMatrix(whiteKing, row, col);
+                continue;
+            }
+            if (c == 'W' || c == 'w' || c == 'R') {
+                Bitboard90.setBitAsMatrix(white, row, col);
+                continue;
+            }
+            if (c == 'B' || c == 'b' || c == 'S' || c == 's') {
+                Bitboard90.setBitAsMatrix(black, row, col);
+                continue;
+            }
+
+            throw new IllegalArgumentException("undefined symbol in pointString: " + c);
+        }
+
+        return new Board(white, whiteKing, black, sideToMove);
+    }
+
     static Board fenToBoard(String fen){
         String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist)
 
