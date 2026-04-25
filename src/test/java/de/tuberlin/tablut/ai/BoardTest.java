@@ -398,6 +398,34 @@ public class BoardTest {
     }
 
     @Test
+    public void testCaptureWhiteAboveKingOnThrone() {
+        // König auf dem Thron (44)
+        // Weiß oben (34)
+        // Schwarz links (43), rechts (45), unten (54)
+        // Schwarz zieht auf 24 → Weiß wird geschlagen
+
+        Board board = createBoard(
+                1L << 34, 0,                         // white at 34
+                1L << 44, 0,                         // king on throne
+                (1L << 14) | (1L << 43) | (1L << 45) | (1L << 54), 0,  // black around king
+                0, 1L << 16
+        );
+
+        Move move = new Move(14, 24, Piece.BLACK); // Schwarz zieht auf 24
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+        boolean containsWhite = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.WHITE && h.position() == 34) {
+                containsWhite = true;
+            }
+        }
+
+        assertTrue("White above king should be captured", containsWhite);
+        assertEquals(Piece.EMPTY, board.getPieceAt(34));
+    }
+
+    @Test
     public void testPrintBoardShowsPiecesAndThrone() {
         Board board = createBoard(
                 1L << 10, 0,      // white at 10
@@ -459,6 +487,122 @@ public class BoardTest {
         }
 
         assertEquals(expectedMoves, actualMoves, "generateLegalMoves should return exactly the reachable moves");
+    }
+
+    @Test
+    public void testGenerateLegalMovesAllowsKingToMoveOntoBlockedCorner() {
+        Board board = createBoard(
+                0, 0,
+                1L << 3, 0,                    // king at 3
+                (1L << 4) | (1L << 13), 0,     // block east and south
+                0, 0
+        );
+
+        ArrayList<Move> legalMoves = generateLegalMoves(board, Player.WHITE);
+
+        Set<String> actualMoves = new HashSet<>();
+        for (Move move : legalMoves) {
+            assertEquals(Piece.KING, move.movedPiece, "Generated move should belong to the king");
+            actualMoves.add(move.from + "-" + move.to);
+        }
+
+        Set<String> expectedMoves = new HashSet<>(Arrays.asList("3-2", "3-1", "3-0"));
+        assertEquals(expectedMoves, actualMoves, "King should be allowed to move onto the blocked corner");
+    }
+
+    @Test
+    public void testGenerateLegalMovesDoesNotAllowWhitePieceOntoBlockedCorner() {
+        Board board = createBoard(
+                1L << 3, 0,                    // white at 3
+                0, 0,
+                (1L << 4) | (1L << 13), 0,     // block east and south
+                0, 0
+        );
+
+        ArrayList<Move> legalMoves = generateLegalMoves(board, Player.WHITE);
+
+        Set<String> actualMoves = new HashSet<>();
+        for (Move move : legalMoves) {
+            assertEquals(Piece.WHITE, move.movedPiece, "Generated move should belong to a white piece");
+            actualMoves.add(move.from + "-" + move.to);
+        }
+
+        Set<String> expectedMoves = new HashSet<>(Arrays.asList("3-2", "3-1"));
+        assertEquals(expectedMoves, actualMoves, "Normal white pieces must not be allowed to move onto blocked corners");
+    }
+
+    @Test
+    public void testGenerateLegalMovesDoesNotAllowWhitePieceOntoEmptyThrone() {
+        Board board = createBoard(
+                1L << 41, 0,                   // white left of throne
+                0, 0,
+                0, 0,
+                0, 0
+        );
+
+        ArrayList<Move> legalMoves = generateLegalMoves(board, Player.WHITE);
+
+        Set<String> actualMoves = new HashSet<>();
+        for (Move move : legalMoves) {
+            actualMoves.add(move.from + "-" + move.to);
+        }
+
+        assertFalse(actualMoves.contains("41-44"), "Normal white pieces must not be allowed to enter the empty throne");
+        assertTrue("Move before the throne should stay legal", actualMoves.contains("41-42"));
+        assertTrue("Move before the throne should stay legal", actualMoves.contains("41-43"));
+        assertTrue("Empty throne may be passed over", actualMoves.contains("41-45"));
+        assertTrue("Empty throne may be passed over", actualMoves.contains("41-46"));
+        assertTrue("Empty throne may be passed over", actualMoves.contains("41-47"));
+        assertTrue("Empty throne may be passed over", actualMoves.contains("41-48"));
+    }
+
+    @Test
+    public void testGenerateLegalMovesDoesNotAllowKingBackOntoEmptyThrone() {
+        Board board = createBoard(
+                0, 0,
+                1L << 41, 0,                   // king left of throne
+                0, 0,
+                0, 0
+        );
+
+        ArrayList<Move> legalMoves = generateLegalMoves(board, Player.WHITE);
+
+        Set<String> actualMoves = new HashSet<>();
+        for (Move move : legalMoves) {
+            assertEquals(Piece.KING, move.movedPiece, "Generated move should belong to the king");
+            actualMoves.add(move.from + "-" + move.to);
+        }
+
+        assertFalse(actualMoves.contains("41-44"), "King must not be allowed to re-enter the empty throne");
+        assertTrue("King may pass over the empty throne", actualMoves.contains("41-45"));
+        assertTrue("King may pass over the empty throne", actualMoves.contains("41-46"));
+        assertTrue("King may pass over the empty throne", actualMoves.contains("41-47"));
+        assertTrue("King may pass over the empty throne", actualMoves.contains("41-48"));
+    }
+
+    @Test
+    public void testGenerateLegalMovesDoesNotJumpOverOccupiedThrone() {
+        Board board = createBoard(
+                1L << 41, 0,                   // white left of throne
+                1L << 44, 0,                   // king on throne
+                0, 0,
+                0, 0
+        );
+
+        ArrayList<Move> legalMoves = generateLegalMoves(board, Player.WHITE);
+
+        Set<String> actualMoves = new HashSet<>();
+        for (Move move : legalMoves) {
+            actualMoves.add(move.from + "-" + move.to);
+        }
+
+        assertFalse(actualMoves.contains("41-44"), "Occupied throne must not be a legal destination");
+        assertFalse(actualMoves.contains("41-45"), "Occupied throne must not be jumpable");
+        assertFalse(actualMoves.contains("41-46"), "Occupied throne must not be jumpable");
+        assertFalse(actualMoves.contains("41-47"), "Occupied throne must not be jumpable");
+        assertFalse(actualMoves.contains("41-48"), "Occupied throne must not be jumpable");
+        assertTrue("Moves before the occupied throne should stay legal", actualMoves.contains("41-42"));
+        assertTrue("Moves before the occupied throne should stay legal", actualMoves.contains("41-43"));
     }
 
     @Test

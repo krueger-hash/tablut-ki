@@ -8,7 +8,7 @@ public class PerformanceTest {
         System.out.println(perft(base, 1, Player.BLACK));
     }
     // Without piece hit
-    private static int perft(Board board, int depth, Player player){
+    public static int perft(Board board, int depth, Player player){
         if(depth == 0) return 1;
 
         // generate all possible moves
