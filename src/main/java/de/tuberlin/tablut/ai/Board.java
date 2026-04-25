@@ -123,7 +123,8 @@ public class Board {
         ArrayList<Hit> hits = checkHit(move);
         this.hit(hits);
         if (move.movedPiece == Piece.KING) {
-            if (getPieceAt(move.from) == Piece.KING && getPieceAt(move.to) == Piece.EMPTY) {
+            if (getPieceAt(move.from) == Piece.KING &&
+                    (getPieceAt(move.to) == Piece.EMPTY || getPieceAt(move.to) == Piece.BLOCKED)) {
                 Bitboard90.removeBit(whiteKing, move.from);
                 Bitboard90.setBit(whiteKing, move.to);
             }
