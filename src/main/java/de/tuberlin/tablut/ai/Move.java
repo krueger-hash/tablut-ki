@@ -62,7 +62,7 @@ public class Move {
         else {throw new IllegalArgumentException("Something wrong with movedPiece - called with:"+this.movedPiece);}
 
         String origin = Arrays.toString(Bitboard90.bitToMatrix(this.from));
-        String target = Arrays.toString(Bitboard90.bitToMatrix(this.from));
+        String target = Arrays.toString(Bitboard90.bitToMatrix(this.to));
 
         return "Move{"
                 + moved +" "
