@@ -121,25 +121,27 @@ public class Board {
     //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
     public void applyMove(Move move) {
         ArrayList<Hit> hits = checkHit(move);
+        this.hit(hits);
         if (move.movedPiece == Piece.KING) {
             if (getPieceAt(move.from) == Piece.KING && getPieceAt(move.to) == Piece.EMPTY) {
                 Bitboard90.removeBit(whiteKing, move.from);
                 Bitboard90.setBit(whiteKing, move.to);
             }
-
             return;
         }
-        if (move.movedPiece == Piece.WHITE && getPieceAt(move.from) == Piece.WHITE && getPieceAt(move.to) == Piece.EMPTY) {
+        else if (move.movedPiece == Piece.WHITE && getPieceAt(move.from) == Piece.WHITE && getPieceAt(move.to) == Piece.EMPTY) {
             Bitboard90.removeBit(white, move.from);
             Bitboard90.setBit(white, move.to);
             return;
         }
-        if (move.movedPiece == Piece.BLACK && getPieceAt(move.from) == Piece.BLACK && getPieceAt(move.to) == Piece.EMPTY) {
+        else if (move.movedPiece == Piece.BLACK && getPieceAt(move.from) == Piece.BLACK && getPieceAt(move.to) == Piece.EMPTY) {
             Bitboard90.removeBit(black, move.from);
             Bitboard90.setBit(black, move.to);
             return;
         }
-        hit(hits);
+        else {
+            throw new RuntimeException("ein nicht definierter Move soll durchgeführt werden!");
+        }
     }
 
     public void hit(ArrayList<Hit> hits){
