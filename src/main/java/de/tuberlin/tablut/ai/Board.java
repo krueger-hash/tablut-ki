@@ -74,7 +74,7 @@ public class Board {
         this.whiteKing = whiteKing;
         this.black = black;
         this.sideToMove=sideToMove;
-        resetStalemateTracking();
+        resetStalemateTracking(sideToMove);
     }
 
     void main() {
