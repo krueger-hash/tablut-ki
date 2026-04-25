@@ -657,11 +657,11 @@ public class Board {
                     Bitboard90.setBitAsMatrix(whiteKing,row,col);
                     col++;
                 }
-                else if (c == 'w' || c == 'W'){
+                else if (c == 'w' || c == 'W' || c=='R'){
                     Bitboard90.setBitAsMatrix(white,row,col);
                     col++;
                 }
-                else if (c == 'b' || c == 'B' || c=='s'|| c=='S'){
+                else if (c == 'b' || c == 'B' || c=='s'|| c=='S' || c=='r'){
                     Bitboard90.setBitAsMatrix(black,row,col);
                     col++;
                 }
