@@ -1,6 +1,7 @@
 package de.tuberlin.tablut.ai;
 
 
+import java.util.Arrays;
 import java.util.Objects;
 
 //mit vordefinierter Größe 9x9, d.h. 81 Bits + je Seperation am Ende der Zeile für 9x10 Bits d.h. 90 Bits
@@ -275,10 +276,19 @@ Grundsätzliche Ideen im Code:
         System.out.print("\n");
     }
 
+    //gibt die entsprechende Zeile und Splte zu einem BitWert zurück
+    static int[] bitToMatrix(int bit){
+        int col = bit % cols;
+        int row = Math.floorDiv(bit,cols);
+        return new int[]{row,col};
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     /// Testing mittels Main
     /////////////////////////////////////////////////////////////////////////////
     static void main() {
+
+        System.out.println(Arrays.toString(Bitboard90.bitToMatrix(88)));
 
 //        Bitboard90 testBB = new Bitboard90();
 //        Bitboard90.setBitAsMatrix(testBB,8,8);
