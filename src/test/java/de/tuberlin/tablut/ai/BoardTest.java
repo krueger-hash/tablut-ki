@@ -398,6 +398,34 @@ public class BoardTest {
     }
 
     @Test
+    public void testCaptureWhiteAboveKingOnThrone() {
+        // König auf dem Thron (44)
+        // Weiß oben (34)
+        // Schwarz links (43), rechts (45), unten (54)
+        // Schwarz zieht auf 24 → Weiß wird geschlagen
+
+        Board board = createBoard(
+                1L << 34, 0,                         // white at 34
+                1L << 44, 0,                         // king on throne
+                (1L << 14) | (1L << 43) | (1L << 45) | (1L << 54), 0,  // black around king
+                0, 1L << 16
+        );
+
+        Move move = new Move(14, 24, Piece.BLACK); // Schwarz zieht auf 24
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+        boolean containsWhite = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.WHITE && h.position() == 34) {
+                containsWhite = true;
+            }
+        }
+
+        assertTrue("White above king should be captured", containsWhite);
+        assertEquals(Piece.EMPTY, board.getPieceAt(34));
+    }
+
+    @Test
     public void testPrintBoardShowsPiecesAndThrone() {
         Board board = createBoard(
                 1L << 10, 0,      // white at 10
