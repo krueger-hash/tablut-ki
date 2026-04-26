@@ -23,7 +23,7 @@ public class Move {
         this. movedPiece = moved;
     }
 
-    Move inputToMove(Board board,int fromX,int fromY, int toX, int toY){
+    static Move inputToMove(Board board,int fromX,int fromY, int toX, int toY){
 
         Piece moved;
         if(Bitboard90.getBitAsMatrix(board.white,fromX,fromY)){
