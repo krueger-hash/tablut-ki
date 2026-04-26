@@ -27,6 +27,17 @@ public class PerftCase {
         this.perft4 = perft4;
     }
 
+    static PerftCase capture1 = new PerftCase("3wb4/2b6/9/9/9/9/9/9/9 s");
+    static PerftCase capture2 = new PerftCase("3Kb4/2b6/9/9/9/9/9/9/9 s");
+    static PerftCase capture3 = new PerftCase("3bw4/2K6/9/9/9/9/9/9/9 w");
+    static PerftCase capture4 = new PerftCase("3bK4/2w6/9/9/9/9/9/9/9 w");
+    static PerftCase capture5 = new PerftCase("3bw4/2w6/9/9/9/9/9/9/9 w");
+
+    static PerftCase cornerNW = new PerftCase("1K7/2b6/9/9/9/9/9/9/9 s");
+    static PerftCase cornerNE = new PerftCase("7w1/6b2/9/9/9/9/9/9/9 s");
+    static PerftCase cornerSE = new PerftCase("9/9/9/9/9/9/9/6K2/7b1 w");
+    static PerftCase cornerSW = new PerftCase("9/9/9/9/9/9/9/2w6/1b7 w");
+
     static PerftCase aa1 = new PerftCase("4b4/7b1/2w2b3/7b1/9/3bK1s2/7b1/3w3b1/9 s");
     static PerftCase aa2 = new PerftCase("4b4/7b1/2w6/7b1/9/3bbK1s2/4b4/3w3b1/9 w");
     static PerftCase ai1 = new PerftCase("3rrr3/4r4/4R4/r3R4/rrRRKR1r1/r3R3r/4R4/4r4/3rrr3 s",73,3587,262916,13462626);
