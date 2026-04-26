@@ -74,7 +74,7 @@ public class Board {
         this.whiteKing = whiteKing;
         this.black = black;
         this.sideToMove=sideToMove;
-        resetStalemateTracking();
+        resetStalemateTracking(sideToMove);
     }
 
     void main() {
@@ -121,25 +121,28 @@ public class Board {
     //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
     public void applyMove(Move move) {
         ArrayList<Hit> hits = checkHit(move);
+        this.hit(hits);
         if (move.movedPiece == Piece.KING) {
-            if (getPieceAt(move.from) == Piece.KING && getPieceAt(move.to) == Piece.EMPTY) {
+            if (getPieceAt(move.from) == Piece.KING &&
+                    (getPieceAt(move.to) == Piece.EMPTY || getPieceAt(move.to) == Piece.BLOCKED)) {
                 Bitboard90.removeBit(whiteKing, move.from);
                 Bitboard90.setBit(whiteKing, move.to);
             }
-
             return;
         }
-        if (move.movedPiece == Piece.WHITE && getPieceAt(move.from) == Piece.WHITE && getPieceAt(move.to) == Piece.EMPTY) {
+        else if (move.movedPiece == Piece.WHITE && getPieceAt(move.from) == Piece.WHITE && getPieceAt(move.to) == Piece.EMPTY) {
             Bitboard90.removeBit(white, move.from);
             Bitboard90.setBit(white, move.to);
             return;
         }
-        if (move.movedPiece == Piece.BLACK && getPieceAt(move.from) == Piece.BLACK && getPieceAt(move.to) == Piece.EMPTY) {
+        else if (move.movedPiece == Piece.BLACK && getPieceAt(move.from) == Piece.BLACK && getPieceAt(move.to) == Piece.EMPTY) {
             Bitboard90.removeBit(black, move.from);
             Bitboard90.setBit(black, move.to);
             return;
         }
-        hit(hits);
+        else {
+            throw new RuntimeException("ein nicht definierter Move soll durchgeführt werden!");
+        }
     }
 
     public void hit(ArrayList<Hit> hits){
@@ -638,8 +641,55 @@ public class Board {
         return side == Piece.BLACK ? Piece.WHITE : Piece.BLACK;
     }
 
+    static Board transformPointString(String pointString) {
+        return transformPointString(pointString, Player.BLACK);
+    }
+
+    static Board transformPointString(String pointString, Player sideToMove) {
+        if (pointString == null) {
+            throw new IllegalArgumentException("pointString must not be null");
+        }
+        if (sideToMove == null) {
+            throw new IllegalArgumentException("sideToMove must not be null");
+        }
+        if (pointString.length() != 81) {
+            throw new IllegalArgumentException("pointString must contain exactly 81 characters");
+        }
+
+        Bitboard90 white = new Bitboard90();
+        Bitboard90 whiteKing = new Bitboard90();
+        Bitboard90 black = new Bitboard90();
+
+        for (int index = 0; index < pointString.length(); index++) {
+            int row = index / 9;
+            int col = index % 9;
+            char c = pointString.charAt(index);
+
+            if (c == '.') {
+                continue;
+            }
+            if (c == 'K' || c == 'k') {
+                Bitboard90.setBitAsMatrix(whiteKing, row, col);
+                continue;
+            }
+            if (c == 'W' || c == 'w' || c == 'R') {
+                Bitboard90.setBitAsMatrix(white, row, col);
+                continue;
+            }
+            if (c == 'B' || c == 'b' || c == 'S' || c == 's') {
+                Bitboard90.setBitAsMatrix(black, row, col);
+                continue;
+            }
+
+            throw new IllegalArgumentException("undefined symbol in pointString: " + c);
+        }
+
+        return new Board(white, whiteKing, black, sideToMove);
+    }
+
     static Board fenToBoard(String fen){
         String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist)
+        if (parts.length < 2) {throw new IllegalArgumentException("FEN unvollständig. Startspieler angegeben?");}
 
         //Boardzustand bauen
         Bitboard90 white = new Bitboard90();
@@ -656,11 +706,11 @@ public class Board {
                     Bitboard90.setBitAsMatrix(whiteKing,row,col);
                     col++;
                 }
-                else if (c == 'w' || c == 'W'){
+                else if (c == 'w' || c == 'W' || c=='R'){
                     Bitboard90.setBitAsMatrix(white,row,col);
                     col++;
                 }
-                else if (c == 'b' || c == 'B' || c=='s'|| c=='S'){
+                else if (c == 'b' || c == 'B' || c=='s'|| c=='S' || c=='r'){
                     Bitboard90.setBitAsMatrix(black,row,col);
                     col++;
                 }
@@ -686,6 +736,14 @@ public class Board {
             throw new IllegalArgumentException ("undefinierter Symbol für Startseite: "+ side);
         }
         return new Board(white,whiteKing,black,sideToMove);
+    }
+
+    //Funktion gibt ein das Board zurück, das nach einem Move entsteht. ZugSpieler werden durch Auslesen der Klassenattribute geupdatet.
+    static Board boardAfterMove(Board board, Move move){
+        Board newBoard = deepCopy(board);
+        newBoard.applyMove(move);
+        newBoard.sideToMove = Board.oppositeSide(board.sideToMove);
+        return newBoard;
     }
 
 
