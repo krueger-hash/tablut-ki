@@ -146,6 +146,28 @@ public class BoardTest {
     }
 
     @Test
+    public void testCheckHitNormalSandwichHorizontalBorder() {
+        Board board = createBoard(
+                (1L << 18) | (1L << 37), 0,
+                0, 0,
+                1L << 28, 0,
+                0, 1L << 16
+        );
+
+        Move move = new Move(37, 38, Piece.WHITE);
+        ArrayList<Hit> hits = board.checkHit(move);
+        board.hit(hits);
+
+        boolean containsBlack = false;
+        for (Hit h : hits) {
+            if (h.piece() == Piece.BLACK) containsBlack = true;
+        }
+
+        assertTrue(containsBlack);
+        assertEquals(Piece.EMPTY, board.getPieceAt(11));
+    }
+
+    @Test
     public void testKingCanCaptureBlack() {
         Board board = createBoard(
                 1L << 13, 0,
