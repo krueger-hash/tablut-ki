@@ -241,15 +241,21 @@ Grundsätzliche Ideen im Code:
     }
     //Prüfe Bits auf benachbarten Feldern: NESW, Ausgangsfeld als Matrix
     static boolean getBitAsMatrix_N(Bitboard90 bb, int row, int col){
+        // N is out of bounds
+        if(row == 0) return false;
         return getBit(bb,col+row*cols - cols);
     }
     static boolean getBitAsMatrix_E(Bitboard90 bb, int row, int col){
+        if(row == 8 && col == 8) return false;
         return getBit(bb,col+row*cols + 1);
     }
     static boolean getBitAsMatrix_S(Bitboard90 bb, int row, int col){
+        // S out of bounds
+        if(row == 8) return false;
         return getBit(bb,col+row*cols + cols);
     }
     static boolean getBitAsMatrix_W(Bitboard90 bb, int row, int col){
+        if(row == 0 && col == 0) return false;
         return getBit(bb,col+row*cols - 1);
     }
 

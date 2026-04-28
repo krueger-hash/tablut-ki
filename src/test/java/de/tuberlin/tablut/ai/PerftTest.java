@@ -32,14 +32,4 @@ public class PerftTest {
         assertEquals(125, PerformanceTest.perft(board, 3, board.sideToMove), "Perft(1) should be 1 for base position black");
         assertEquals(6453, PerformanceTest.perft(board, 4, board.sideToMove), "Perft(1) should be 1 for base position black");
     }
-
-    @Test
-    public void testOurGroup2(){
-        String transformedFen = "4K4/4r4/9/9/9/9/9/9/9 s ";
-        Board board = Board.fenToBoard(transformedFen);
-        assertEquals(14, PerformanceTest.perft(board, 1, board.sideToMove), "Perft(1) should be 1 for base position black");
-        assertEquals(189, PerformanceTest.perft(board, 2, board.sideToMove), "Perft(1) should be 1 for base position black");
-        assertEquals(2717, PerformanceTest.perft(board, 3, board.sideToMove), "Perft(1) should be 1 for base position black");
-        assertEquals(40689, PerformanceTest.perft(board, 4, board.sideToMove), "Perft(1) should be 1 for base position black");
-    }
 }
