@@ -141,7 +141,9 @@ public class Board {
             return;
         }
         else {
-            throw new RuntimeException("ein nicht definierter Move soll durchgeführt werden!");
+            System.out.println("Debugging Board<");
+            printBoard();
+            throw new RuntimeException("ein nicht definierter Move soll durchgeführt werden!"+move);
         }
     }
 
