@@ -26,13 +26,13 @@ public class Move {
     static Move inputToMove(Board board,int fromX,int fromY, int toX, int toY){
 
         Piece moved;
-        if(Bitboard90.getBitAsMatrix(board.white,fromX,fromY)){
+        if(Bitboard90.getBitAsMatrix(board.white,fromY,fromX)){
             moved = Piece.WHITE;
         }
-        else if(Bitboard90.getBitAsMatrix(board.whiteKing,fromX,fromY)){
+        else if(Bitboard90.getBitAsMatrix(board.whiteKing,fromY, fromX)){
             moved = Piece.KING;
         }
-        else if(Bitboard90.getBitAsMatrix(board.black,fromX,fromY)) {
+        else if(Bitboard90.getBitAsMatrix(board.black,fromY, fromX)) {
             moved = Piece.BLACK;
         }
         else {

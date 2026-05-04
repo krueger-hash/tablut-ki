@@ -412,6 +412,7 @@ class Bitboard90Test {
         assertTrue(Bitboard90.getBitAsMatrix_E(testBB,4,2));
         assertFalse(Bitboard90.getBitAsMatrix_E(testBB,0,0));
         assertFalse(Bitboard90.getBitAsMatrix_E(testBB,4,8));
+        assertFalse(Bitboard90.getBitAsMatrix_E(testBB,0,8));
     }
     @Test
     void getBitAsMatrix_S(){
@@ -421,6 +422,7 @@ class Bitboard90Test {
         assertTrue(Bitboard90.getBitAsMatrix_S(testBB,3,3));
         assertFalse(Bitboard90.getBitAsMatrix_S(testBB,0,0));
         assertFalse(Bitboard90.getBitAsMatrix_S(testBB,8,2));
+        assertFalse(Bitboard90.getBitAsMatrix_S(testBB,8,8));
     }
     @Test
     void getBitAsMatrix_W(){

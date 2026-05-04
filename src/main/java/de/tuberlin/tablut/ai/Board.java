@@ -141,7 +141,9 @@ public class Board {
             return;
         }
         else {
-            throw new RuntimeException("ein nicht definierter Move soll durchgeführt werden!");
+            System.out.println("Debugging Board<");
+            printBoard();
+            throw new RuntimeException("ein nicht definierter Move soll durchgeführt werden!"+move);
         }
     }
 
@@ -163,7 +165,7 @@ public class Board {
 
     //gibt den geschlagenen Piece zurück
     //gibt EMPTY zurück, wenn keine Figur geschlagen werden kann
-    public ArrayList<Hit> checkHit(Move move) {
+   /* public ArrayList<Hit> checkHit(Move move) {
         int pos = move.to;
 
         ArrayList<Hit> hits = new ArrayList<>();        // Liste mit Hit(Piece, position)
@@ -172,7 +174,7 @@ public class Board {
         boolean kingOnThrone = getPieceAt(44) == Piece.KING;
         boolean throneEmpty = !kingOnThrone;
 
-        // WEISS oder KÖNIG schlägt SCHWARZ
+        // WEISS oder K&Ouml;NIG schl&auml;gt SCHWARZ
         if (move.movedPiece == Piece.WHITE || move.movedPiece == Piece.KING) {
 
             // LINKS
@@ -216,7 +218,7 @@ public class Board {
             }
         }
 
-        // SCHWARZ schlägt WEISS oder KÖNIG
+        // SCHWARZ schl&auml;gt WEISS oder K&Ouml;NIG
         else if (move.movedPiece == Piece.BLACK) {
 
             // LINKS
@@ -259,7 +261,7 @@ public class Board {
                 hitPieces.add(Piece.WHITE);
             }
 
-            // König auf dem Thron
+            // K&ouml;nig auf dem Thron
             if (pos == 34 || pos == 43 || pos == 45 || pos == 54) {
                 if (getPieceAt(44) == Piece.KING
                         && getPieceAt(34) == Piece.BLACK
@@ -272,7 +274,7 @@ public class Board {
                 }
             }
 
-            // König oben am Thron (34)
+            // K&ouml;nig oben am Thron (34)
             if (getPieceAt(34) == Piece.KING
                     && getPieceAt(33) == Piece.BLACK
                     && getPieceAt(35) == Piece.BLACK
@@ -283,7 +285,7 @@ public class Board {
                 hitPieces.add(Piece.KING);
             }
 
-            // König links am Thron (43)
+            // K&ouml;nig links am Thron (43)
             if (getPieceAt(43) == Piece.KING
                     && getPieceAt(33) == Piece.BLACK
                     && getPieceAt(42) == Piece.BLACK
@@ -294,7 +296,7 @@ public class Board {
                 hitPieces.add(Piece.KING);
             }
 
-            // König rechts am Thron (45)
+            // K&ouml;nig rechts am Thron (45)
             if (getPieceAt(45) == Piece.KING
                     && getPieceAt(35) == Piece.BLACK
                     && getPieceAt(46) == Piece.BLACK
@@ -305,7 +307,7 @@ public class Board {
                 hitPieces.add(Piece.KING);
             }
 
-            // König unten am Thron (54)
+            // K&ouml;nig unten am Thron (54)
             if (getPieceAt(54) == Piece.KING
                     && getPieceAt(55) == Piece.BLACK
                     && getPieceAt(53) == Piece.BLACK
@@ -316,7 +318,7 @@ public class Board {
                 hitPieces.add(Piece.KING);
             }
 
-            // König wie normaler Stein
+            // K&ouml;nig wie normaler Stein
             if (getPieceAt(pos - 1) == Piece.KING
                     && (getPieceAt(pos - 2) == Piece.BLACK
                     || Bitboard90.getBit(BLOCKED_PIECES, pos - 2)
@@ -358,10 +360,10 @@ public class Board {
             }
 
 
-            // König auf dem Thron: Weißer Stein kann geschlagen werden, wenn er zwischen König und 3 Schwarzen steht
+            // K&ouml;nig auf dem Thron: Wei&szlig;er Stein kann geschlagen werden, wenn er zwischen K&ouml;nig und 3 Schwarzen steht
             if (getPieceAt(44) == Piece.KING) {
 
-                // Weiß oben (34)
+                // Wei&szlig; oben (34)
                 if (pos == 24 && getPieceAt(34) == Piece.WHITE
                         && getPieceAt(43) == Piece.BLACK
                         && getPieceAt(45) == Piece.BLACK
@@ -371,7 +373,7 @@ public class Board {
                     hitPieces.add(Piece.WHITE);
                 }
 
-                // Weiß links (43)
+                // Wei&szlig; links (43)
                 if (pos == 42 && getPieceAt(43) == Piece.WHITE
                         && getPieceAt(34) == Piece.BLACK
                         && getPieceAt(45) == Piece.BLACK
@@ -381,7 +383,7 @@ public class Board {
                     hitPieces.add(Piece.WHITE);
                 }
 
-                // Weiß rechts (45)
+                // Wei&szlig; rechts (45)
                 if (pos == 46 && getPieceAt(45) == Piece.WHITE
                         && getPieceAt(34) == Piece.BLACK
                         && getPieceAt(43) == Piece.BLACK
@@ -391,7 +393,7 @@ public class Board {
                     hitPieces.add(Piece.WHITE);
                 }
 
-                // Weiß unten (54)
+                // Wei&szlig; unten (54)
                 if (pos == 64 && getPieceAt(54) == Piece.WHITE
                         && getPieceAt(34) == Piece.BLACK
                         && getPieceAt(43) == Piece.BLACK
@@ -406,6 +408,158 @@ public class Board {
 
         // wichtig: beide Listen weitergeben
         registerMoveForStalemate(move, hitPieces);
+
+        return hits;
+    }*/
+
+    public ArrayList<Hit> checkHit(Move move) {
+
+        int pos = move.to;
+        Piece mover = move.movedPiece;
+
+        ArrayList<Hit> hits = new ArrayList<>(4);
+
+        // Vorbereitete Bitboards
+        Bitboard90 whiteAll = Bitboard90.or(white, whiteKing);
+        boolean throneEmpty = !Bitboard90.getBit(whiteKing, 44);
+
+        // Richtungen
+        final int[] DIR = {-1, +1, -10, +10};
+
+        // --- 1) WEISS oder KÖNIG schlägt SCHWARZ ---
+        if (mover == Piece.WHITE || mover == Piece.KING) {
+
+            for (int d : DIR) {
+                int adj = pos + d;
+                int behind = pos + 2*d;
+
+                // Grenzen prüfen
+                if (adj < 0 || adj >= 90) continue;
+                if (behind < 0 || behind >= 90) continue;
+
+                // Separator-Spalte ausschließen
+                if ((adj % 10) == 9) continue;
+                if ((behind % 10) == 9) continue;
+
+                // Prüfe: adj = Schwarz?
+                if (!Bitboard90.getBit(black, adj)) continue;
+
+                // Prüfe: behind = Weiß / König / Blocked / Thron (leer)
+                if (Bitboard90.getBit(whiteAll, behind)
+                        || Bitboard90.getBit(BLOCKED_PIECES, behind)
+                        || (Bitboard90.getBit(THRONE, behind) && throneEmpty)) {
+
+                    hits.add(new Hit(Piece.BLACK, adj));
+                }
+            }
+
+            return hits;
+        }
+
+        // --- 2) SCHWARZ schlägt WEISS oder KÖNIG ---
+        if (mover == Piece.BLACK) {
+
+            for (int d : DIR) {
+                int adj = pos + d;
+                int behind = pos + 2*d;
+
+                if (adj < 0 || adj >= 90) continue;
+                if (behind < 0 || behind >= 90) continue;
+
+                if ((adj % 10) == 9) continue;
+                if ((behind % 10) == 9) continue;
+
+                // Prüfe: adj = Weiß oder König?
+                boolean adjWhite = Bitboard90.getBit(white, adj);
+                boolean adjKing  = Bitboard90.getBit(whiteKing, adj);
+
+                if (!adjWhite && !adjKing) continue;
+
+                // Prüfe: behind = Schwarz / Blocked / Thron (leer)
+                if (Bitboard90.getBit(black, behind)
+                        || Bitboard90.getBit(BLOCKED_PIECES, behind)
+                        || (Bitboard90.getBit(THRONE, behind) && throneEmpty)) {
+
+                    hits.add(new Hit(adjKing ? Piece.KING : Piece.WHITE, adj));
+                }
+            }
+
+            // --- König-Sonderfälle separat ---
+            hits.addAll(checkKingSpecialCaptures(pos));
+
+            return hits;
+        }
+
+        return hits;
+    }
+
+    private ArrayList<Hit> checkKingSpecialCaptures(int pos) {
+
+        ArrayList<Hit> hits = new ArrayList<>(2);
+
+        // König auf dem Thron (44)
+        if (Bitboard90.getBit(whiteKing, 44)) {
+
+            // oben (34)
+            if (pos == 24
+                    && Bitboard90.getBit(white, 34)
+                    && Bitboard90.getBit(black, 43)
+                    && Bitboard90.getBit(black, 45)
+                    && Bitboard90.getBit(black, 54)) {
+                hits.add(new Hit(Piece.WHITE, 34));
+            }
+
+            // links (43)
+            if (pos == 42
+                    && Bitboard90.getBit(white, 43)
+                    && Bitboard90.getBit(black, 34)
+                    && Bitboard90.getBit(black, 45)
+                    && Bitboard90.getBit(black, 54)) {
+                hits.add(new Hit(Piece.WHITE, 43));
+            }
+
+            // rechts (45)
+            if (pos == 46
+                    && Bitboard90.getBit(white, 45)
+                    && Bitboard90.getBit(black, 34)
+                    && Bitboard90.getBit(black, 43)
+                    && Bitboard90.getBit(black, 54)) {
+                hits.add(new Hit(Piece.WHITE, 45));
+            }
+
+            // unten (54)
+            if (pos == 64
+                    && Bitboard90.getBit(white, 54)
+                    && Bitboard90.getBit(black, 34)
+                    && Bitboard90.getBit(black, 43)
+                    && Bitboard90.getBit(black, 45)) {
+                hits.add(new Hit(Piece.WHITE, 54));
+            }
+        }
+
+        // König wie normaler Stein (nicht am Thron)
+        int[] DIR = {-1, +1, -10, +10};
+        for (int d : DIR) {
+            int adj = pos + d;
+            int behind = pos + 2*d;
+
+            if (adj < 0 || adj >= 90) continue;
+            if (behind < 0 || behind >= 90) continue;
+            if ((adj % 10) == 9) continue;
+            if ((behind % 10) == 9) continue;
+
+            if (!Bitboard90.getBit(whiteKing, adj)) continue;
+
+            // König darf NICHT an den 5 Thronfeldern normal geschlagen werden
+            if (adj == 34 || adj == 43 || adj == 44 || adj == 45 || adj == 54) continue;
+
+            if (Bitboard90.getBit(black, behind)
+                    || Bitboard90.getBit(BLOCKED_PIECES, behind)
+                    || Bitboard90.getBit(THRONE, behind)) {
+
+                hits.add(new Hit(Piece.KING, adj));
+            }
+        }
 
         return hits;
     }

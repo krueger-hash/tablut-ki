@@ -75,6 +75,9 @@ Grundsätzliche Ideen im Code:
     //Setzt ein Bit an Stelle Pos (keine Prüfung, ob da schon eins ist)
     //grundsätzlich erlaubt die Methode auch Separation Bits auf 1 zu setzen
     static void setBit(Bitboard90 bb,int pos){
+        if (pos < 0 || pos >= 128) {
+            throw new IllegalArgumentException();
+        }
         if (pos < 64){
             bb.low |= (1L << pos);
         }
@@ -85,6 +88,9 @@ Grundsätzliche Ideen im Code:
 
     //  Prüft, ob an Stelle pos ein Bit gesetzt ist
     static boolean getBit(Bitboard90 bb,int pos){
+        if (pos < 0 || pos >= 128) {
+            throw new IllegalArgumentException();
+        }
         if (pos < 64){
 //          ist an Stelle pos eine 1, so bleibt ein Bit gesetzt und das Ergebnis ist !=0, alle anderen Stellen werden durch die Maske (1L<<Pos) ignoriert beim AND
             return (bb.low & (1L << pos)) != 0;
@@ -96,6 +102,9 @@ Grundsätzliche Ideen im Code:
 
     //Entfernt Bit an Stelle pos; keine Prüfung, ob Bit überhaupt gesetzt ist
     static void removeBit(Bitboard90 bb, int pos){
+        if (pos < 0 || pos >= 128) {
+            throw new IllegalArgumentException();
+        }
         // mask ist die invertierte Maske, d.h. nur das Bit an Pos ist 0, der Rest 1, durch das AND wird die Ursprungsfolge beibehalten, aber Bit an pos auf jeden Fall auf 0 gesetzt
         if (pos <64){
             long mask = ~(1L << pos);
@@ -203,7 +212,6 @@ Grundsätzliche Ideen im Code:
                         )
                 )
         );
-
     }
     static Bitboard90 erosion(Bitboard90 bb){
         Bitboard90 bbN = shiftN(bb);
@@ -233,15 +241,21 @@ Grundsätzliche Ideen im Code:
     }
     //Prüfe Bits auf benachbarten Feldern: NESW, Ausgangsfeld als Matrix
     static boolean getBitAsMatrix_N(Bitboard90 bb, int row, int col){
+        // N is out of bounds
+        if(row == 0) return false;
         return getBit(bb,col+row*cols - cols);
     }
     static boolean getBitAsMatrix_E(Bitboard90 bb, int row, int col){
+        if(row == 8 && col == 8) return false;
         return getBit(bb,col+row*cols + 1);
     }
     static boolean getBitAsMatrix_S(Bitboard90 bb, int row, int col){
+        // S out of bounds
+        if(row == 8) return false;
         return getBit(bb,col+row*cols + cols);
     }
     static boolean getBitAsMatrix_W(Bitboard90 bb, int row, int col){
+        if(row == 0 && col == 0) return false;
         return getBit(bb,col+row*cols - 1);
     }
 
