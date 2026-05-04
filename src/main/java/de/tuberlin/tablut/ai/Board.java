@@ -698,6 +698,10 @@ public class Board {
     //TODO:
     // Methode zum Überprüfen des Spielendes
 
+    boolean gameIsEnd(){
+        return (this.hasBlackWon() || this.hasWhiteWon() || this.isStalemate());
+    }
+
      boolean hasBlackWon (){
         if(whiteKing.high + whiteKing.low == 0) {return true;} //Ist kein König mehr auf dem Board, sind beide vom Zahlenwert 0
         else {return false;}
