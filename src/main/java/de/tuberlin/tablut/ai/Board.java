@@ -147,6 +147,42 @@ public class Board {
         }
     }
 
+
+    public void unmake (Move move, ArrayList<Hit> hits){
+        for (Hit h : hits) {
+            if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
+            if (h.piece() == Piece.BLACK && getPieceAt(h.position()) == Piece.EMPTY) {
+                Bitboard90.setBit(black, h.position());
+            }
+            if (h.piece() == Piece.KING && getPieceAt(h.position()) == Piece.EMPTY) {
+                Bitboard90.setBit(whiteKing, h.position());
+            }
+            if (h.piece() == Piece.WHITE && getPieceAt(h.position()) == Piece.EMPTY) {
+                Bitboard90.setBit(white, h.position());
+            }
+        }
+         if (move.movedPiece == Piece.KING) {
+             if (getPieceAt(move.to) == Piece.KING &&
+                     (getPieceAt(move.from) == Piece.EMPTY || getPieceAt(move.from) == Piece.BLOCKED)) {
+                 Bitboard90.removeBit(whiteKing, move.to);
+                 Bitboard90.setBit(whiteKing, move.from);
+             }
+             return;
+         }
+         else if (move.movedPiece == Piece.WHITE && getPieceAt(move.to) == Piece.WHITE && getPieceAt(move.from) == Piece.EMPTY) {
+             Bitboard90.removeBit(white, move.to);
+             Bitboard90.setBit(white, move.from);
+             return;
+         }
+         else if (move.movedPiece == Piece.BLACK && getPieceAt(move.to) == Piece.BLACK && getPieceAt(move.from) == Piece.EMPTY) {
+             Bitboard90.removeBit(black, move.to);
+             Bitboard90.setBit(black, move.from);
+             return;
+         }
+    }
+
+
+
     public void hit(ArrayList<Hit> hits){
         if (hits == null) return;
         for (Hit h : hits) {
