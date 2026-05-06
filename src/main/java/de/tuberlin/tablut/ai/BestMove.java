@@ -4,6 +4,10 @@ import java.util.ArrayList;
 
 public class BestMove {
 
+    //erstmal hier eine globale Definition für min bzw. max spieler; vmtl besser in Bewertungsfunktion
+    static final Player maxPlayer = Player.WHITE;
+    static final Player minPlayer = Player.BLACK;
+
 
     //Achtung: gerade nur für einen Spieler gültig, da value nur maximiert wird!!
 
@@ -15,10 +19,18 @@ public class BestMove {
         for (Move move : moves){
             Board newState = Board.boardAfterMove(state, move);
             int value = AlphaBeta.alphaBetaSearch(newState,depth,-9001,9001);
-            if (value > bestValue){
-                bestValue = value;
-                bestMove = move;
+            if(state.sideToMove == BestMove.maxPlayer) {
+                if (value > bestValue) {
+                    bestValue = value;
+                    bestMove = move;
+                }
+            } else if (state.sideToMove == BestMove.minPlayer) {
+                if (value < bestValue) {
+                    bestValue = value;
+                    bestMove = move;
+                }
             }
+            else {throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");}
         }
         return bestMove;
     }
