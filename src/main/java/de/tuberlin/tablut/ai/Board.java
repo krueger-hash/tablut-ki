@@ -34,6 +34,8 @@ public class Board {
     // In Tablut black (attackers) starts.
     public Player sideToMove = Player.BLACK;
     private int movesWithoutCapture = 0;
+    private int movesWithoutCaptureCopy = 0;
+
     private boolean stalemateTrackingInitialized = false;
     private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
 
@@ -118,10 +120,38 @@ public class Board {
     }
 
 
-    //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
-    public void applyMove(Move move) {
+    // führt einen kompletten zug aus
+    // 1. applyMove
+    //2. steine schlagen
+    //3. aktiver Spieler wechselt
+    //4. stalemateCounter inkrementieren
+    public void makeMove (Move move){
+        //Steine schlagen
         ArrayList<Hit> hits = checkHit(move);
         this.hit(hits);
+
+        //Zug anwenden
+        applyMove(move);
+
+        //Counter für Züge ohne Schlagen inkrementieren oder auf 0 zurücksetzen
+        if (hits.isEmpty()){
+            movesWithoutCapture++;
+        } else {
+            movesWithoutCaptureCopy = movesWithoutCapture;
+            movesWithoutCapture = 0;
+
+        }
+
+        //Spieler am Zug wechseln
+        this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
+
+        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+    }
+
+
+    //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
+    public void applyMove(Move move) {
+
         if (move.movedPiece == Piece.KING) {
             if (getPieceAt(move.from) == Piece.KING &&
                     (getPieceAt(move.to) == Piece.EMPTY || getPieceAt(move.to) == Piece.BLOCKED)) {
@@ -167,18 +197,23 @@ public class Board {
                  Bitboard90.removeBit(whiteKing, move.to);
                  Bitboard90.setBit(whiteKing, move.from);
              }
-             return;
          }
          else if (move.movedPiece == Piece.WHITE && getPieceAt(move.to) == Piece.WHITE && getPieceAt(move.from) == Piece.EMPTY) {
              Bitboard90.removeBit(white, move.to);
              Bitboard90.setBit(white, move.from);
-             return;
          }
          else if (move.movedPiece == Piece.BLACK && getPieceAt(move.to) == Piece.BLACK && getPieceAt(move.from) == Piece.EMPTY) {
              Bitboard90.removeBit(black, move.to);
              Bitboard90.setBit(black, move.from);
-             return;
          }
+
+         if (hits.isEmpty()){
+             movesWithoutCapture = movesWithoutCaptureCopy;
+         } else movesWithoutCapture--;
+        this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
+
+        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
+
     }
 
 
