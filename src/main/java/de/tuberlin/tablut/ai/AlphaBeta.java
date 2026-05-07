@@ -1,6 +1,7 @@
 package de.tuberlin.tablut.ai;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class AlphaBeta {
 
@@ -9,6 +10,9 @@ public class AlphaBeta {
         return 0;
     }
 
+    ///////////////////////////////////////////////////////////////////////
+    /// reine Alpha-Beta-Suche
+    ///////////////////
     //Wrapper für den Aufruf der Alpha-Beta-Suche. Alternativ hätte man auch alles in eine Funktion mit Fallunterscheidung reinpacken können. Ich fand aber die Zweiteilung in Min-Max aber besser, da analog zur GKI-VL
     static int alphaBetaSearch(Board state, int depth, int alpha, int beta){
         if (state.sideToMove == BestMove.maxPlayer){
@@ -22,7 +26,7 @@ public class AlphaBeta {
         }
     }
 
-    //Alpha-Beta-Min basierend auf GKI-VL WS2526 05A01 Folie 14
+    //Alpha-Beta-Max basierend auf GKI-VL WS2526 05A01 Folie 14
     static int alphaBetaMax(Board state, int depth, int alpha, int beta){
         if(depth == 0 || state.gameIsEnd()){
             return evaluateState(state);
@@ -41,12 +45,11 @@ public class AlphaBeta {
         return alpha;
     }
 
-    //Alpha-Beta-Max basierend auf GKI-VL WS2526 05A01 Folie 14
+    //Alpha-Beta-Min basierend auf GKI-VL WS2526 05A01 Folie 14
     static int alphaBetaMin(Board state, int depth, int alpha, int beta){
         if(depth == 0 || state.gameIsEnd()){
             return evaluateState(state);
         }
-        int value = 9001;
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         for (Move move : moves){
             Board newState = Board.boardAfterMove(state, move);
@@ -59,5 +62,70 @@ public class AlphaBeta {
             }
         }
         return beta;
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    /// Alpha-Beta mit Zugsortierung
+    ///////////////////
+    static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta){
+        if(depth == 0 || state.gameIsEnd()){
+            return evaluateState(state);
+        }
+        ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
+        //Zugsortierung
+        sortMoves(state, moves,state.sideToMove);
+
+        // * Max-Player
+        if (state.sideToMove == BestMove.maxPlayer) {
+        // Rekursiver Aufruf
+            for (Move move : moves) {
+                Board newState = Board.boardAfterMove(state, move);
+                int score = sortedAlphaBetaSearch(newState, depth - 1, alpha, beta);
+                if (score >= beta) {
+                    return beta; //Cutoff
+                }
+                if (score > alpha) {
+                    alpha = score;
+                }
+            }
+            return alpha;
+        }
+
+        // * Min-Player
+        else if (state.sideToMove == BestMove.minPlayer){
+            // Rekursiver Aufruf
+            for (Move move : moves){
+                Board newState = Board.boardAfterMove(state, move);
+                int score = sortedAlphaBetaSearch(newState,depth-1,alpha,beta);
+                if (score <= alpha){
+                    return alpha; //Cutoff
+                }
+                if (score < beta){
+                    beta = score;
+                }
+            }
+            return beta;
+        }
+        else {
+            throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
+        }
+    }
+
+    static void sortMoves(Board state,ArrayList<Move> moves, Player sideToMove){
+        //Zugsortierung absteigend
+        if (sideToMove == BestMove.maxPlayer) {
+            moves.sort(
+                    Comparator.comparingInt(
+                            (Move move) -> evaluateState(Board.boardAfterMove(state, move))
+                    ).reversed()
+            );
+        }
+        else {
+            moves.sort(
+                    Comparator.comparingInt(
+                            (Move move) -> evaluateState(Board.boardAfterMove(state, move))
+                    )
+            );
+        }
     }
 }
