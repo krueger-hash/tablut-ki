@@ -645,4 +645,23 @@ public class BoardTest {
         assertFalse(board.isStalemate(), "Initial position should not be stalemate");
     }
 
+    @Test
+    public void testFenToMove(){
+        String fen ="3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S 48";
+        Board test = Board.fenToBoard(fen);
+        assertEquals(Player.BLACK,test.sideToMove);
+        assertEquals(48,test.movesWithoutCapture);
+        assertEquals(1,test.whiteKing.bitCount());
+        assertEquals(8,test.white.bitCount());
+        assertEquals(16,test.black.bitCount());
+
+        fen ="3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S";
+        test = Board.fenToBoard(fen);
+        assertEquals(Player.BLACK,test.sideToMove);
+        assertEquals(0,test.movesWithoutCapture);
+        assertEquals(1,test.whiteKing.bitCount());
+        assertEquals(8,test.white.bitCount());
+        assertEquals(16,test.black.bitCount());
+    }
+
 }

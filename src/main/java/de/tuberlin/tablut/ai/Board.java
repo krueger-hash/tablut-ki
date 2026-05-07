@@ -33,7 +33,7 @@ public class Board {
 
     // In Tablut black (attackers) starts.
     public Player sideToMove = Player.BLACK;
-    private int movesWithoutCapture = 0;
+    int movesWithoutCapture = 0;
     private boolean stalemateTrackingInitialized = false;
     private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
 
@@ -75,6 +75,19 @@ public class Board {
         this.black = black;
         this.sideToMove=sideToMove;
         resetStalemateTracking(sideToMove);
+    }
+
+    public Board(Bitboard90 white,
+                 Bitboard90 whiteKing,
+                 Bitboard90 black,
+                 Player sideToMove,
+                 int movesWithoutCapture){
+
+        this.white = white;
+        this.whiteKing = whiteKing;
+        this.black = black;
+        this.sideToMove=sideToMove;
+        this.movesWithoutCapture = movesWithoutCapture;
     }
 
     void main() {
@@ -893,7 +906,19 @@ public class Board {
         else {
             throw new IllegalArgumentException ("undefinierter Symbol für Startseite: "+ side);
         }
-        return new Board(white,whiteKing,black,sideToMove);
+
+        // * 50-Züge-Regel Parameter auslesen
+        if (parts.length > 2){
+            int capturelessMoves = Integer.parseInt(parts[2]);
+            return new Board(white, whiteKing, black, sideToMove, capturelessMoves);
+        }
+
+        //Return, falls nur sideToMove und Stellung angegeben sind
+        return new Board(white, whiteKing, black, sideToMove);
+
+
+
+
     }
 
     //Funktion gibt ein das Board zurück, das nach einem Move entsteht. ZugSpieler werden durch Auslesen der Klassenattribute geupdatet.
