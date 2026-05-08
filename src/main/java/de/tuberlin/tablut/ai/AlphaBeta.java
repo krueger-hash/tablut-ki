@@ -5,20 +5,23 @@ import java.util.Comparator;
 
 public class AlphaBeta {
 
+    private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
+    private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
+
     //nur Mock-Up, damit ich nicht die ganze Zeit rote Linien sehen muss
-    static int evaluateState(Board state){
-        return 0;
-    }
+//    static int evaluateState(Board state){
+//        return 0;
+//    }
 
     ///////////////////////////////////////////////////////////////////////
     /// reine Alpha-Beta-Suche
     ///////////////////
     //Wrapper für den Aufruf der Alpha-Beta-Suche. Alternativ hätte man auch alles in eine Funktion mit Fallunterscheidung reinpacken können. Ich fand aber die Zweiteilung in Min-Max aber besser, da analog zur GKI-VL
     static int alphaBetaSearch(Board state, int depth, int alpha, int beta){
-        if (state.sideToMove == BestMove.maxPlayer){
+        if (state.sideToMove == maxPlayer){
             return alphaBetaMax(state,depth,alpha,beta);
         }
-        if (state.sideToMove == BestMove.minPlayer){
+        if (state.sideToMove == minPlayer){
             return alphaBetaMin(state,depth,alpha,beta);
         }
         else {
@@ -29,7 +32,7 @@ public class AlphaBeta {
     //Alpha-Beta-Max basierend auf GKI-VL WS2526 05A01 Folie 14
     static int alphaBetaMax(Board state, int depth, int alpha, int beta){
         if(depth == 0 || state.gameIsEnd()){
-            return evaluateState(state);
+            return BoardEvaluator.evaluate(state);
         }
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         for (Move move : moves){
@@ -48,7 +51,7 @@ public class AlphaBeta {
     //Alpha-Beta-Min basierend auf GKI-VL WS2526 05A01 Folie 14
     static int alphaBetaMin(Board state, int depth, int alpha, int beta){
         if(depth == 0 || state.gameIsEnd()){
-            return evaluateState(state);
+            return BoardEvaluator.evaluate(state);
         }
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         for (Move move : moves){
@@ -69,14 +72,14 @@ public class AlphaBeta {
     ///////////////////
     static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta){
         if(depth == 0 || state.gameIsEnd()){
-            return evaluateState(state);
+            return BoardEvaluator.evaluate(state);
         }
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         //Zugsortierung
         sortMoves(state, moves,state.sideToMove);
 
         // * Max-Player
-        if (state.sideToMove == BestMove.maxPlayer) {
+        if (state.sideToMove == maxPlayer) {
         // Rekursiver Aufruf
             for (Move move : moves) {
                 Board newState = Board.boardAfterMove(state, move);
@@ -92,7 +95,7 @@ public class AlphaBeta {
         }
 
         // * Min-Player
-        else if (state.sideToMove == BestMove.minPlayer){
+        else if (state.sideToMove == minPlayer){
             // Rekursiver Aufruf
             for (Move move : moves){
                 Board newState = Board.boardAfterMove(state, move);
@@ -113,17 +116,17 @@ public class AlphaBeta {
 
     static void sortMoves(Board state,ArrayList<Move> moves, Player sideToMove){
         //Zugsortierung absteigend
-        if (sideToMove == BestMove.maxPlayer) {
+        if (sideToMove == maxPlayer) {
             moves.sort(
                     Comparator.comparingInt(
-                            (Move move) -> evaluateState(Board.boardAfterMove(state, move))
+                            (Move move) -> BoardEvaluator.evaluate(Board.boardAfterMove(state, move))
                     ).reversed()
             );
         }
         else {
             moves.sort(
                     Comparator.comparingInt(
-                            (Move move) -> evaluateState(Board.boardAfterMove(state, move))
+                            (Move move) -> BoardEvaluator.evaluate(Board.boardAfterMove(state, move))
                     )
             );
         }
