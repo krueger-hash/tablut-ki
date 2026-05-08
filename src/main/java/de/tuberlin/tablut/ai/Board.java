@@ -30,7 +30,7 @@ public class Board {
 
     // In Tablut black (attackers) starts.
     public Player sideToMove = Player.BLACK;
-    private int movesWithoutCapture = 0;
+    public int movesWithoutCapture = 0;
     private final Stack<Integer> movesWithoutCaptureStack = new Stack<>();
 
     private boolean stalemateTrackingInitialized = false;
