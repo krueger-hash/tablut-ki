@@ -130,12 +130,14 @@ public class Board {
     }
 
 
+
+    // TODO: makeMove unmakeMove - check if there is another way to pass hits from makeMove to unmakeMove, then to return it from makeMove
     // führt einen kompletten zug aus
     // 1. applyMove
     //2. steine schlagen
     //3. aktiver Spieler wechselt
     //4. stalemateCounter inkrementieren
-    public void makeMove (Move move){
+    public ArrayList<Hit> makeMove (Move move){
         //Steine schlagen
         ArrayList<Hit> hits = checkHit(move);
         this.hit(hits);
@@ -155,6 +157,7 @@ public class Board {
         this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
 
         positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+        return hits;
     }
 
     public void unmakeMove (Move move, ArrayList<Hit> hits){

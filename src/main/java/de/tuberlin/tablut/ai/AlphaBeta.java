@@ -114,19 +114,28 @@ public class AlphaBeta {
         }
     }
 
+    static int evalMove(Move move, Board state){
+        ArrayList<Hit> hits = state.makeMove(move);
+        int result = BoardEvaluator.evaluate(state);
+        state.unmakeMove(move, hits);
+        return result;
+    }
+
     static void sortMoves(Board state,ArrayList<Move> moves, Player sideToMove){
         //Zugsortierung absteigend
+
+
         if (sideToMove == maxPlayer) {
             moves.sort(
                     Comparator.comparingInt(
-                            (Move move) -> BoardEvaluator.evaluate(Board.boardAfterMove(state, move))
+                            (Move move) -> evalMove(move, state)
                     ).reversed()
             );
         }
         else {
             moves.sort(
                     Comparator.comparingInt(
-                            (Move move) -> BoardEvaluator.evaluate(Board.boardAfterMove(state, move))
+                            (Move move) -> evalMove(move, state)
                     )
             );
         }
