@@ -1,9 +1,6 @@
 package de.tuberlin.tablut.ai;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Board {
 
@@ -33,7 +30,9 @@ public class Board {
 
     // In Tablut black (attackers) starts.
     public Player sideToMove = Player.BLACK;
-    int movesWithoutCapture = 0;
+    private int movesWithoutCapture = 0;
+    private final Stack<Integer> movesWithoutCaptureStack = new Stack<>();
+
     private boolean stalemateTrackingInitialized = false;
     private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
 
@@ -131,10 +130,75 @@ public class Board {
     }
 
 
-    //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
-    public void applyMove(Move move) {
+    // führt einen kompletten zug aus
+    // 1. applyMove
+    //2. steine schlagen
+    //3. aktiver Spieler wechselt
+    //4. stalemateCounter inkrementieren
+    public void makeMove (Move move){
+        //Steine schlagen
         ArrayList<Hit> hits = checkHit(move);
         this.hit(hits);
+
+        //Zug anwenden
+        applyMove(move);
+
+        //Counter für Züge ohne Schlagen inkrementieren oder auf 0 zurücksetzen
+        if (hits.isEmpty()){
+            movesWithoutCapture++;
+        } else {
+            movesWithoutCapture = 0;
+        }
+        //aktuelle Anzahl an Zügen ohne Schlagen auf Stack legen
+        movesWithoutCaptureStack.push(movesWithoutCapture);
+        //Spieler am Zug wechseln
+        this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
+
+        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+    }
+
+    public void unmakeMove (Move move, ArrayList<Hit> hits){
+        for (Hit h : hits) {
+            if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
+            if (h.piece() == Piece.BLACK && getPieceAt(h.position()) == Piece.EMPTY) {
+                Bitboard90.setBit(black, h.position());
+            }
+            if (h.piece() == Piece.KING && getPieceAt(h.position()) == Piece.EMPTY) {
+                Bitboard90.setBit(whiteKing, h.position());
+            }
+            if (h.piece() == Piece.WHITE && getPieceAt(h.position()) == Piece.EMPTY) {
+                Bitboard90.setBit(white, h.position());
+            }
+        }
+        if (move.movedPiece == Piece.KING) {
+            if (getPieceAt(move.to) == Piece.KING &&
+                    (getPieceAt(move.from) == Piece.EMPTY || getPieceAt(move.from) == Piece.BLOCKED)) {
+                Bitboard90.removeBit(whiteKing, move.to);
+                Bitboard90.setBit(whiteKing, move.from);
+            }
+        }
+        else if (move.movedPiece == Piece.WHITE && getPieceAt(move.to) == Piece.WHITE && getPieceAt(move.from) == Piece.EMPTY) {
+            Bitboard90.removeBit(white, move.to);
+            Bitboard90.setBit(white, move.from);
+        }
+        else if (move.movedPiece == Piece.BLACK && getPieceAt(move.to) == Piece.BLACK && getPieceAt(move.from) == Piece.EMPTY) {
+            Bitboard90.removeBit(black, move.to);
+            Bitboard90.setBit(black, move.from);
+        }
+    // letzte Anzahl an Zügen ohne Schlagen von Stack entfernen und speichern
+        movesWithoutCapture = movesWithoutCaptureStack.pop();
+
+        //Spieler am Zug zurück wechseln
+        this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
+
+        // Zug entfernen
+        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
+
+    }
+
+    //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
+    public void applyMove(Move move) {
+
         if (move.movedPiece == Piece.KING) {
             if (getPieceAt(move.from) == Piece.KING &&
                     (getPieceAt(move.to) == Piece.EMPTY || getPieceAt(move.to) == Piece.BLOCKED)) {

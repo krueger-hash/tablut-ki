@@ -22,7 +22,7 @@ public class PerformanceTest {
             Board copy = Board.deepCopy(board);
 
             // apply the moves
-            copy.applyMove(move);
+            copy.makeMove(move);
 
             // call perft recursively
             nodes += perft(copy, depth-1, Board.oppositeSide(player));
