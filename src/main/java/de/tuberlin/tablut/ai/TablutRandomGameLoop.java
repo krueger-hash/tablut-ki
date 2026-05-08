@@ -19,6 +19,14 @@ public class TablutRandomGameLoop {
     private Board board = new Board();
     private Player localPlayer = Player.BLACK;
 
+
+    private static final int EXPECTED_MOVES = 60; // Total expected moves by current player in the entire game
+    private static final int MIN_EXPECTED_MOVES = 10; // Expect that the game has always at least 10 moves left
+    private static final int MAX_SEARCH_DEPTH = 6; // Maximum search depth for alpha-beta search
+    private static final long SAFETY_BUFFER_MS = 500; // Used to calculate hard time limit for the alpha beta search (max time to use)
+    private long remainingMs = 300_000; // Remaining Ms for the entire game
+    private int moveNumber = 0; // Number of moves made by the current player
+
     public static void run(String[] args) {
         ClientOptions options = ClientOptions.fromArgs(args);
         try {
@@ -189,7 +197,13 @@ public class TablutRandomGameLoop {
                 board.printBoard();
                 System.out.println("Opponent played " + line.substring("move ".length()));
                 // TODO: currently respond with random move - later -> respond with calculated move
-                makeRandomMove(in, out);
+//                makeRandomMove(in, out);
+                // TODO: evaluate strucutre and time management?
+                long moveBudgetMs = calculateMoveBudgetMs();
+                Move move = new BestMoveInTime(board, MAX_SEARCH_DEPTH, (int)moveBudgetMs).getMove();
+                // TODO: change to makemove?
+                board.applyMove(move);
+
                 System.out.println("Our Move");
                 board.printBoard();
                 continue;
@@ -199,6 +213,18 @@ public class TablutRandomGameLoop {
             }
             throw new IOException("Unexpected game message: " + line);
         }
+    }
+
+    public long calculateMoveBudgetMs(){
+        int expectedMovesLeft = Math.max(MIN_EXPECTED_MOVES, EXPECTED_MOVES - moveNumber);
+        // Distribute time equally between expected moves in the game
+        long budget = remainingMs / expectedMovesLeft;
+        // Never use full time, due to uncertainty (Network effects, Java overhead, Server-Communication)
+        long hardLimit = remainingMs - SAFETY_BUFFER_MS;
+
+        // TODO: check whether this is needed
+        // 10 ms to ensure methode never results in to low ms (for bestMovesInTime logic)
+        return Math.max(10, Math.min(budget, hardLimit));
     }
 
     private void makeRandomMove(BufferedReader in, BufferedWriter out) throws IOException {
@@ -249,6 +275,10 @@ public class TablutRandomGameLoop {
         if ("start_pos".equals(key) && !value.isBlank()) {
             board = Board.fenToBoard(String.join("", value.split("\\s+")));
         }
+        if ("time_account".equals(key) && !value.isBlank()) {
+            remainingMs = (long) (Double.parseDouble(value) * 1000);
+        }
+
     }
 
     private void sendAndExpectOk(BufferedReader in, BufferedWriter out, String command) throws IOException {
