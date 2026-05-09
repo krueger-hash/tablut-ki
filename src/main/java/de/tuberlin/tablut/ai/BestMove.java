@@ -2,6 +2,7 @@ package de.tuberlin.tablut.ai;
 
 import java.util.ArrayList;
 
+@Deprecated
 public class BestMove {
 
     private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
