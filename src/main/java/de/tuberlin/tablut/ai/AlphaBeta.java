@@ -2,8 +2,6 @@ package de.tuberlin.tablut.ai;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 
 public class AlphaBeta {
 
@@ -78,7 +76,7 @@ public class AlphaBeta {
         }
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         //Zugsortierung
-        sortMoves(state, moves);
+        sortMoves(state, moves,state.sideToMove);
 
         // * Max-Player
         if (state.sideToMove == maxPlayer) {
@@ -120,33 +118,24 @@ public class AlphaBeta {
         ArrayList<Hit> hits = state.makeMove(move);
         int result = BoardEvaluator.evaluate(state);
         state.unmakeMove(move, hits);
-//        System.out.println("Board:");
-//        state.printBoard();
-        System.out.println("Move:"+move+" - Result:" +result);
         return result;
     }
 
-    static void sortMoves(Board state,ArrayList<Move> moves){
-        Player sideToMove = state.sideToMove;
-
-        Map<Move, Integer> scores = new HashMap<>();
-        for (Move move : moves) {
-            scores.put(move, evalMove(move, state));
-        }
-
+    static void sortMoves(Board state,ArrayList<Move> moves, Player sideToMove){
         //Zugsortierung absteigend
+
+
         if (sideToMove == maxPlayer) {
             moves.sort(
                     Comparator.comparingInt(
-                            ((Move move) -> scores.get(move))
+                            (Move move) -> evalMove(move, state)
                     ).reversed()
             );
         }
-        //Zugsortierung aufsteigend
         else {
             moves.sort(
                     Comparator.comparingInt(
-                            ((Move move) -> scores.get(move))
+                            (Move move) -> evalMove(move, state)
                     )
             );
         }
