@@ -120,9 +120,7 @@ public class AlphaBeta {
         ArrayList<Hit> hits = state.makeMove(move);
         int result = BoardEvaluator.evaluate(state);
         state.unmakeMove(move, hits);
-//        System.out.println("Board:");
-//        state.printBoard();
-        System.out.println("Move:"+move+" - Result:" +result);
+//        System.out.println("Move:"+move+" - Result:" +result);
         return result;
     }
 
