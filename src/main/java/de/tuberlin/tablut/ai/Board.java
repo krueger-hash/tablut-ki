@@ -4,35 +4,40 @@ import java.util.*;
 
 public class Board {
 
-    public long whiteLow = (1L << 24) | (1L << 34) | (1L << 42) | (1L << 43) | (1L << 45) | (1L << 46) | (1L << 54);
-    public long whiteHigh = (1L);
+//    public long whiteLow = (1L << 24) | (1L << 34) | (1L << 42) | (1L << 43) | (1L << 45) | (1L << 46) | (1L << 54);
+//    public long whiteHigh = (1L);
+//
+//    public long whiteKingLow = 1L << 44;
+//    public long whiteKingHigh = 0L;
+//
+//    public long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) |
+//            (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
+//    public long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
 
-    public long whiteKingLow = 1L << 44;
-    public long whiteKingHigh = 0L;
-
-    public long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) |
-            (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
-    public long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
-
+    // konstante Randbedingungen (Feld und Regeln)
     public static final long BLOCKED_LOW = (1L << 0) | (1L << 8);
     public static final long BLOCKED_HIGH = (1L << 16) | (1L << 24);
+    public static final Bitboard90 BLOCKED_PIECES = new Bitboard90(BLOCKED_LOW, BLOCKED_HIGH);
+    public static final  Bitboard90 THRONE = new Bitboard90(1L << 44, 0L);
 
+    private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
+    private static final int STALEMATE_REPETITION_LIMIT = 3;
 
+    //////////////////////////////////////////////////
+    /// Zustand des Spiels
+    // * Stellung der Figuren
     public Bitboard90 white;
     public Bitboard90 whiteKing;
     public Bitboard90 black;
 
+    // * Spieler, der am Zug ist
+    public Player sideToMove = Player.BLACK; // In Tablut black (attackers) starts.
 
-    public static final Bitboard90 BLOCKED_PIECES = new Bitboard90(BLOCKED_LOW, BLOCKED_HIGH);
-    public static final  Bitboard90 THRONE = new Bitboard90(1L << 44, 0L);
-    private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
-    private static final int STALEMATE_REPETITION_LIMIT = 3;
-
-    // In Tablut black (attackers) starts.
-    public Player sideToMove = Player.BLACK;
+    // * Anzahl Züge ohne geschlagene Figur
     public int movesWithoutCapture = 0;
     private final Stack<Integer> movesWithoutCaptureStack = new Stack<>();
 
+    // * Tracking der vergangenen BoardStates
     private boolean stalemateTrackingInitialized = false;
     private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
 
@@ -49,12 +54,12 @@ public class Board {
 
     //Konstruktoren:
     //Startaufstellung:
-    public Board() {
-        this.white = new Bitboard90(whiteLow, whiteHigh);
-        this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
-        this.black = new Bitboard90(blackLow, blackHigh);
-        resetStalemateTracking();
-    }
+//    public Board() {
+//        this.white = new Bitboard90(whiteLow, whiteHigh);
+//        this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
+//        this.black = new Bitboard90(blackLow, blackHigh);
+//        resetStalemateTracking();
+//    }
 
     public Board(Bitboard90 white,
                  Bitboard90 whiteKing,
