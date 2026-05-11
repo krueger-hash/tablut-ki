@@ -57,7 +57,7 @@ public class Board {
         this.white = new Bitboard90(whiteLow, whiteHigh);
         this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
         this.black = new Bitboard90(blackLow, blackHigh);
-        resetStalemateTracking();
+//        this.resetStalemateTracking(Player.BLACK);
     }
 
     public Board(Bitboard90 white,
@@ -73,11 +73,11 @@ public class Board {
                  Bitboard90 black,
                  Player sideToMove) {
 
-        this.white = white;
-        this.whiteKing = whiteKing;
-        this.black = black;
-        this.sideToMove=sideToMove;
-        resetStalemateTracking(sideToMove);
+        this(white, whiteKing, black, sideToMove,0);
+
+        //default Werte // eigenltich redundant
+        this.movesWithoutCapture = 0;
+//        resetStalemateTracking(sideToMove);
     }
 
     public Board(Bitboard90 white,
@@ -91,6 +91,11 @@ public class Board {
         this.black = black;
         this.sideToMove=sideToMove;
         this.movesWithoutCapture = movesWithoutCapture;
+
+        // eingestelltes Board in besuchte Positionen speichern
+        this.positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+
+        this.stalemateTrackingInitialized = true; // Legacy?
     }
 
     void main() {
@@ -144,11 +149,11 @@ public class Board {
     public void makeMove (Move move){
 
         //Steine schlagen
-        ArrayList<Hit> hits = checkHit(move);
+        ArrayList<Hit> hits = this.checkHit(move);
         this.applyHits(hits);
 
         //Bewegung anwenden
-        applyMove(move);
+        this.applyMove(move);
 
         //aktuelle Anzahl an Zügen ohne Schlagen auf Stack legen
         BoardStateChange change = new BoardStateChange(
@@ -169,7 +174,7 @@ public class Board {
         this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
 
         //Map mit Stellungszähler inkrementieren
-        this.positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+        this.positionCounts.merge(this.currentPositionKey(), 1, Integer::sum);
         return;
     }
 
@@ -213,7 +218,9 @@ public class Board {
         this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
 
         // Zug entfernen
+        System.out.println(positionCounts.get(currentPositionKey()));
         positionCounts.merge(currentPositionKey(), -1, Integer::sum);
+        System.out.println(positionCounts.get(currentPositionKey()));
 
     }
 
@@ -572,7 +579,7 @@ public class Board {
             return false;
         }
 
-        ensureStalemateTrackingInitialized();
+//        ensureStalemateTrackingInitialized(); // welchen Sinn hat das hier?; wenn erst hier sichergegangen wird, dass Tracking stattfindet, ist es zu spät, da ggf. der ursprungszug fehlt
 
         // *50 Zuege ohne geschlagene Figur;
         if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
@@ -594,10 +601,6 @@ public class Board {
         return false;
     }
 
-    public void resetStalemateTracking() {
-        resetStalemateTracking(Player.BLACK);
-    }
-
     public void resetStalemateTracking(Player sideToMove) {
         this.sideToMove = sideToMove;
         this.movesWithoutCapture = 0;
@@ -609,7 +612,7 @@ public class Board {
         if (stalemateTrackingInitialized) {
             return;
         }
-        positionCounts.put(currentPositionKey(), 1);
+        positionCounts.put(this.currentPositionKey(), 1);
         stalemateTrackingInitialized = true;
     }
 
@@ -637,13 +640,13 @@ public class Board {
 
     private PositionKey currentPositionKey() {
         return new PositionKey(
-                white.low,
-                white.high,
-                whiteKing.low,
-                whiteKing.high,
-                black.low,
-                black.high,
-                sideToMove
+                this.white.low,
+                this.white.high,
+                this.whiteKing.low,
+                this.whiteKing.high,
+                this.black.low,
+                this.black.high,
+                this.sideToMove
         );
     }
 
