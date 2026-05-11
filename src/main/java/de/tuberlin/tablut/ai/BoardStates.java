@@ -3,14 +3,16 @@ package de.tuberlin.tablut.ai;
 import java.util.ArrayList;
 
 public class BoardStates {
-    public static Move move;
-    public static ArrayList<Hit> hits;
-    public static int movesWithoutHit;
+    public final Move move;
+    public final ArrayList<Hit> hits;
+    public final int movesWithoutHit;
 
 
-    BoardStates(Move move, ArrayList<Hit> hits, int movesWithoutHit){
-        BoardStates.movesWithoutHit = movesWithoutHit;
-        BoardStates.move = move;
-        BoardStates.hits = hits;
+
+
+    public BoardStates(Move move, ArrayList<Hit> hits, int movesWithoutHit) {
+        this.move = move;
+        this.hits = hits;
+        this.movesWithoutHit = movesWithoutHit;
     }
 }

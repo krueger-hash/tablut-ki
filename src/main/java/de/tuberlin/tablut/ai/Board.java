@@ -138,12 +138,8 @@ public class Board {
     //3. aktiver Spieler wechselt
     //4. stalemateCounter inkrementieren
     public ArrayList<Hit> makeMove (Move move){
-        //Steine schlagen
         ArrayList<Hit> hits = checkHit(move);
-        this.hit(hits);
 
-        //Zug anwenden
-        applyMove(move);
 
         //aktuelle Anzahl an Zügen ohne Schlagen auf Stack legen
         BoardStates change = new BoardStates(
@@ -152,6 +148,12 @@ public class Board {
                 movesWithoutCapture
         );
         boardStates.push(change);
+
+        //Steine schlagen
+        this.hit(hits);
+
+        //Zug anwenden
+        applyMove(move);
 
         //Counter für Züge ohne Schlagen inkrementieren oder auf 0 zurücksetzen
         if (hits.isEmpty()){
@@ -171,6 +173,8 @@ public class Board {
         BoardStates change = boardStates.pop();
         ArrayList<Hit> hits = change.hits;
         Move move = change.move;
+        // letzte Anzahl an Zügen ohne Schlagen von Stack entfernen und speichern
+        movesWithoutCapture = change.movesWithoutHit;
 
         for (Hit h : hits) {
             if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
@@ -199,8 +203,6 @@ public class Board {
             Bitboard90.removeBit(black, move.to);
             Bitboard90.setBit(black, move.from);
         }
-        // letzte Anzahl an Zügen ohne Schlagen von Stack entfernen und speichern
-        movesWithoutCapture = change.movesWithoutHit;
 
 
         //Spieler am Zug zurück wechseln
