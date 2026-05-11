@@ -4,16 +4,6 @@ import java.util.*;
 
 public class Board {
 
-//    public long whiteLow = (1L << 24) | (1L << 34) | (1L << 42) | (1L << 43) | (1L << 45) | (1L << 46) | (1L << 54);
-//    public long whiteHigh = (1L);
-//
-//    public long whiteKingLow = 1L << 44;
-//    public long whiteKingHigh = 0L;
-//
-//    public long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) |
-//            (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
-//    public long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
-
     // konstante Randbedingungen (Feld und Regeln)
     public static final long BLOCKED_LOW = (1L << 0) | (1L << 8);
     public static final long BLOCKED_HIGH = (1L << 16) | (1L << 24);
@@ -35,7 +25,9 @@ public class Board {
 
     // * Anzahl Züge ohne geschlagene Figur
     public int movesWithoutCapture = 0;
-    private final Stack<BoardStates> boardStates = new Stack<>();
+
+    //Stack der Änderungen am Board (insbesondere für Suche wichtig)
+    private final Stack<BoardStateChange> boardStateChanges = new Stack<>();
 
     // * Tracking der vergangenen BoardStates
     private boolean stalemateTrackingInitialized = false;
@@ -54,12 +46,19 @@ public class Board {
 
     //Konstruktoren:
     //Startaufstellung:
-//    public Board() {
-//        this.white = new Bitboard90(whiteLow, whiteHigh);
-//        this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
-//        this.black = new Bitboard90(blackLow, blackHigh);
-//        resetStalemateTracking();
-//    }
+    public Board() {
+        long whiteLow = (1L << 24) | (1L << 34) | (1L << 42) | (1L << 43) | (1L << 45) | (1L << 46) | (1L << 54);
+        long whiteHigh = (1L);
+        long whiteKingLow = 1L << 44;
+        long whiteKingHigh = 0L;
+        long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) | (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
+        long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
+
+        this.white = new Bitboard90(whiteLow, whiteHigh);
+        this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
+        this.black = new Bitboard90(blackLow, blackHigh);
+        resetStalemateTracking();
+    }
 
     public Board(Bitboard90 white,
                  Bitboard90 whiteKing,
@@ -142,38 +141,40 @@ public class Board {
     //2. steine schlagen
     //3. aktiver Spieler wechselt
     //4. stalemateCounter inkrementieren
-    public ArrayList<Hit> makeMove (Move move){
+    public void makeMove (Move move){
+
         //Steine schlagen
         ArrayList<Hit> hits = checkHit(move);
-        this.hit(hits);
+        this.applyHits(hits);
 
-        //Zug anwenden
+        //Bewegung anwenden
         applyMove(move);
 
         //aktuelle Anzahl an Zügen ohne Schlagen auf Stack legen
-        BoardStates change = new BoardStates(
+        BoardStateChange change = new BoardStateChange(
                 move,
                 hits,
-                movesWithoutCapture
+                this.movesWithoutCapture
         );
-        boardStates.push(change);
+        this.boardStateChanges.push(change);
 
         //Counter für Züge ohne Schlagen inkrementieren oder auf 0 zurücksetzen
         if (hits.isEmpty()){
-            movesWithoutCapture++;
+            this.movesWithoutCapture++;
         } else {
-            movesWithoutCapture = 0;
+            this.movesWithoutCapture = 0;
         }
 
         //Spieler am Zug wechseln
         this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
 
-        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
-        return hits;
+        //Map mit Stellungszähler inkrementieren
+        this.positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+        return;
     }
 
     public void unmakeMove (){
-        BoardStates change = boardStates.pop();
+        BoardStateChange change = boardStateChanges.pop();
         ArrayList<Hit> hits = change.hits;
         Move move = change.move;
 
@@ -205,7 +206,7 @@ public class Board {
             Bitboard90.setBit(black, move.from);
         }
         // letzte Anzahl an Zügen ohne Schlagen von Stack entfernen und speichern
-        movesWithoutCapture = change.movesWithoutHit;
+        movesWithoutCapture = change.formerMovesWithoutHit;
 
 
         //Spieler am Zug zurück wechseln
@@ -216,7 +217,7 @@ public class Board {
 
     }
 
-    //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
+    //die Bewegung ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
     public void applyMove(Move move) {
 
         if (move.movedPiece == Piece.KING) {
@@ -244,7 +245,7 @@ public class Board {
         }
     }
 
-    public void hit(ArrayList<Hit> hits){
+    public void applyHits(ArrayList<Hit> hits){
         if (hits == null) return;
         for (Hit h : hits) {
             if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
@@ -575,16 +576,22 @@ public class Board {
 
         // *50 Zuege ohne geschlagene Figur;
         if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
+            System.out.println("Stalemate durch 50 Züge Regel");
             return true;
         }
 
         // *wiederholte Stellung (Zyklenfreiheit),
         if (positionCounts.getOrDefault(currentPositionKey(), 0) >= STALEMATE_REPETITION_LIMIT) {
+            System.out.println("Stalemate durch wiederholte Stellung");
             return true;
         }
 
         // *kein Zug moeglich
-        return hasNoLegalMovesForSideToMove();
+        if (hasNoLegalMovesForSideToMove()){
+            System.out.println("Stalemate durch 'keine möglichen Züge'");
+            return true;
+        }
+        return false;
     }
 
     public void resetStalemateTracking() {
