@@ -584,19 +584,19 @@ public class Board {
 
         // *50 Zuege ohne geschlagene Figur;
         if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
-            System.out.println("Stalemate durch 50 Züge Regel");
+//            System.out.println("Stalemate durch 50 Züge Regel");
             return true;
         }
 
         // *wiederholte Stellung (Zyklenfreiheit),
         if (positionCounts.getOrDefault(currentPositionKey(), 0) >= STALEMATE_REPETITION_LIMIT) {
-            System.out.println("Stalemate durch wiederholte Stellung");
+//            System.out.println("Stalemate durch wiederholte Stellung");
             return true;
         }
 
         // *kein Zug moeglich
         if (hasNoLegalMovesForSideToMove()){
-            System.out.println("Stalemate durch 'keine möglichen Züge'");
+//            System.out.println("Stalemate durch 'keine möglichen Züge'");
             return true;
         }
         return false;
