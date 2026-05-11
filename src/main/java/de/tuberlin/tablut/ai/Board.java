@@ -93,7 +93,7 @@ public class Board {
         this.movesWithoutCapture = movesWithoutCapture;
 
         // eingestelltes Board in besuchte Positionen speichern
-        this.positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+        this.positionCounts.put(this.currentPositionKey(), 1);
 
         this.stalemateTrackingInitialized = true; // Legacy?
     }
@@ -183,6 +183,11 @@ public class Board {
         ArrayList<Hit> hits = change.hits;
         Move move = change.move;
 
+        // Zug entfernen
+//        System.out.println(positionCounts.get(currentPositionKey()));
+        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
+//        System.out.println(positionCounts.get(currentPositionKey()));
+
         for (Hit h : hits) {
             if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
             if (h.piece() == Piece.BLACK && getPieceAt(h.position()) == Piece.EMPTY) {
@@ -217,10 +222,6 @@ public class Board {
         //Spieler am Zug zurück wechseln
         this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
 
-        // Zug entfernen
-        System.out.println(positionCounts.get(currentPositionKey()));
-        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
-        System.out.println(positionCounts.get(currentPositionKey()));
 
     }
 
@@ -601,34 +602,34 @@ public class Board {
         return false;
     }
 
-    public void resetStalemateTracking(Player sideToMove) {
-        this.sideToMove = sideToMove;
-        this.movesWithoutCapture = 0;
-        this.stalemateTrackingInitialized = false;
-        this.positionCounts.clear();
-    }
+//    public void resetStalemateTracking(Player sideToMove) {
+//        this.sideToMove = sideToMove;
+//        this.movesWithoutCapture = 0;
+//        this.stalemateTrackingInitialized = false;
+//        this.positionCounts.clear();
+//    }
 
-    private void ensureStalemateTrackingInitialized() {
-        if (stalemateTrackingInitialized) {
-            return;
-        }
-        positionCounts.put(this.currentPositionKey(), 1);
-        stalemateTrackingInitialized = true;
-    }
+//    private void ensureStalemateTrackingInitialized() {
+//        if (stalemateTrackingInitialized) {
+//            return;
+//        }
+//        positionCounts.put(this.currentPositionKey(), 1);
+//        stalemateTrackingInitialized = true;
+//    }
 
-    private void registerMoveForStalemate(Move move, List<Piece> hitPieces) {
-        if (move == null) {
-            return;
-        }
-
-        ensureStalemateTrackingInitialized();
-
-        boolean captureOccurred = hitPieces != null && !hitPieces.isEmpty();
-        movesWithoutCapture = captureOccurred ? 0 : movesWithoutCapture + 1;
-        sideToMove = oppositeSide(move.movedPiece==Piece.BLACK?Player.BLACK:Player.WHITE);
-
-        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
-    }
+//    private void registerMoveForStalemate(Move move, List<Piece> hitPieces) {
+//        if (move == null) {
+//            return;
+//        }
+//
+//        ensureStalemateTrackingInitialized();
+//
+//        boolean captureOccurred = hitPieces != null && !hitPieces.isEmpty();
+//        movesWithoutCapture = captureOccurred ? 0 : movesWithoutCapture + 1;
+//        sideToMove = oppositeSide(move.movedPiece==Piece.BLACK?Player.BLACK:Player.WHITE);
+//
+//        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+//    }
 
     private boolean hasNoLegalMovesForSideToMove() {
         if (sideToMove == Player.BLACK) {
