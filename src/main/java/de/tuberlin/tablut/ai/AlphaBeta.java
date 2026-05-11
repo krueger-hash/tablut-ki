@@ -119,8 +119,10 @@ public class AlphaBeta {
     static int evalMove(Move move, Board state){
         ArrayList<Hit> hits = state.makeMove(move);
         int result = BoardEvaluator.evaluate(state);
-        state.unmakeMove(move, hits);
-//        System.out.println("Move:"+move+" - Result:" +result);
+        //state.unmakeMove(move, hits);
+        state.unmakeMove();
+        System.out.println("Move:"+move+" - Result:" +result);
+        System.out.println("Moves without Capture: " + state.movesWithoutCapture);
         return result;
     }
 

@@ -31,7 +31,7 @@ public class Board {
     // In Tablut black (attackers) starts.
     public Player sideToMove = Player.BLACK;
     public int movesWithoutCapture = 0;
-    private final Stack<Integer> movesWithoutCaptureStack = new Stack<>();
+    private final Stack<BoardStates> boardStates = new Stack<>();
 
     private boolean stalemateTrackingInitialized = false;
     private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
@@ -146,7 +146,12 @@ public class Board {
         applyMove(move);
 
         //aktuelle Anzahl an Zügen ohne Schlagen auf Stack legen
-        movesWithoutCaptureStack.push(movesWithoutCapture);
+        BoardStates change = new BoardStates(
+                move,
+                hits,
+                movesWithoutCapture
+        );
+        boardStates.push(change);
 
         //Counter für Züge ohne Schlagen inkrementieren oder auf 0 zurücksetzen
         if (hits.isEmpty()){
@@ -162,7 +167,11 @@ public class Board {
         return hits;
     }
 
-    public void unmakeMove (Move move, ArrayList<Hit> hits){
+    public void unmakeMove (){
+        BoardStates change = boardStates.pop();
+        ArrayList<Hit> hits = change.hits;
+        Move move = change.move;
+
         for (Hit h : hits) {
             if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
             if (h.piece() == Piece.BLACK && getPieceAt(h.position()) == Piece.EMPTY) {
@@ -190,8 +199,9 @@ public class Board {
             Bitboard90.removeBit(black, move.to);
             Bitboard90.setBit(black, move.from);
         }
-    // letzte Anzahl an Zügen ohne Schlagen von Stack entfernen und speichern
-        movesWithoutCapture = movesWithoutCaptureStack.pop();
+        // letzte Anzahl an Zügen ohne Schlagen von Stack entfernen und speichern
+        movesWithoutCapture = change.movesWithoutHit;
+
 
         //Spieler am Zug zurück wechseln
         this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
