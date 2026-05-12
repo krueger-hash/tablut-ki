@@ -422,15 +422,14 @@ public class Board {
         return hits;
     }
 
-
-
-    // Prints labeled 9x9 board visualizing pieces and throne
-    public  void printBoard() {
-        System.out.println("    0 1 2 3 4 5 6 7 8");
+    @Override
+    public String toString() {
+        StringBuilder boardString = new StringBuilder();
+        boardString.append("    0 1 2 3 4 5 6 7 8\n");
         for (int row = 0; row < 9; row++) {
-            StringBuilder line = new StringBuilder();
-            line.append(row).append(" | ");
+            boardString.append(row).append(" | ");
             for (int col = 0; col < 9; col++) {
+
                 int pos = row * Bitboard90.cols + col;
                 Piece piece = getPieceAt(pos);
 
@@ -448,15 +447,20 @@ public class Board {
                 } else {
                     symbol = '.';
                 }
+                boardString.append(symbol);
 
-                line.append(symbol);
                 if (col < 8) {
-                    line.append(' ');
+                    boardString.append(' ');
                 }
             }
-            line.append(" |");
-            System.out.println(line);
+            boardString.append(" |\n");
         }
+        return boardString.toString();
+    }
+
+    // Prints labeled 9x9 board visualizing pieces and throne
+    public  void printBoard() {
+        System.out.println(this);
     }
 
     // Calculates all possible moves for a given bitboard and player type.
