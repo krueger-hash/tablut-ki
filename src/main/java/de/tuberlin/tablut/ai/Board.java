@@ -171,7 +171,7 @@ public class Board {
         }
 
         //Spieler am Zug wechseln
-        this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
+        this.sideToMove = Board.oppositeSide(this.sideToMove);
 
         //Map mit Stellungszähler inkrementieren
         this.positionCounts.merge(this.currentPositionKey(), 1, Integer::sum);
@@ -190,27 +190,27 @@ public class Board {
 
         for (Hit h : hits) {
             switch(h.piece()){
-                case BLACK:
+                case Piece.BLACK:
                     Bitboard90.setBit(black, h.position());
                     break;
-                case KING:
+                case Piece.KING:
                     Bitboard90.setBit(whiteKing, h.position());
                     break;
-                case WHITE:
+                case Piece.WHITE:
                     Bitboard90.setBit(white, h.position());
             }
         }
 
         switch(move.movedPiece){
-            case BLACK:
+            case Piece.BLACK:
                 Bitboard90.removeBit(black, move.to);
                 Bitboard90.setBit(black, move.from);
                 break;
-            case KING:
+            case Piece.KING:
                 Bitboard90.removeBit(whiteKing, move.to);
                 Bitboard90.setBit(whiteKing, move.from);
                 break;
-            case WHITE:
+            case Piece.WHITE:
                 Bitboard90.removeBit(white, move.to);
                 Bitboard90.setBit(white, move.from);
         }
@@ -220,7 +220,7 @@ public class Board {
 
 
         //Spieler am Zug zurück wechseln
-        this.sideToMove = (this.sideToMove == Player.WHITE ? Player.BLACK : Player.WHITE);
+        this.sideToMove = Board.oppositeSide(this.sideToMove);
 
 
     }
@@ -657,10 +657,6 @@ public class Board {
 
     public static Player oppositeSide(Player side) {
         return side == Player.BLACK ? Player.WHITE : Player.BLACK;
-    }
-
-    private Piece oppositeSide(Piece side) {
-        return side == Piece.BLACK ? Piece.WHITE : Piece.BLACK;
     }
 
     static Board transformPointString(String pointString) {
