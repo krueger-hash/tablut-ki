@@ -167,25 +167,37 @@ public class BestMoveInTimeTest {
     }
 
     @Test
-    public void testBestMoveAtDepth_1() {
-//        String fen = "9/1b7/9/9/9/9/9/9/4K2b1 b 48"; //bester Zug für W: König auf obere linke Ecke
-        String fen = "2b6/9/b1K1b4/9/9/2b6/9/9/9 b 20"; // schwarz kann Sieg erzwingen, indem es figur auf [5,2] nach oben bewegt, ansonsten nicht; Tiefe 2 nötig!
+    public void testBestMoveAtDepth_1B() {
+        String fen = "2b6/9/b1K1b4/9/9/2b6/9/9/9 b 20"; // schwarz kann in 3 halbzügen Sieg erzwingen, indem es figur auf [5,2] nach oben bewegt, ansonsten nicht; Tiefe 3 nötig!
         Board testBoard = Board.fenToBoard(fen);
 //        testBoard.printBoard();
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMoveInTime test = new BestMoveInTime(testBoard,0);
 //        testBoard.printBoard();
-        test.bestMoveAtDepth(testBoard,moves,2);
+        test.bestMoveAtDepth(testBoard,moves,3);
 
 //        System.out.println(test.getBestMoveDuringIteration()); // warum nicht auf [3,2]?
         assertEquals(100_000,test.getBestValueDuringIteration());
-
     }
 
     @Test
-    public void testBestMoveAtDepth_2() {
-        String fen = "9/9/9/9/9/9/9/9/4K2b1 b 48"; //unentschieden sollte ab tiefe 1 erst erkannt werden
+    public void testBestMoveAtDepth_1W() {
+        String fen = "2b6/9/b1K1b4/9/2b6/9/9/9/9 w 20"; // weiß hat in 2 halbzügen verloren
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
+
+        BestMoveInTime test = new BestMoveInTime(testBoard,0);
+        test.bestMoveAtDepth(testBoard,moves,2);
+
+        System.out.println(test.getBestMoveDuringIteration()); // warum nicht auf [3,2]?
+        assertEquals(100_000,test.getBestValueDuringIteration());
+    }
+
+    @Test
+    public void testBestMoveAtDepth_2b() {
+        String fen = "9/9/9/9/9/9/9/9/4K2b1 b 20"; // weiß hat in 2 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
@@ -195,7 +207,22 @@ public class BestMoveInTimeTest {
 
         System.out.println(test.getBestMoveDuringIteration());
         System.out.println(test.getBestValueDuringIteration());
-        assertEquals(0,test.getBestValueDuringIteration());
+        assertEquals(-100_000,test.getBestValueDuringIteration());
+    }
+
+    @Test
+    public void testBestMoveAtDepth_2w() {
+        String fen = "9/9/9/9/9/9/9/9/4K2b1 w 20"; // weiß hat in 1 halbzügen gewonnen
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
+
+        BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
+        test.bestMoveAtDepth(testBoard,moves,1);
+
+        System.out.println(test.getBestMoveDuringIteration());
+        System.out.println(test.getBestValueDuringIteration());
+        assertEquals(-100_000,test.getBestValueDuringIteration());
     }
 
 }
