@@ -38,8 +38,11 @@ public class AlphaBeta {
         }
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         for (Move move : moves){
-            Board newState = Board.boardAfterMove(state, move);
-            int score = alphaBetaMin(newState,depth-1,alpha,beta); // Aufruf von ABMin
+
+            state.makeMove(move);
+            int score = alphaBetaMin(state,depth-1,alpha,beta); // Aufruf von ABMin
+            state.unmakeMove(); //unmakeMove vor den returns!
+
             if (score >= beta){
                 return beta; //Cutoff
             }
@@ -57,8 +60,11 @@ public class AlphaBeta {
         }
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         for (Move move : moves){
-            Board newState = Board.boardAfterMove(state, move);
-            int score = alphaBetaMax(newState,depth-1,alpha,beta); //Aufruf von ABMax
+
+            state.makeMove(move);
+            int score = alphaBetaMax(state,depth-1,alpha,beta); //Aufruf von ABMax
+            state.unmakeMove();
+
             if (score <= alpha){
                 return alpha; //Cutoff
             }
@@ -84,8 +90,11 @@ public class AlphaBeta {
         if (state.sideToMove == maxPlayer) {
         // Rekursiver Aufruf
             for (Move move : moves) {
-                Board newState = Board.boardAfterMove(state, move);
-                int score = sortedAlphaBetaSearch(newState, depth - 1, alpha, beta);
+
+                state.makeMove(move);
+                int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta);
+                state.unmakeMove();
+
                 if (score >= beta) {
                     return beta; //Cutoff
                 }
@@ -100,8 +109,11 @@ public class AlphaBeta {
         else if (state.sideToMove == minPlayer){
             // Rekursiver Aufruf
             for (Move move : moves){
-                Board newState = Board.boardAfterMove(state, move);
-                int score = sortedAlphaBetaSearch(newState,depth-1,alpha,beta);
+
+                state.makeMove(move);
+                int score = sortedAlphaBetaSearch(state,depth-1,alpha,beta);
+                state.unmakeMove();
+
                 if (score <= alpha){
                     return alpha; //Cutoff
                 }
@@ -117,9 +129,8 @@ public class AlphaBeta {
     }
 
     static int evalMove(Move move, Board state){
-        ArrayList<Hit> hits = state.makeMove(move);
+        state.makeMove(move);
         int result = BoardEvaluator.evaluate(state);
-        //state.unmakeMove(move, hits);
         state.unmakeMove();
         System.out.println("Move:"+move+" - Result:" +result);
         System.out.println("Moves without Capture: " + state.movesWithoutCapture);

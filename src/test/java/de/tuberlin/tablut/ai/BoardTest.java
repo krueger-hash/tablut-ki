@@ -1,7 +1,6 @@
 package de.tuberlin.tablut.ai;
 
 import org.junit.Test;
-import org.junit.jupiter.api.BeforeEach;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -134,7 +133,7 @@ public class BoardTest {
 
         Move move = new Move(22, 12, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
         boolean containsBlack = false;
         for (Hit h : hits) {
@@ -156,7 +155,7 @@ public class BoardTest {
 
         Move move = new Move(37, 38, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
         boolean containsBlack = false;
         for (Hit h : hits) {
@@ -179,7 +178,7 @@ public class BoardTest {
         Move move = new Move(22, 12, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
 
-        board.hit(hits);
+        board.applyHits(hits);
 
         boolean containsBlack = false;
         for (Hit h : hits) {
@@ -200,7 +199,7 @@ public class BoardTest {
 
         Move move = new Move(24, 34, Piece.BLACK);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         boolean containsKing = false;
@@ -222,7 +221,7 @@ public class BoardTest {
 
         Move move = new Move(43, 33, Piece.BLACK);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         boolean containsKing = false;
@@ -244,7 +243,7 @@ public class BoardTest {
 
         Move move = new Move(22, 12, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         assertEquals(2, hits.size());
@@ -263,7 +262,7 @@ public class BoardTest {
 
         Move move = new Move(3, 2, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         boolean containsBlack = false;
@@ -286,7 +285,7 @@ public class BoardTest {
 
         Move move = new Move(41, 42, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         boolean containsBlack = false;
@@ -308,7 +307,7 @@ public class BoardTest {
 
         Move move = new Move(23, 22, Piece.BLACK);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         boolean containsKing = false;
@@ -330,7 +329,7 @@ public class BoardTest {
 
         Move move = new Move(40, 30, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         boolean containsBlack = false;
@@ -353,7 +352,7 @@ public class BoardTest {
 
         Move move = new Move(12, 11, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         assertTrue(hits.isEmpty());
@@ -371,7 +370,7 @@ public class BoardTest {
 
         Move move = new Move(13, 12, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         assertTrue(hits.isEmpty());
@@ -389,7 +388,7 @@ public class BoardTest {
 
         Move move = new Move(47, 46, Piece.WHITE);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         boolean containsBlack = false;
@@ -412,7 +411,7 @@ public class BoardTest {
 
         Move move = new Move(47, 46, Piece.BLACK);
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
 
 
         assertTrue(hits.isEmpty());
@@ -435,7 +434,7 @@ public class BoardTest {
 
         Move move = new Move(14, 24, Piece.BLACK); // Schwarz zieht auf 24
         ArrayList<Hit> hits = board.checkHit(move);
-        board.hit(hits);
+        board.applyHits(hits);
         boolean containsWhite = false;
         for (Hit h : hits) {
             if (h.piece() == Piece.WHITE && h.position() == 34) {

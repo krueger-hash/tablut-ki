@@ -200,7 +200,7 @@ public class TablutRandomGameLoop {
 //                makeRandomMove(in, out);
                 // TODO: evaluate strucutre and time management?
                 long moveBudgetMs = calculateMoveBudgetMs();
-                Move move = new BestMoveInTime(board, MAX_SEARCH_DEPTH, (int)moveBudgetMs).getMove();
+                Move move = new BestMoveInTime(board, (int)moveBudgetMs).getMove();
                 // TODO: change to makemove?
                 board.applyMove(move);
 

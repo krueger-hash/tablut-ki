@@ -28,8 +28,8 @@ public class PerftTest {
         String transformedFen = "9/9/9/9/9/9/5RRRR/5RRKR/4RrR1r s";
         Board board = Board.fenToBoard(transformedFen);
         assertEquals(1, PerformanceTest.perft(board, 1, board.sideToMove), "Perft(1) should be 1 for base position black");
-        assertEquals(44, PerformanceTest.perft(board, 2, board.sideToMove), "Perft(1) should be 1 for base position black");
-        assertEquals(125, PerformanceTest.perft(board, 3, board.sideToMove), "Perft(1) should be 1 for base position black");
-        assertEquals(6453, PerformanceTest.perft(board, 4, board.sideToMove), "Perft(1) should be 1 for base position black");
+        assertEquals(44, PerformanceTest.perft(board, 2, board.sideToMove), "Perft(2) should be 44 for base position white");
+        assertEquals(125, PerformanceTest.perft(board, 3, board.sideToMove), "Perft(3) should be 125 for base position black");
+        assertEquals(6453, PerformanceTest.perft(board, 4, board.sideToMove), "Perft(4) should be 6453 for base position white");
     }
 }
