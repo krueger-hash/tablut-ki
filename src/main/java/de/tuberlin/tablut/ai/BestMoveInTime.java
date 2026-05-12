@@ -11,6 +11,9 @@ public class BestMoveInTime{
     private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
     private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
 
+    private static final int ALPHA_INIT = -1_000_000;
+    private static final int BETA_INIT = -1_000_000;
+
 
     private volatile Move bestMove; //volatile Variable, damit Future sie überschreiben kann und ein Ergebnis auch bei Timeout geliefert wird
     private volatile int bestValue;
@@ -32,9 +35,6 @@ public class BestMoveInTime{
 
             //iterative Tiefensuche
             for (int depth = 0; ; depth++) {
-
-                this.bestMoveDuringIteration = this.bestMove;
-                this.bestValueDuringIteration = 0; // bestValue muss auf jeder Suchtiefe neu initialisiert werden, da ggf. bei größerer Tiefe identische Züge schlechter bewertet werden können, als mit geringerer Tiefe
 
                 long iterationStart = System.currentTimeMillis();
                 this.bestMoveAtDepth(state, moves, depth);
@@ -82,9 +82,15 @@ public class BestMoveInTime{
     // während einer Suchtiefe wird der beste Move auf der Iterationsvariable gespeichert, damit bestMove nur basierend auf einer vollständig durchsuchten Ebene zurückgegeben wird;
     //bestValue benötigt keine intermediate Variable
     void bestMoveAtDepth(Board state, ArrayList<Move> moves, int depth){
+
+        this.bestMoveDuringIteration = this.bestMove;
+        // bestValue muss auf jeder Suchtiefe neu initialisiert werden, da ggf. bei größerer Tiefe identische Züge schlechter bewertet werden können, als mit geringerer Tiefe
+        if(state.sideToMove == maxPlayer){this.bestValueDuringIteration = ALPHA_INIT;}
+        else {this.bestValueDuringIteration = BETA_INIT;}
+
         for (Move move : moves){
             state.makeMove(move);
-            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth,-1_000_000,1_000_000); // Aufruf des Alpha-Beta-Fensters ist typischerweise mit +/- unendlich
+            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth,ALPHA_INIT,BETA_INIT);
             state.unmakeMove();
 
             if(state.sideToMove == maxPlayer) {
