@@ -225,4 +225,34 @@ public class BestMoveInTimeTest {
         assertEquals(-100_000,test.getBestValueDuringIteration());
     }
 
+    @Test
+    public void testBestMoveAtDepth_3w() {
+        String fen = "9/9/9/9/9/9/9/4K5/2b6 w 20"; // weiß hat in 3 halbzügen gewonnen
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
+
+        BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
+        test.bestMoveAtDepth(testBoard,moves,3);
+
+        System.out.println(test.getBestMoveDuringIteration());
+        System.out.println(test.getBestValueDuringIteration());
+        assertEquals(-100_000,test.getBestValueDuringIteration());
+    }
+
+    @Test
+    public void testBestMoveAtDepth_3b() {
+        String fen = "9/9/9/9/9/9/9/4K5/2b6 b 20"; // weiß hat in 4 halbzügen gewonnen
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
+
+        BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
+        test.bestMoveAtDepth(testBoard,moves,4);
+
+        System.out.println(test.getBestMoveDuringIteration());
+        System.out.println(test.getBestValueDuringIteration());
+        assertEquals(-100_000,test.getBestValueDuringIteration());
+    }
+
 }
