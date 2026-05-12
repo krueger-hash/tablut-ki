@@ -4,11 +4,9 @@ import org.junit.Test;
 import org.w3c.dom.ls.LSOutput;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class BestMoveInTimeTest {
 
@@ -146,6 +144,28 @@ public class BestMoveInTimeTest {
                 && first.movedPiece == second.movedPiece;
     }
 
+
+    @Test
+    public void testBestMoveAtDepth_allMovesUnmaked(){
+        String fen = "2b6/9/b1K1b4/9/9/2b6/9/9/9 b 20";
+        Board t = Board.fenToBoard(fen);
+//        testBoard.printBoard();
+        ArrayList<Move> moves = Board.generateLegalMoves(t, t.sideToMove);
+        BestMoveInTime test = new BestMoveInTime(Board.deepCopy(t),0);
+
+        test.bestMoveAtDepth(t,moves,2);
+        Board og = Board.fenToBoard(fen);
+
+        assertEquals(t.movesWithoutCapture,og.movesWithoutCapture);
+        assertEquals(t.isStalemateTrackingInitialized(),og.isStalemateTrackingInitialized());
+        assertEquals(t.white,og.white);
+        assertEquals(t.whiteKing,og.whiteKing);
+        assertEquals(t.black,og.black);
+        assertEquals(t.sideToMove,og.sideToMove);
+        assertEquals(t.boardStateChanges,og.boardStateChanges);
+//        assertEquals(t.getPositionCounts(),og.getPositionCounts());
+    }
+
     @Test
     public void testBestMoveAtDepth_1() {
 //        String fen = "9/1b7/9/9/9/9/9/9/4K2b1 b 48"; //bester Zug für W: König auf obere linke Ecke
@@ -154,27 +174,28 @@ public class BestMoveInTimeTest {
 //        testBoard.printBoard();
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
-        BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
-        test.bestMoveAtDepth(testBoard,moves,1);
+        BestMoveInTime test = new BestMoveInTime(testBoard,0);
+//        testBoard.printBoard();
+        test.bestMoveAtDepth(testBoard,moves,2);
 
-        System.out.println(test.getBestMoveDuringIteration());
-        System.out.println(test.getBestValueDuringIteration());
+//        System.out.println(test.getBestMoveDuringIteration()); // warum nicht auf [3,2]?
+        assertEquals(100_000,test.getBestValueDuringIteration());
 
     }
 
     @Test
     public void testBestMoveAtDepth_2() {
-//        String fen = "9/1b7/9/9/9/9/9/9/4K2b1 b 48";
-        String fen = "9/9/9/9/9/9/9/9/4K2b1 b 48"; // schwarz kann nicht gewinnen
+        String fen = "9/9/9/9/9/9/9/9/4K2b1 b 48"; //unentschieden sollte ab tiefe 1 erst erkannt werden
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
-        test.bestMoveAtDepth(testBoard,moves,3);
+        test.bestMoveAtDepth(testBoard,moves,2);
 
         System.out.println(test.getBestMoveDuringIteration());
         System.out.println(test.getBestValueDuringIteration());
+        assertEquals(0,test.getBestValueDuringIteration());
     }
 
 }
