@@ -35,7 +35,7 @@ public class BestMoveInTime{
             this.bestValue = 0;// der erste Move erstmal als Ausgangspunkt
 
             //iterative Tiefensuche
-            for (int depth = 0; ; depth++) {
+            for (int depth = 1; ; depth++) {
 
                 long iterationStart = System.currentTimeMillis();
                 this.bestMoveAtDepth(state, moves, depth);
@@ -89,9 +89,17 @@ public class BestMoveInTime{
         if(state.sideToMove == maxPlayer){this.bestValueDuringIteration = ALPHA_INIT;}
         else {this.bestValueDuringIteration = BETA_INIT;}
 
+        //Tiefe 0 ist der Wurzelknoten. dort gibt es noch keine Moves
+        if(depth == 0){
+            this.bestValueDuringIteration = BoardEvaluator.evaluate(state);
+            this.bestMove = null;
+            return;
+        }
+
         for (Move move : moves){
             state.makeMove(move);
-            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth,ALPHA_INIT,BETA_INIT);
+            //Aufruf mit depth-1, da die erste Ebene (die moves) bereits generiert wurde; d.h. wird mit depth = 1 aufgerufen, wird der Wert des ersten Halbzugs ausgewertet
+            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth-1,ALPHA_INIT,BETA_INIT);
             state.unmakeMove();
 
             if(state.sideToMove == maxPlayer) {
@@ -108,7 +116,7 @@ public class BestMoveInTime{
             }
             else {throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");}
         }
-
+        return;
     }
 
 
