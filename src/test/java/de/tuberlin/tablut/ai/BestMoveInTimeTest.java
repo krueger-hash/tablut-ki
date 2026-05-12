@@ -102,9 +102,11 @@ public class BestMoveInTimeTest {
          */
         board.printBoard();
         Move expected = new Move(8,7,8,8, Piece.KING);
-        Move bestMove = new BestMoveInTime(board,1000).getMove();
+        BestMoveInTime test = new BestMoveInTime(board,1000);
+        Move bestMove = test.getMove();
         System.out.println(bestMove);
-        assertSameMove(expected, bestMove);
+        System.out.println(test.getBestValue());
+        assertSameMove(expected, bestMove); // technisch gesehen, sind hier die Züge auch egal, da jederzeit der Sieg durch Weiß erzwungen werden kann ...
     }
 
     @Test
@@ -112,9 +114,11 @@ public class BestMoveInTimeTest {
         Board board = Board.fenToBoard("9/9/5k3/9/8b/8w/2b6/9/9 b");
         board.printBoard();
         Move expected = new Move(2,6,8,6, Piece.BLACK);
-        Move bestMove = new BestMoveInTime(board,1000).getMove();
+        BestMoveInTime test = new BestMoveInTime(board,1000);
+        Move bestMove = test.getMove();
         System.out.println(bestMove);
-        assertSameMove(expected, bestMove);
+        System.out.println(test.getBestValue());
+        assertSameMove(expected, bestMove); // das ist nach aktueller Implementierung nicht der beste Move, da schwarz in 2 Zügen verliert und somit alle Züge gleichwertig sind
     }
 
     private static void assertOnlyLegalMove(Board board, Move expected){
@@ -174,6 +178,7 @@ public class BestMoveInTimeTest {
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMoveInTime test = new BestMoveInTime(testBoard,0);
+        try {Thread.sleep(1000);}catch(InterruptedException ignored){}
 //        testBoard.printBoard();
         test.bestMoveAtDepth(testBoard,moves,3);
 
@@ -189,6 +194,8 @@ public class BestMoveInTimeTest {
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMoveInTime test = new BestMoveInTime(testBoard,0);
+        try {Thread.sleep(1000);}catch(InterruptedException ignored){}
+
         test.bestMoveAtDepth(testBoard,moves,2);
 
         System.out.println(test.getBestMoveDuringIteration()); // warum nicht auf [3,2]?
@@ -203,6 +210,7 @@ public class BestMoveInTimeTest {
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
+        try {Thread.sleep(1000);}catch(InterruptedException ignored){}
         test.bestMoveAtDepth(testBoard,moves,2);
 
         System.out.println(test.getBestMoveDuringIteration());
@@ -218,6 +226,7 @@ public class BestMoveInTimeTest {
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
+        try {Thread.sleep(1000);}catch(InterruptedException ignored){}
         test.bestMoveAtDepth(testBoard,moves,1);
 
         System.out.println(test.getBestMoveDuringIteration());
@@ -233,6 +242,7 @@ public class BestMoveInTimeTest {
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
+        try {Thread.sleep(1000);}catch(InterruptedException ignored){}
         test.bestMoveAtDepth(testBoard,moves,3);
 
         System.out.println(test.getBestMoveDuringIteration());
@@ -248,6 +258,7 @@ public class BestMoveInTimeTest {
         ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMoveInTime test = new BestMoveInTime(Board.deepCopy(testBoard),0);
+        try {Thread.sleep(1000);}catch(InterruptedException ignored){}
         test.bestMoveAtDepth(testBoard,moves,4);
 
         System.out.println(test.getBestMoveDuringIteration());
