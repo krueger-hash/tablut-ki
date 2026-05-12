@@ -1,9 +1,11 @@
 package de.tuberlin.tablut.ai;
 
 import org.junit.Test;
+import org.w3c.dom.ls.LSOutput;
 
 import java.util.ArrayList;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -55,6 +57,88 @@ public class BestMoveInTimeTest {
         assertTrue(blackBefore == board.black.bitCount());
         assertTrue(sideBefore == board.sideToMove);
         assertTrue(movesWithoutCaptureBefore == board.movesWithoutCapture);
+    }
+
+    @Test
+    public void testBestMoveInTimeReturnsOnlyLegalBlackMove(){
+        Board board = Board.fenToBoard("9/9/9/9/9/9/5RRRR/5RRKR/4RrR1r s 0"); // Same board as submitted by our group
+        /*
+                    0 1 2 3 4 5 6 7 8
+                0 | X . . . . . . . X |
+                1 | . . . . . . . . . |
+                2 | . . . . . . . . . |
+                3 | . . . . . . . . . |
+                4 | . . . . T . . . . |
+                5 | . . . . . . . . . |
+                6 | . . . . . W W W W |
+                7 | . . . . . W W K W |
+                8 | X . . . W B W . B |
+         */
+        Move expected = new Move(8, 8, 7, 8, Piece.BLACK);
+        assertOnlyLegalMove(board, expected);
+        assertSameMove(expected, new BestMoveInTime(board,3,1000).getMove());
+    }
+
+    @Test
+    public void testBestMoveInTimeReturnsOnlyLegalWhiteMove(){
+        Board board = Board.fenToBoard("9/9/9/4b4/3bKb3/4b4/9/8b/6b1w w 0");
+        /*
+                0 1 2 3 4 5 6 7 8
+            0 | X . . . . . . . X |
+            1 | . . . . . . . . . |
+            2 | . . . . . . . . . |
+            3 | . . . . B . . . . |
+            4 | . . . B K B . . . |
+            5 | . . . . B . . . . |
+            6 | . . . . . . . . . |
+            7 | . . . . . . . . B |
+            8 | X . . . . . B . W |
+         */
+        Move expected = new Move(8, 8, 7, 8, Piece.WHITE);
+        System.out.println("Test Black Best Move");
+        board.printBoard();
+
+        assertOnlyLegalMove(board, expected);
+        assertSameMove(expected, new BestMoveInTime(board,3,1000).getMove());
+    }
+
+    @Test
+    public void testBestMoveInTimeReturnsKingMoveToEscape(){
+        Board board = Board.fenToBoard("9/9/9/9/9/8b/9/8K/9 w");
+        /*
+                0 1 2 3 4 5 6 7 8
+            0 | X . . . . . . . X |
+            1 | . . . . . . . . . |
+            2 | . . . . . . . . . |
+            3 | . . . . . . . . . |
+            4 | . . . . T . . . . |
+            5 | . . . . . . . . . |
+            6 | . . . . . . . . . |
+            7 | . . . . . . . . K |
+            8 | X . . . . . . . X |
+         */
+        board.printBoard();
+        Move expected = new Move(8,7,8,8, Piece.KING);
+        Move bestMove = new BestMoveInTime(board,3,1000).getMove();
+        System.out.println(bestMove);
+        assertSameMove(expected, bestMove);
+    }
+
+    @Test
+    public void testBestMoveInTimeCaptureWhitePiece(){
+        Board board = Board.fenToBoard("9/9/5k3/9/8b/8w/2b6/9/9 b");
+        board.printBoard();
+        Move expected = new Move(2,6,8,6, Piece.BLACK);
+        Move bestMove = new BestMoveInTime(board,3,1000).getMove();
+        System.out.println(bestMove);
+        assertSameMove(expected, bestMove);
+    }
+
+    private static void assertOnlyLegalMove(Board board, Move expected){
+        ArrayList<Move> legalMoves = Board.generateLegalMoves(board, board.sideToMove);
+
+        assertEquals(1, legalMoves.size());
+        assertSameMove(expected, legalMoves.getFirst());
     }
 
     private static boolean containsMove(ArrayList<Move> moves, Move expected){
