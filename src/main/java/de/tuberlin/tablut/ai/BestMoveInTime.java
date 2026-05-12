@@ -12,7 +12,7 @@ public class BestMoveInTime{
     private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
 
     private static final int ALPHA_INIT = -1_000_000;
-    private static final int BETA_INIT = -1_000_000;
+    private static final int BETA_INIT = 1_000_000;
 
 
     private volatile Move bestMove; //volatile Variable, damit Future sie überschreiben kann und ein Ergebnis auch bei Timeout geliefert wird
@@ -23,7 +23,8 @@ public class BestMoveInTime{
 
     private final CompletableFuture<Move> future;
 
-    BestMoveInTime(Board state, int msTime) {
+    BestMoveInTime(Board originalState, int msTime) {
+        Board state = Board.deepCopy(originalState);
         this.future = CompletableFuture.supplyAsync( ()-> {
 
             long tStart = System.currentTimeMillis();
