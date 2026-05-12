@@ -84,9 +84,14 @@ public class BestMoveInTime{
     //bestValue benötigt keine intermediate Variable
     void bestMoveAtDepth(Board state, ArrayList<Move> moves, int depth){
 
+        if (state.sideToMove != maxPlayer && state.sideToMove != minPlayer){
+            throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
+        }
+
         this.bestMoveDuringIteration = this.bestMove;
+        boolean isMaxing = (state.sideToMove == maxPlayer);
         // bestValue muss auf jeder Suchtiefe neu initialisiert werden, da ggf. bei größerer Tiefe identische Züge schlechter bewertet werden können, als mit geringerer Tiefe
-        if(state.sideToMove == maxPlayer){this.bestValueDuringIteration = ALPHA_INIT;}
+        if(isMaxing){this.bestValueDuringIteration = ALPHA_INIT;}
         else {this.bestValueDuringIteration = BETA_INIT;}
 
         //Tiefe 0 ist der Wurzelknoten. dort gibt es noch keine Moves
@@ -102,19 +107,18 @@ public class BestMoveInTime{
             int value = AlphaBeta.sortedAlphaBetaSearch(state,depth-1,ALPHA_INIT,BETA_INIT);
             state.unmakeMove();
 
-            if(state.sideToMove == maxPlayer) {
+            if(isMaxing) {
                 if (value > this.bestValueDuringIteration) {
                     this.bestValueDuringIteration = value;
                     this.bestMoveDuringIteration = move;
                 }
             }
-            else if (state.sideToMove == minPlayer) {
+            else{
                 if (value < this.bestValueDuringIteration) {
                     this.bestValueDuringIteration = value;
                     this.bestMoveDuringIteration = move;
                 }
             }
-            else {throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");}
         }
         return;
     }
