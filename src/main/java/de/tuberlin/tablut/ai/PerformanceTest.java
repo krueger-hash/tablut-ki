@@ -68,13 +68,13 @@ public class PerformanceTest {
         output += String.format("%-10s %-15s%-10s", "Peft(n)", "Duration ms", "Leafs") + "\n";
         for (int depth = 1; depth <= 4; depth++) {
             output += perfTest(midGame, depth, repetitions) + "\n";
-            if(includeOld) output += perfTest(startPos, depth, repetitions, true) + " # Old Test\n";
+            if(includeOld) output += perfTest(midGame, depth, repetitions, true) + " # Old Test\n";
         }
         output += "\nEndgame: " + endGame + "\n";
         output += String.format("%-10s %-15s%-10s", "Peft(n)", "Duration ms", "Leafs") + "\n";
         for (int depth = 1; depth <= 4; depth++) {
             output += perfTest(endGame, depth, repetitions) + "\n";
-            if(includeOld) output += perfTest(startPos, depth, repetitions, true) + " # Old Test\n";
+            if(includeOld) output += perfTest(endGame, depth, repetitions, true) + " # Old Test\n";
         }
         output += "\n///////////////////////////////////////////";
 
