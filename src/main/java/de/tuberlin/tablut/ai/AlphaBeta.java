@@ -132,8 +132,8 @@ public class AlphaBeta {
         state.makeMove(move);
         int result = BoardEvaluator.evaluate(state);
         state.unmakeMove();
-        System.out.println("Move:"+move+" - Result:" +result);
-        System.out.println("Moves without Capture: " + state.movesWithoutCapture);
+//        System.out.println("Move:"+move+" - Result:" +result);
+//        System.out.println("Moves without Capture: " + state.movesWithoutCapture);
         return result;
     }
 
