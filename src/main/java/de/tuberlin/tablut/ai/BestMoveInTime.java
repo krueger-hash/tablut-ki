@@ -15,13 +15,14 @@ public class BestMoveInTime{
     private static final int BETA_INIT = 1_000_000;
 
 
-    private volatile Move bestMove; //volatile Variable, damit Future sie überschreiben kann und ein Ergebnis auch bei Timeout geliefert wird
-    private volatile int bestValue;
+    private static volatile Move bestMove; //volatile Variable, damit Future sie überschreiben kann und ein Ergebnis auch bei Timeout geliefert wird
+    private static volatile int bestValue;
 
-    private volatile Move bestMoveDuringIteration;
-    private volatile int bestValueDuringIteration;
+    private static volatile Move bestMoveDuringIteration;
+    private static volatile int bestValueDuringIteration;
 
     private final CompletableFuture<Move> future;
+
 
     BestMoveInTime(Board originalState, int msTime) {
         Board state = Board.deepCopy(originalState);
@@ -31,18 +32,18 @@ public class BestMoveInTime{
 
             // * Logik von BestMove
             ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
-            this.bestMove = moves.getFirst();
-            this.bestValue = 0;// der erste Move erstmal als Ausgangspunkt
+            bestMove = moves.getFirst();
+            bestValue = 0;// der erste Move erstmal als Ausgangspunkt
 
             //iterative Tiefensuche
             for (int depth = 1; ; depth++) {
 
                 long iterationStart = System.currentTimeMillis();
-                this.bestMoveAtDepth(state, moves, depth);
+                bestMoveAtDepth(state, moves, depth);
                 long iterationEnd = System.currentTimeMillis();
 
-                this.bestMove = this.bestMoveDuringIteration;
-                this.bestValue = this.bestValueDuringIteration;
+                bestMove = bestMoveDuringIteration;
+                bestValue = bestValueDuringIteration;
 
                 //Abbruchbedingung sinnvoll?
                 long remainingTime = msTime - (iterationEnd - tStart);
@@ -51,7 +52,7 @@ public class BestMoveInTime{
 
             }
 
-            return this.bestMove;
+            return bestMove;
         }).orTimeout(msTime,TimeUnit.MILLISECONDS);
     }
 
@@ -63,10 +64,10 @@ public class BestMoveInTime{
         }
     }
 
-    public int getBestValueDuringIteration() {
+    public static int getBestValueDuringIteration() {
         return bestValueDuringIteration;
     }
-    public Move getBestMoveDuringIteration() {
+    public static Move getBestMoveDuringIteration() {
         return bestMoveDuringIteration;
     }
 
@@ -82,41 +83,40 @@ public class BestMoveInTime{
 
     // während einer Suchtiefe wird der beste Move auf der Iterationsvariable gespeichert, damit bestMove nur basierend auf einer vollständig durchsuchten Ebene zurückgegeben wird;
     //bestValue benötigt keine intermediate Variable
-    void bestMoveAtDepth(Board state, ArrayList<Move> moves, int depth){
+    static void bestMoveAtDepth(Board state, ArrayList<Move> moves, int depth){
 
         if (state.sideToMove != maxPlayer && state.sideToMove != minPlayer){
             throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
         }
 
-        this.bestMoveDuringIteration = this.bestMove;
+        bestMoveDuringIteration = bestMove;
         boolean isMaxing = (state.sideToMove == maxPlayer);
         // bestValue muss auf jeder Suchtiefe neu initialisiert werden, da ggf. bei größerer Tiefe identische Züge schlechter bewertet werden können, als mit geringerer Tiefe
-        if(isMaxing){this.bestValueDuringIteration = ALPHA_INIT;}
-        else {this.bestValueDuringIteration = BETA_INIT;}
+        if(isMaxing){bestValueDuringIteration = ALPHA_INIT;}
+        else {bestValueDuringIteration = BETA_INIT;}
 
         //Tiefe 0 ist der Wurzelknoten. dort gibt es noch keine Moves
         if(depth == 0){
-            this.bestValueDuringIteration = BoardEvaluator.evaluate(state);
-            this.bestMove = null;
+            bestValueDuringIteration = BoardEvaluator.evaluate(state);
+            bestMove = null;
             return;
         }
 
         for (Move move : moves){
             state.makeMove(move);
-            //Aufruf mit depth-1, da die erste Ebene (die moves) bereits generiert wurde; d.h. wird mit depth = 1 aufgerufen, wird der Wert des ersten Halbzugs ausgewertet
-            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth-1,ALPHA_INIT,BETA_INIT);
+            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth-1,ALPHA_INIT,BETA_INIT);            //Aufruf mit depth-1, da die erste Ebene (die moves) bereits generiert wurde; d.h. wird mit depth = 1 aufgerufen, wird der Wert des ersten Halbzugs ausgewertet
             state.unmakeMove();
 
             if(isMaxing) {
-                if (value > this.bestValueDuringIteration) {
-                    this.bestValueDuringIteration = value;
-                    this.bestMoveDuringIteration = move;
+                if (value > bestValueDuringIteration) {
+                    bestValueDuringIteration = value;
+                    bestMoveDuringIteration = move;
                 }
             }
             else{
-                if (value < this.bestValueDuringIteration) {
-                    this.bestValueDuringIteration = value;
-                    this.bestMoveDuringIteration = move;
+                if (value < bestValueDuringIteration) {
+                    bestValueDuringIteration = value;
+                    bestMoveDuringIteration = move;
                 }
             }
         }
