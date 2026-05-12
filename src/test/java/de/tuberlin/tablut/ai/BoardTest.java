@@ -663,4 +663,150 @@ public class BoardTest {
         assertEquals(16,test.black.bitCount());
     }
 
+
+    @Test
+    public void testMakeUnmake_NoHit() {
+        String fen ="9/9/9/9/w8/9/9/9/9 w";
+        Board b = Board.fenToBoard(fen);
+
+        Move m = new Move(40, 41, Piece.WHITE);
+
+        int before = b.movesWithoutCapture;
+
+        b.makeMove(m);
+        assertEquals(Piece.WHITE, b.getPieceAt(41));
+        assertEquals(Piece.EMPTY, b.getPieceAt(40));
+        assertEquals(before + 1, b.movesWithoutCapture);
+
+        b.unmakeMove();
+        assertEquals(Piece.WHITE, b.getPieceAt(40));
+        assertEquals(Piece.EMPTY, b.getPieceAt(41));
+        assertEquals(before, b.movesWithoutCapture);
+    }
+
+    @Test
+    public void testMakeUnmake_SingleHit() {
+        String fen="9/9/9/9/w8/9/b8/w8/9 w";
+        Board b = Board.fenToBoard(fen);
+
+        Move m = new Move(40, 50, Piece.WHITE);
+
+        b.makeMove(m);
+        assertEquals(Piece.EMPTY, b.getPieceAt(60)); // geschlagener Stein weg
+        assertEquals(0, b.movesWithoutCapture);
+
+        b.unmakeMove();
+        assertEquals(Piece.WHITE, b.getPieceAt(40));
+        assertEquals(Piece.BLACK, b.getPieceAt(60));
+    }
+
+    @Test
+    public void testMakeUnmake_CaptureCounterSequence() {
+        String fen ="9/9/9/b8/w8/9/9/9/9 w";
+        Board b = Board.fenToBoard(fen);
+
+        Move m1 = new Move(40, 41, Piece.WHITE);
+        Move m2 = new Move(30, 31, Piece.BLACK);
+        Move m3 = new Move(41, 42, Piece.WHITE);
+
+        int start = b.movesWithoutCapture;
+
+        int before = b.movesWithoutCapture;
+
+        b.makeMove(m1);
+        assertEquals(Piece.WHITE, b.getPieceAt(41));
+        assertEquals(Piece.EMPTY, b.getPieceAt(40));
+        assertEquals(before + 1, b.movesWithoutCapture);
+        b.makeMove(m2);
+        assertEquals(Piece.BLACK, b.getPieceAt(31));
+        assertEquals(Piece.EMPTY, b.getPieceAt(30));
+        assertEquals(before + 2, b.movesWithoutCapture);
+
+        b.makeMove(m3);
+        assertEquals(Piece.WHITE, b.getPieceAt(42));
+        assertEquals(Piece.EMPTY, b.getPieceAt(41));
+        assertEquals(before + 3, b.movesWithoutCapture);
+
+
+        b.unmakeMove();
+        assertEquals(before + 2, b.movesWithoutCapture);
+
+        b.unmakeMove();
+        assertEquals(before + 1, b.movesWithoutCapture);
+
+        b.unmakeMove();
+
+        assertEquals(start, b.movesWithoutCapture);
+        assertEquals(Piece.WHITE, b.getPieceAt(40));
+
+    }
+
+    @Test
+    public void testMakeUnmake_CaptureCounterSequence_WithCapture() {
+
+        String fen ="3b5/9/w8/b8/w8/9/9/9/9 w";
+        Board b = Board.fenToBoard(fen);
+
+
+        // Züge:
+        // m1: Weiß 40 -> 41 (kein Capture)
+        // m2: Schwarz 30 -> 31 (kein Capture)
+        // m3: Weiß 41 -> 51 (schlägt Schwarz bei 50)
+        // m4: Schwarz 31 -> 32 (kein Capture)
+        Move m1 = new Move(40, 41, Piece.WHITE);
+        Move m2 = new Move(30, 31, Piece.BLACK);
+        Move m3 = new Move(20, 21, Piece.WHITE); // Capture
+        Move m4 = new Move(3, 4, Piece.BLACK);
+
+        int start = b.movesWithoutCapture;
+
+        // --- Zug 1 ---
+        b.makeMove(m1);
+        assertEquals(Piece.WHITE, b.getPieceAt(41));
+        assertEquals(Piece.EMPTY, b.getPieceAt(40));
+        assertEquals(start + 1, b.movesWithoutCapture);
+
+        // --- Zug 2 ---
+        b.makeMove(m2);
+        assertEquals(Piece.BLACK, b.getPieceAt(31));
+        assertEquals(Piece.EMPTY, b.getPieceAt(30));
+
+        assertEquals(start + 2, b.movesWithoutCapture);
+
+        // --- Zug 3 (mit Capture) ---
+        b.makeMove(m3);
+        assertEquals(Piece.EMPTY, b.getPieceAt(20));
+        assertEquals(Piece.WHITE, b.getPieceAt(21)); // geschlagen
+        assertEquals(Piece.EMPTY, b.getPieceAt(31));
+        assertEquals(0, b.movesWithoutCapture); // Reset wegen Capture
+
+        // --- Zug 4 ---
+        b.makeMove(m4);
+        assertEquals(1, b.movesWithoutCapture);
+
+        // --- Undo 4 ---
+        b.unmakeMove();
+        assertEquals(0, b.movesWithoutCapture);
+        assertEquals(Piece.BLACK, b.getPieceAt(3));
+        assertEquals(Piece.EMPTY, b.getPieceAt(4));
+
+        // --- Undo 3 ---
+        b.unmakeMove();
+        assertEquals(start + 2, b.movesWithoutCapture);
+        assertEquals(Piece.WHITE, b.getPieceAt(20));
+        assertEquals(Piece.EMPTY, b.getPieceAt(21)); // wiederhergestellt
+
+        // --- Undo 2 ---
+        b.unmakeMove();
+        assertEquals(start + 1, b.movesWithoutCapture);
+        assertEquals(Piece.BLACK, b.getPieceAt(30));
+        assertEquals(Piece.EMPTY, b.getPieceAt(31));
+
+        // --- Undo 1 ---
+        b.unmakeMove();
+        assertEquals(start, b.movesWithoutCapture);
+        assertEquals(Piece.WHITE, b.getPieceAt(40));
+        assertEquals(Piece.EMPTY, b.getPieceAt(41));
+    }
+
 }

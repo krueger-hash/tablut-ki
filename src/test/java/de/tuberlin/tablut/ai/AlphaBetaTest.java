@@ -9,6 +9,57 @@ import static org.junit.Assert.assertTrue;
 
 public class AlphaBetaTest {
 
+    @Test
+    public void testAlphaBetaDepthZeroReturnsEvaluation(){
+        Board board = Board.fenToBoard("3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S 48");
+
+        assertEquals(
+                BoardEvaluator.evaluate(board),
+                AlphaBeta.alphaBetaSearch(board,0,-200000,200000)
+        );
+    }
+
+    @Test
+    public void testAlphaBetaDepthOneMaximizesForBlack(){
+        Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 b 20");
+        ArrayList<Move> moves = Board.generateLegalMoves(board, board.sideToMove);
+        int expected = Integer.MIN_VALUE;
+
+        for (Move move : moves){
+            expected = Math.max(
+                    expected,
+                    BoardEvaluator.evaluate(Board.boardAfterMove(board, move))
+            );
+        }
+
+        assertEquals(expected, AlphaBeta.alphaBetaSearch(board,1,-200000,200000));
+    }
+
+    @Test
+    public void testAlphaBetaDepthOneMinimizesForWhite(){
+        Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 w 48");
+        ArrayList<Move> moves = Board.generateLegalMoves(board, board.sideToMove);
+        int expected = Integer.MAX_VALUE;
+
+        for (Move move : moves){
+            expected = Math.min(
+                    expected,
+                    BoardEvaluator.evaluate(Board.boardAfterMove(board, move))
+            );
+        }
+
+        assertEquals(expected, AlphaBeta.alphaBetaSearch(board,1,-200000,200000));
+    }
+
+    @Test
+    public void testSortedAlphaBetaMatchesUnsortedSearch(){
+        Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 b 20");
+
+        assertEquals(
+                AlphaBeta.alphaBetaSearch(board,2,-200000,200000),
+                AlphaBeta.sortedAlphaBetaSearch(board,2,-200000,200000)
+        );
+    }
 
     @Test
     public void testSortMoves_sortWhite(){

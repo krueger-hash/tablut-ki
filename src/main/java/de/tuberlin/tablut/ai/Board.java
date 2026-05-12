@@ -27,7 +27,7 @@ public class Board {
     public int movesWithoutCapture = 0;
 
     //Stack der Änderungen am Board (insbesondere für Suche wichtig)
-    private final Stack<BoardStateChange> boardStateChanges = new Stack<>();
+    public final Stack<BoardStateChange> boardStateChanges = new Stack<>();
 
     // * Tracking der vergangenen BoardStates
     private boolean stalemateTrackingInitialized = false;
@@ -189,32 +189,32 @@ public class Board {
 //        System.out.println(positionCounts.get(currentPositionKey()));
 
         for (Hit h : hits) {
-            if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
-            if (h.piece() == Piece.BLACK && getPieceAt(h.position()) == Piece.EMPTY) {
-                Bitboard90.setBit(black, h.position());
-            }
-            if (h.piece() == Piece.KING && getPieceAt(h.position()) == Piece.EMPTY) {
-                Bitboard90.setBit(whiteKing, h.position());
-            }
-            if (h.piece() == Piece.WHITE && getPieceAt(h.position()) == Piece.EMPTY) {
-                Bitboard90.setBit(white, h.position());
+            switch(h.piece()){
+                case BLACK:
+                    Bitboard90.setBit(black, h.position());
+                    break;
+                case KING:
+                    Bitboard90.setBit(whiteKing, h.position());
+                    break;
+                case WHITE:
+                    Bitboard90.setBit(white, h.position());
             }
         }
-        if (move.movedPiece == Piece.KING) {
-            if (getPieceAt(move.to) == Piece.KING &&
-                    (getPieceAt(move.from) == Piece.EMPTY || getPieceAt(move.from) == Piece.BLOCKED)) {
+
+        switch(move.movedPiece){
+            case BLACK:
+                Bitboard90.removeBit(black, move.to);
+                Bitboard90.setBit(black, move.from);
+                break;
+            case KING:
                 Bitboard90.removeBit(whiteKing, move.to);
                 Bitboard90.setBit(whiteKing, move.from);
-            }
+                break;
+            case WHITE:
+                Bitboard90.removeBit(white, move.to);
+                Bitboard90.setBit(white, move.from);
         }
-        else if (move.movedPiece == Piece.WHITE && getPieceAt(move.to) == Piece.WHITE && getPieceAt(move.from) == Piece.EMPTY) {
-            Bitboard90.removeBit(white, move.to);
-            Bitboard90.setBit(white, move.from);
-        }
-        else if (move.movedPiece == Piece.BLACK && getPieceAt(move.to) == Piece.BLACK && getPieceAt(move.from) == Piece.EMPTY) {
-            Bitboard90.removeBit(black, move.to);
-            Bitboard90.setBit(black, move.from);
-        }
+
         // letzte Anzahl an Zügen ohne Schlagen von Stack entfernen und speichern
         movesWithoutCapture = change.formerMovesWithoutHit;
 
