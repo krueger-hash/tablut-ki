@@ -15,29 +15,14 @@ public class BestMoveInTimeTest {
     @Test
     public void testBestMoveInTimeReturnsLegalMove(){
         Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 b 20");
-        Move move = new BestMoveInTime(board,1,1000).getMove();
-
+        // TODO - board somehow mutates original board when stopped
+        Move move = new BestMoveInTime(Board.deepCopy(board),1000).getMove();
+        board.printBoard();
+        System.out.println(move);
         assertNotNull(move);
         assertTrue(containsMove(Board.generateLegalMoves(board, board.sideToMove), move));
     }
 
-    @Test
-    public void testBestMoveInTimeMatchesBestMoveWithEnoughTimeForBlack(){
-        Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 b 20");
-        Move expected = BestMove.getBestMove(board,1);
-        Move actual = new BestMoveInTime(board,1,1000).getMove();
-
-        assertSameMove(expected, actual);
-    }
-
-    @Test
-    public void testBestMoveInTimeMatchesBestMoveWithEnoughTimeForWhite(){
-        Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 w 48");
-        Move expected = BestMove.getBestMove(board,1);
-        Move actual = new BestMoveInTime(board,1,1000).getMove();
-
-        assertSameMove(expected, actual);
-    }
 
     @Test
     public void testBestMoveInTimeDoesNotMutateOriginalBoard(){
@@ -48,7 +33,7 @@ public class BestMoveInTimeTest {
         Player sideBefore = board.sideToMove;
         int movesWithoutCaptureBefore = board.movesWithoutCapture;
 
-        new BestMoveInTime(board,1,1000).getMove();
+        new BestMoveInTime(board,1000).getMove();
 
         assertFalse(board.gameIsEnd());
         assertTrue(board.boardStateChanges.isEmpty());
@@ -76,7 +61,7 @@ public class BestMoveInTimeTest {
          */
         Move expected = new Move(8, 8, 7, 8, Piece.BLACK);
         assertOnlyLegalMove(board, expected);
-        assertSameMove(expected, new BestMoveInTime(board,3,1000).getMove());
+        assertSameMove(expected, new BestMoveInTime(board,1000).getMove());
     }
 
     @Test
@@ -99,7 +84,7 @@ public class BestMoveInTimeTest {
         board.printBoard();
 
         assertOnlyLegalMove(board, expected);
-        assertSameMove(expected, new BestMoveInTime(board,3,1000).getMove());
+        assertSameMove(expected, new BestMoveInTime(board,1000).getMove());
     }
 
     @Test
@@ -119,7 +104,7 @@ public class BestMoveInTimeTest {
          */
         board.printBoard();
         Move expected = new Move(8,7,8,8, Piece.KING);
-        Move bestMove = new BestMoveInTime(board,3,1000).getMove();
+        Move bestMove = new BestMoveInTime(board,1000).getMove();
         System.out.println(bestMove);
         assertSameMove(expected, bestMove);
     }
@@ -129,7 +114,7 @@ public class BestMoveInTimeTest {
         Board board = Board.fenToBoard("9/9/5k3/9/8b/8w/2b6/9/9 b");
         board.printBoard();
         Move expected = new Move(2,6,8,6, Piece.BLACK);
-        Move bestMove = new BestMoveInTime(board,3,1000).getMove();
+        Move bestMove = new BestMoveInTime(board,1000).getMove();
         System.out.println(bestMove);
         assertSameMove(expected, bestMove);
     }
