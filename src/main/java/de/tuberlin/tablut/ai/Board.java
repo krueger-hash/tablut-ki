@@ -776,6 +776,11 @@ public class Board {
         return newBoard;
     }
 
-
+    public boolean isStalemateTrackingInitialized() {
+        return stalemateTrackingInitialized;
+    }
+    public Map<PositionKey, Integer> getPositionCounts() {
+        return positionCounts;
+    }
 }
 
