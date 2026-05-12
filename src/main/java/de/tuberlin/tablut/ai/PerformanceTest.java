@@ -6,7 +6,8 @@ public class PerformanceTest {
     public static void main(String[] args) {
 //        Board base = new Board();
 //        System.out.println(perft(base, 1, Player.BLACK));
-        benchmark();
+        boolean includeOld = true;
+        benchmark(includeOld);
     }
 
     public static int perft(Board board, int depth, Player player) {
@@ -49,7 +50,7 @@ public class PerformanceTest {
     }
 
 
-    static void benchmark() {
+    static void benchmark(boolean includeOld) {
         String startPos = "3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S";
         String midGame = "3rrr3/9/4R4/r3R3r/rrR1KRR1r/r3R3r/3R5/4r4/3rrr3 s 4 7"; // Gruppe B1_1
         String endGame = "3r5/9/9/4R4/r4R2r/7K1/9/2r6/5r3 w 3 24";// Gruppe AI_2
@@ -58,16 +59,22 @@ public class PerformanceTest {
         String output = "///////////////////////////////////////////\n"
                 + "//Benchmark - " + repetitions + " Wiederholungen\n";
         output += "\nStartposition: " + startPos + "\n";
+        output += String.format("%-10s %-15s%-10s", "Peft(n)", "Duration ms", "Leafs") + "\n";
         for (int depth = 1; depth <= 4; depth++) {
             output += perfTest(startPos, depth, repetitions) + "\n";
+            if(includeOld) output += perfTest(startPos, depth, repetitions, true) + " # Old Test\n";
         }
         output += "\nMidgame: " + midGame + "\n";
+        output += String.format("%-10s %-15s%-10s", "Peft(n)", "Duration ms", "Leafs") + "\n";
         for (int depth = 1; depth <= 4; depth++) {
             output += perfTest(midGame, depth, repetitions) + "\n";
+            if(includeOld) output += perfTest(startPos, depth, repetitions, true) + " # Old Test\n";
         }
         output += "\nEndgame: " + endGame + "\n";
+        output += String.format("%-10s %-15s%-10s", "Peft(n)", "Duration ms", "Leafs") + "\n";
         for (int depth = 1; depth <= 4; depth++) {
             output += perfTest(endGame, depth, repetitions) + "\n";
+            if(includeOld) output += perfTest(startPos, depth, repetitions, true) + " # Old Test\n";
         }
         output += "\n///////////////////////////////////////////";
 
@@ -75,16 +82,24 @@ public class PerformanceTest {
 
     }
 
-    static String perfTest(String fen, int depth, int repetitions) {
+    static String perfTest(String fen, int depth, int repetitions){
+        return perfTest(fen, depth, repetitions, false);
+    }
+    static String perfTest(String fen, int depth, int repetitions, boolean testOld) {
 
         Board state = Board.fenToBoard(fen);
         long tStart = System.currentTimeMillis();
-        int leafs = perft(state, depth, state.sideToMove);
-//        int leafs = perftWithDeepCopy(state, depth, state.sideToMove);
+        int leafs;
+        if(!testOld){
+            leafs = perft(state, depth, state.sideToMove);
+        }else{
+            leafs = perftWithDeepCopy(state, depth, state.sideToMove);
+        }
         long tEnd = System.currentTimeMillis();
         long duration = tEnd - tStart;
 
-        String output = String.format("perft(%d) - time: %d ms - leafs: %d", depth, duration, leafs);
+//        String output = String.format("perft(%d) - time: %d ms - leafs: %d", depth, duration, leafs);
+        String output = String.format("%-10s %-15s%-10s",depth, duration, leafs);
 //                "///////////////////////////////////////////\n"
 //                + "Results:\n"
 //                + "inital Board: "+ fen +"\n"
