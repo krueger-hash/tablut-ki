@@ -3,69 +3,88 @@ package de.tuberlin.tablut.ai;
 import java.util.ArrayList;
 
 public class PerformanceTest {
-    public static void main(String[] args){
+    public static void main(String[] args) {
 //        Board base = new Board();
 //        System.out.println(perft(base, 1, Player.BLACK));
         benchmark();
     }
-    // Without piece hit
-    public static int perft(Board board, int depth, Player player){
-        if(depth == 0) return 1;
+
+    public static int perft(Board board, int depth, Player player) {
+        if (depth == 0) return 1;
 
         // generate all possible moves
         ArrayList<Move> moves = Board.generateLegalMoves(board, player);
 
         int nodes = 0;
         // iterate through all moves
-        for(Move move : moves){
-            // make a deep copy of the board
-            Board copy = Board.deepCopy(board);
-
-            // apply the moves
-            copy.makeMove(move);
-
+        for (Move move : moves) {
+            board.makeMove(move);
             // call perft recursively
-            nodes += perft(copy, depth-1, Board.oppositeSide(player));
+
+            // Stalemate should be ignored in perft tests
+            board.movesWithoutCapture = 0;
+            nodes += perft(board, depth - 1, board.sideToMove);
+            board.unmakeMove();
+        }
+        return nodes;
+    }
+
+    // Without piece hit
+    public static int perftWithDeepCopy(Board board, int depth, Player player) {
+        if (depth == 0) return 1;
+
+        // generate all possible moves
+        ArrayList<Move> moves = Board.generateLegalMoves(board, player);
+
+        int nodes = 0;
+        // iterate through all moves
+        for (Move move : moves) {
+            Board copy = Board.deepCopy(board);
+            copy.makeMove(move);
+            // call perft recursively
+            nodes += perft(copy, depth - 1, copy.sideToMove);
         }
         return nodes;
 
     }
 
 
-    static void benchmark(){
+    static void benchmark() {
         String startPos = "3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S";
         String midGame = "3rrr3/9/4R4/r3R3r/rrR1KRR1r/r3R3r/3R5/4r4/3rrr3 s 4 7"; // Gruppe B1_1
         String endGame = "3r5/9/9/4R4/r4R2r/7K1/9/2r6/5r3 w 3 24";// Gruppe AI_2
-        int repetitions = 10*1000;
+        int repetitions = 10 * 1000;
 
         String output = "///////////////////////////////////////////\n"
-                + "//Benchmark - "+repetitions+" Wiederholungen\n";
-        output += "\nStartposition: "+startPos +"\n";
-        for (int depth = 1; depth <=4; depth++){
-            output += perfTest(startPos,depth,repetitions) +"\n";
+                + "//Benchmark - " + repetitions + " Wiederholungen\n";
+        output += "\nStartposition: " + startPos + "\n";
+        for (int depth = 1; depth <= 4; depth++) {
+            output += perfTest(startPos, depth, repetitions) + "\n";
         }
-        output += "\nMidgame: "+midGame +"\n";
-        for (int depth = 1; depth <=4; depth++){
-            output += perfTest(midGame,depth,repetitions) +"\n";
+        output += "\nMidgame: " + midGame + "\n";
+        for (int depth = 1; depth <= 4; depth++) {
+            output += perfTest(midGame, depth, repetitions) + "\n";
         }
-        output += "\nEndgame: "+endGame +"\n";
-        for (int depth = 1; depth <=4; depth++){
-            output += perfTest(endGame,depth,repetitions) +"\n";
+        output += "\nEndgame: " + endGame + "\n";
+        for (int depth = 1; depth <= 4; depth++) {
+            output += perfTest(endGame, depth, repetitions) + "\n";
         }
         output += "\n///////////////////////////////////////////";
 
         System.out.println(output);
 
     }
-    static String perfTest(String fen,int depth, int repetitions){
+
+    static String perfTest(String fen, int depth, int repetitions) {
 
         Board state = Board.fenToBoard(fen);
         long tStart = System.currentTimeMillis();
-        int leafs = perft(state,depth,state.sideToMove);
+        int leafs = perft(state, depth, state.sideToMove);
+//        int leafs = perftWithDeepCopy(state, depth, state.sideToMove);
         long tEnd = System.currentTimeMillis();
         long duration = tEnd - tStart;
 
-        String output = String.format("perft(%d) - time: %d ms - leafs: %d",depth,duration,leafs);
+        String output = String.format("perft(%d) - time: %d ms - leafs: %d", depth, duration, leafs);
 //                "///////////////////////////////////////////\n"
 //                + "Results:\n"
 //                + "inital Board: "+ fen +"\n"
