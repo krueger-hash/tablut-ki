@@ -27,6 +27,8 @@ public class BestMove {
     @Getter
     private long runtime;
     @Getter
+    private long runtimeDuringIteration;
+    @Getter
     private int maxDepth;
 
     BestMove(){
@@ -53,9 +55,7 @@ public class BestMove {
         for (int depth = 1;; depth++) {
             if(context.shouldStop()){break;} // könnte eigentlich auch in Schleifenkopf, aber so lesbarer
 
-            long iterationStart = System.currentTimeMillis();
             this.bestMoveAtDepth(state, moves, depth, context);
-            long iterationEnd = System.currentTimeMillis();
 
             if(context.shouldStop()){break;} // Verhindere, dass bestMove und bestValue bei abgebrochener Tiefensuche überschrieben werden
             this.bestMove = this.bestMoveDuringIteration;
@@ -65,8 +65,7 @@ public class BestMove {
 
             //weitere sinnvolle Abbruchbedingungen?
             long remainingTime = context.getEndTime() - System.currentTimeMillis();
-            long iterationTime = iterationEnd - iterationStart;
-            if(iterationTime >= remainingTime){break;}
+            if(this.runtimeDuringIteration >= remainingTime){break;}
         }
 
         this.runtime = System.currentTimeMillis() - this.tStart;
@@ -80,6 +79,7 @@ public class BestMove {
         }
 
         //Initialisierung der Variablen für diese Suchtiefe
+        long tStart = System.currentTimeMillis();
         this.bestMoveDuringIteration = this.bestMove;
         boolean isMaxing = (state.sideToMove == maxPlayer);
         // bestValue muss auf jeder Suchtiefe neu initialisiert werden, da ggf. bei größerer Tiefe identische Züge schlechter bewertet werden können, als mit geringerer Tiefe
@@ -119,6 +119,7 @@ public class BestMove {
                 }
             }
         }
+        this.runtimeDuringIteration = System.currentTimeMillis() - tStart;
         return;
     }
 }
