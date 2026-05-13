@@ -1,6 +1,7 @@
 package de.tuberlin.tablut.ai;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class Move {
 
@@ -69,5 +70,17 @@ public class Move {
                 +"->"
                 + target
                 +"}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Move move = (Move) o;
+        return from == move.from && to == move.to && movedPiece == move.movedPiece;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(from, to, movedPiece);
     }
 }
