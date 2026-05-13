@@ -23,13 +23,20 @@ public class BestMove {
     @Getter
     private int bestValueDuringIteration;
 
+    BestMove(){
+        this.bestValue = 0;
+        this.bestMove = null;
+        this.bestValueDuringIteration = 0;
+        this.bestMoveDuringIteration = null;
+    }
+
     Move getBestMove(Board originalState, int msTimeout) {
 
         SearchContext context = new SearchContext(msTimeout);
         Board state = Board.deepCopy(originalState);
 
         // * Logik von BestMove
-        // Liste der Ausgangsmoves erstellen zwischen denen gewählt wird
+        // Liste der Ausgangsmoves erstellen zwischen denen gewählt wird und zurücksetzen der statischen Variablen
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         this.bestMove = moves.getFirst(); // hier könnte man die Auswahl auch random machen?
         this.bestValue = 0;// der erste Move erstmal als Ausgangspunkt
