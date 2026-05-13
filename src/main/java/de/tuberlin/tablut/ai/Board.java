@@ -573,6 +573,8 @@ public class Board {
         //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. es existiert ein gesetztes Bit
         int bitCount = Bitboard90.and(whiteKing, BLOCKED_PIECES).bitCount();
         if (bitCount == 1) {
+//            System.out.println("White has won.");
+//            this.printBoard();
             return true;
         }
         else {return false;}
