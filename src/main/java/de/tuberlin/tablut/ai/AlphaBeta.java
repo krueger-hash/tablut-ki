@@ -83,10 +83,13 @@ public class AlphaBeta {
         System.err.println("WARNING: AlphaBetaSearch ohne Context aufgerufen!");
         try {
             return sortedAlphaBetaSearch(state, depth, alpha, beta, context);
-        } catch (SearchStoppedException sse) {sse.printStackTrace();}
+        } catch (SearchStoppedException sse) {
+            sse.printStackTrace();
+            return 1234567;
+        }
     }
 
-    // bei erreichen des Zeitlimits wird unmakeMove nicht! aufgerufen. Wir könnten das noch sauber beheben mit catch-Blöcken, aber es ist wohl besser mit Deep-Copy zu begin von BestMove
+    // bei Erreichen des Zeitlimits wird unmakeMove nicht! aufgerufen. Wir könnten das noch sauber beheben mit catch-Blöcken, aber es ist wohl besser mit Deep-Copy zu begin von BestMove
     static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta, SearchContext context) throws SearchStoppedException{
         if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
         if(depth == 0 || state.gameIsEnd()){
