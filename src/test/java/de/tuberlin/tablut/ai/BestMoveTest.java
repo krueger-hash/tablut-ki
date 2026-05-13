@@ -118,4 +118,39 @@ public class BestMoveTest {
         assertEquals(-100_000,testBM.getBestValueDuringIteration());
     }
 
+    @Test
+    public void testBestMoveAtDepth_Stalemate5(){
+        String fen = "3K2b2/2b6/9/9/9/9/9/9/6b2 b 45"; // BLACK kann nicht gewinnen, aber durch Blockade im ersten Halbzug verhindern, dass WHITE gewinnt
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+
+        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
+        BestMove testBM = new BestMove();
+        testBM.bestMoveAtDepth(testBoard,moves,5,new SearchContext());
+
+        System.out.println(testBM.getBestMoveDuringIteration());
+        System.out.println("value: "+testBM.getBestValueDuringIteration());
+        System.out.println("Runtime: "+testBM.getRuntime());
+        assertEquals(0,testBM.getBestValueDuringIteration());
+        assertEquals(new Move(12,2,Piece.BLACK),testBM.getBestMoveDuringIteration());
+
+    }
+
+//    @Test
+//    public void testBestMoveAtDepth(){
+//        String fen = "3K1b3/2b2b3/5b3/3b1b3/5b3/5b3/5b3/5b3/5b3 b 0";
+//        Board testBoard = Board.fenToBoard(fen);
+//        testBoard.printBoard();
+//
+//        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
+//        BestMove testBM = new BestMove();
+//        testBM.bestMoveAtDepth(testBoard,moves,8,new SearchContext());
+//
+//        System.out.println(testBM.getBestMoveDuringIteration());
+//        System.out.println("value: "+testBM.getBestValueDuringIteration());
+//        System.out.println("Runtime: "+testBM.getRuntimeDuringIteration());
+//       assertEquals(0,testBM.getBestValueDuringIteration());
+//        assertEquals(new Move(12,2,Piece.BLACK),testBM.getBestMoveDuringIteration());
+//    }
+
 }
