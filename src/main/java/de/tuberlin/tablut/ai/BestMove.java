@@ -23,11 +23,19 @@ public class BestMove {
     @Getter
     private int bestValueDuringIteration;
 
+    private long tStart;
+    @Getter
+    private long runtime;
+    @Getter
+    private int maxDepth;
+
     BestMove(){
         this.bestValue = 0;
         this.bestMove = null;
         this.bestValueDuringIteration = 0;
         this.bestMoveDuringIteration = null;
+        this.tStart = System.currentTimeMillis();
+        this.maxDepth = 0;
     }
 
     Move getBestMove(Board originalState, int msTimeout) {
@@ -52,6 +60,8 @@ public class BestMove {
             if(context.shouldStop()){break;} // Verhindere, dass bestMove und bestValue bei abgebrochener Tiefensuche überschrieben werden
             this.bestMove = this.bestMoveDuringIteration;
             this.bestValue = this.bestValueDuringIteration;
+            this.maxDepth = depth;
+            System.out.println(this.maxDepth);
 
             //weitere sinnvolle Abbruchbedingungen?
             long remainingTime = context.getEndTime() - System.currentTimeMillis();
@@ -59,6 +69,7 @@ public class BestMove {
             if(iterationTime >= remainingTime){break;}
         }
 
+        this.runtime = System.currentTimeMillis() - this.tStart;
         return this.bestMove;
     }
 
