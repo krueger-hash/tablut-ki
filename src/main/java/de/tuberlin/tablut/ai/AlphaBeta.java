@@ -80,6 +80,7 @@ public class AlphaBeta {
     ///////////////////
     static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta){
         SearchContext context = new SearchContext(3600_000);
+//        throw new RuntimeException();
         System.err.println("WARNING: AlphaBetaSearch ohne Context aufgerufen!");
         try {
             return sortedAlphaBetaSearch(state, depth, alpha, beta, context);
@@ -106,7 +107,7 @@ public class AlphaBeta {
                 if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
 
                 state.makeMove(move);
-                int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta);
+                int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta,context);
                 state.unmakeMove();
 
                 if (score >= beta) {
@@ -126,7 +127,7 @@ public class AlphaBeta {
                 if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
 
                 state.makeMove(move);
-                int score = sortedAlphaBetaSearch(state,depth-1,alpha,beta);
+                int score = sortedAlphaBetaSearch(state,depth-1,alpha,beta,context);
                 state.unmakeMove();
 
                 if (score <= alpha){
