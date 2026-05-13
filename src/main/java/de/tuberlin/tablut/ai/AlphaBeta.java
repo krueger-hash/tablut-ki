@@ -79,6 +79,16 @@ public class AlphaBeta {
     /// Alpha-Beta mit Zugsortierung
     ///////////////////
     static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta){
+        SearchContext context = new SearchContext(3600_000);
+        System.err.println("WARNING: AlphaBetaSearch ohne Context aufgerufen!");
+        try {
+            return sortedAlphaBetaSearch(state, depth, alpha, beta, context);
+        } catch (SearchStoppedException sse) {sse.printStackTrace();}
+    }
+
+    // bei erreichen des Zeitlimits wird unmakeMove nicht! aufgerufen. Wir könnten das noch sauber beheben mit catch-Blöcken, aber es ist wohl besser mit Deep-Copy zu begin von BestMove
+    static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta, SearchContext context) throws SearchStoppedException{
+        if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
         if(depth == 0 || state.gameIsEnd()){
             return BoardEvaluator.evaluate(state);
         }
@@ -90,6 +100,7 @@ public class AlphaBeta {
         if (state.sideToMove == maxPlayer) {
         // Rekursiver Aufruf
             for (Move move : moves) {
+                if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
 
                 state.makeMove(move);
                 int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta);
@@ -109,6 +120,7 @@ public class AlphaBeta {
         else if (state.sideToMove == minPlayer){
             // Rekursiver Aufruf
             for (Move move : moves){
+                if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
 
                 state.makeMove(move);
                 int score = sortedAlphaBetaSearch(state,depth-1,alpha,beta);
