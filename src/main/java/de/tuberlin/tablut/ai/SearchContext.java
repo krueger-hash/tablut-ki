@@ -19,6 +19,9 @@ public class SearchContext {
         }
         return false;
     }
+    SearchContext(){
+        this(3600_000); // default Zeitlimit 1h
+    }
     SearchContext(int msTime){
         this.stopped = false;
         this.endTime = System.currentTimeMillis() + msTime;
