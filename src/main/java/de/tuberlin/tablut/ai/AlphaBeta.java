@@ -1,14 +1,12 @@
 package de.tuberlin.tablut.ai;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class AlphaBeta {
 
     private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
     private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
+
 
     //nur Mock-Up, damit ich nicht die ganze Zeit rote Linien sehen muss
 //    static int evaluateState(Board state){
@@ -77,110 +75,74 @@ public class AlphaBeta {
     /// ////////////////////////////////////////////////////////////////////
     /// Alpha-Beta mit Zugsortierung
     /// ////////////////
-    static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta) {
-        SearchContext context = new SearchContext(3600_000);
-//        throw new RuntimeException();
-        System.err.println("WARNING: AlphaBetaSearch ohne Context aufgerufen!");
+    static ABResult sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta) {
+        SearchContext context = new SearchContext();
         try {
             return sortedAlphaBetaSearch(state, depth, alpha, beta, context);
         } catch (SearchStoppedException sse) {
             sse.printStackTrace();
-            return 1234567;
+            return null;
         }
     }
 
     // bei Erreichen des Zeitlimits wird unmakeMove nicht! aufgerufen. Wir könnten das noch sauber beheben mit catch-Blöcken, aber es ist wohl besser mit Deep-Copy zu begin von BestMove
-    static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta, SearchContext context) throws SearchStoppedException {
-        if (context.shouldStop()) {
-            throw new SearchStoppedException("Zeitlimit erreicht");
-        }
+    static ABResult sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta, SearchContext context) throws SearchStoppedException {
+        if (context.shouldStop()) {throw new SearchStoppedException("Zeitlimit erreicht");}
+
+        //*Initialisierung lokaler Variablen für Knoten
+        boolean isMaxing;
+        ArrayList<Move> bestPath = new ArrayList<Move>();
+        if (state.sideToMove == BoardEvaluator.MAX_PLAYER){isMaxing = true;}
+        else{isMaxing = false;}
+
+        //*Rekursionsende in Terminal- oder Blattknoten
         if (depth == 0 || state.gameIsEnd()) {
-            return BoardEvaluator.evaluate(state);
+            int value = BoardEvaluator.evaluate(state);
+            return new ABResult(value,new ArrayList<Move>());
         }
 
-        // Prüfen aller Züge
+        //*Erzeuge alle möglichen Züge
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         //Zugsortierung
         sortMoves(state, moves);
 
-        // * Max-Player
+        // * Schleife über Kinder
         for (Move move : moves) {
             if (context.shouldStop()) {
                 throw new SearchStoppedException("Zeitlimit erreicht");
             }
 
             state.makeMove(move);
-            context.bestSequence.push(move);
-            int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta, context);
+            ABResult child = sortedAlphaBetaSearch(state, depth - 1, alpha, beta, context);
             state.unmakeMove();
-            context.bestSequence.pop();
 
-            if (state.sideToMove == maxPlayer) {
-                if (score >= beta) {
-                    return beta; //Cutoff
+            int score = child.value;
+
+            if (isMaxing) {
+                if (score >= beta ) {
+                    return new ABResult(beta,null); //Cutoff
                 }
                 if (score > alpha) {
                     alpha = score;
+                    bestPath = new ArrayList<Move>(child.trace);
+                    bestPath.add(move);
                 }
-            } else if (state.sideToMove == minPlayer) {
+            } else {
                 if (score <= alpha) {
-                    return alpha; //Cutoff
+                    return new ABResult(alpha,null); //Cutoff
                 }
                 if (score < beta) {
                     beta = score;
+                    bestPath = new ArrayList<Move>(child.trace);
+                    bestPath.add(move);
                 }
-            } else {
-                throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
             }
         }
-        if (state.sideToMove == maxPlayer) {
-            return alpha;
+        if (isMaxing) {
+            return new ABResult(alpha,bestPath);
         } else {
-            return beta;
+            return new ABResult(beta,bestPath);
         }
-
-        //        if (state.sideToMove == maxPlayer) {
-//        // Rekursiver Aufruf
-//            for (Move move : moves) {
-//                if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
-//
-//                state.makeMove(move);
-//                int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta,context);
-//                state.unmakeMove();
-//
-//                if (score >= beta) {
-//                    return beta; //Cutoff
-//                }
-//                if (score > alpha) {
-//                    alpha = score;
-//                }
-//            }
-//            return alpha;
-//        }
-//
-//        // * Min-Player
-//        else if (state.sideToMove == minPlayer){
-//            // Rekursiver Aufruf
-//            for (Move move : moves){
-//                if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
-//
-//                state.makeMove(move);
-//                int score = sortedAlphaBetaSearch(state,depth-1,alpha,beta,context);
-//                state.unmakeMove();
-//
-//                if (score <= alpha){
-//                    return alpha; //Cutoff
-//                }
-//                if (score < beta){
-//                    beta = score;
-//                }
-//            }
-//            return beta;
-//        }
-//        else {
-//            throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
-//        }
-
     }
 
     static int evalMove(Move move, Board state){

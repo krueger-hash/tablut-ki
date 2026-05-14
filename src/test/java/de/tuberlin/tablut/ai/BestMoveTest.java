@@ -2,10 +2,7 @@ package de.tuberlin.tablut.ai;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class BestMoveTest {
 
@@ -14,10 +11,9 @@ public class BestMoveTest {
         String fen = "2b6/9/b1K1b4/9/9/2b6/9/9/9 b 20";
         Board t = Board.fenToBoard(fen);
 //        testBoard.printBoard();
-        ArrayList<Move> moves = Board.generateLegalMoves(t, t.sideToMove);
 
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(t,moves,2,new SearchContext());
+        testBM.bestMoveAtDepth(t,2,new SearchContext());
         Board og = Board.fenToBoard(fen);
 
         assertEquals(t.movesWithoutCapture,og.movesWithoutCapture);
@@ -35,27 +31,33 @@ public class BestMoveTest {
         String fen = "2b6/9/b1K1b4/9/9/2b6/9/9/9 b 20"; // schwarz kann in 3 halbzügen Sieg erzwingen, indem es figur auf [5,2] nach oben bewegt, ansonsten nicht; Tiefe 3 nötig!
         Board testBoard = Board.fenToBoard(fen);
 //        testBoard.printBoard();
-        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(testBoard,moves,3,new SearchContext());
+        SearchContext testContext = new SearchContext(Player.BLACK);
+        testBM.bestMoveAtDepth(testBoard,3,testContext);
 
-//        System.out.println(test.getBestMoveDuringIteration()); // warum nicht auf [3,2]?
-        assertEquals(100_000,testBM.getBestValueDuringIteration());
+        System.out.println(testBM.bestMove);
+        System.out.println(testBM.bestPath);
+        System.out.println(testBM.bestValue);
+
+        assertEquals(100_000,testBM.bestValue);
     }
 
     @Test
     public void testBestMoveAtDepth_1W() {
-        String fen = "2b6/9/b1K1b4/9/2b6/9/9/9/9 w 20"; // weiß hat in 2 halbzügen verloren
+        String fen = "2b6/9/b1K1b4/9/2b6/9/9/9/9 w 21"; // weiß hat in 2 halbzügen verloren
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
-        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(testBoard,moves,2, new SearchContext());
+        SearchContext testContext = new SearchContext(Player.WHITE);
+        testBM.bestMoveAtDepth(testBoard,2,testContext);
 
-        System.out.println(testBM.getBestMoveDuringIteration()); // warum nicht auf [3,2]?
-        assertEquals(100_000,testBM.getBestValueDuringIteration());
+        System.out.println(testBM.bestMove);
+        System.out.println(testBM.bestPath);
+        System.out.println(testBM.bestValue);
+
+        assertEquals(100_000,testBM.bestValue);
     }
 
     @Test
@@ -63,14 +65,16 @@ public class BestMoveTest {
         String fen = "9/9/9/9/9/9/9/9/4K2b1 b 20"; // weiß hat in 2 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
-        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(testBoard,moves,2, new SearchContext());
+        SearchContext testContext = new SearchContext(Player.BLACK);
+        testBM.bestMoveAtDepth(testBoard,2,testContext);
 
-        System.out.println(testBM.getBestMoveDuringIteration());
-        System.out.println(testBM.getBestValueDuringIteration());
-        assertEquals(-100_000,testBM.getBestValueDuringIteration());
+
+        System.out.println(testBM.bestMove);
+        System.out.println(testBM.bestPath);
+        System.out.println(testBM.bestValue);
+        assertEquals(-100_000,testBM.bestValue);
     }
 
     @Test
@@ -78,14 +82,17 @@ public class BestMoveTest {
         String fen = "9/9/9/9/9/9/9/9/4K2b1 w 20"; // weiß hat in 1 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
-        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(testBoard,moves,1,new SearchContext());
+        SearchContext testContext = new SearchContext(Player.WHITE);
+        testBM.bestMoveAtDepth(testBoard,1,testContext);
 
-        System.out.println(testBM.getBestMoveDuringIteration());
-        System.out.println(testBM.getBestValueDuringIteration());
-        assertEquals(-100_000,testBM.getBestValueDuringIteration());
+        System.out.println(testBM.bestMove);
+        System.out.println(testBM.bestPath);
+        System.out.println(testBM.bestValue);
+
+        assertEquals(-100_000,testBM.bestValue);
+
     }
 
     @Test
@@ -93,14 +100,15 @@ public class BestMoveTest {
         String fen = "9/9/9/9/9/9/9/4K5/2b6 w 20"; // weiß hat in 3 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
-        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(testBoard,moves,3,new SearchContext());
+        SearchContext testContext = new SearchContext(Player.WHITE);
+        testBM.bestMoveAtDepth(testBoard,3,testContext);
 
-        System.out.println(testBM.getBestMoveDuringIteration());
-        System.out.println(testBM.getBestValueDuringIteration());
-        assertEquals(-100_000,testBM.getBestValueDuringIteration());
+        System.out.println(testBM.bestMove);
+        System.out.println(testBM.bestPath);
+        System.out.println(testBM.bestValue);
+        assertEquals(-100_000,testBM.bestValue);
     }
 
     @Test
@@ -108,14 +116,15 @@ public class BestMoveTest {
         String fen = "9/9/9/9/9/9/9/4K5/2b6 b 20"; // weiß hat in 4 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
-        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
 
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(testBoard,moves,4,new SearchContext());
+        SearchContext testContext = new SearchContext(Player.BLACK);
+        testBM.bestMoveAtDepth(testBoard,4,testContext);
 
-        System.out.println(testBM.getBestMoveDuringIteration());
-        System.out.println(testBM.getBestValueDuringIteration());
-        assertEquals(-100_000,testBM.getBestValueDuringIteration());
+        System.out.println(testBM.bestMove);
+        System.out.println(testBM.bestPath);
+        System.out.println(testBM.bestValue);
+        assertEquals(-100_000,testBM.bestValue);
     }
 
     @Test
@@ -124,15 +133,16 @@ public class BestMoveTest {
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
 
-        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(testBoard,moves,5,new SearchContext());
+        SearchContext testContext = new SearchContext(Player.BLACK);
+        testBM.bestMoveAtDepth(testBoard,5,testContext);
 
-        System.out.println(testBM.getBestMoveDuringIteration());
-        System.out.println("value: "+testBM.getBestValueDuringIteration());
-        System.out.println("Runtime: "+testBM.getRuntime());
-        assertEquals(0,testBM.getBestValueDuringIteration());
-        assertEquals(new Move(12,2,Piece.BLACK),testBM.getBestMoveDuringIteration());
+        System.out.println(testBM.bestMove);
+        System.out.println(testBM.bestPath);
+        System.out.println(testBM.bestValue);
+
+        assertEquals(new Move(12,2,Piece.BLACK),testBM.bestMove);
+        assertEquals(0,testBM.bestValue);
 
     }
 
@@ -150,15 +160,16 @@ public class BestMoveTest {
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
 
-        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
         BestMove testBM = new BestMove();
-        testBM.bestMoveAtDepth(testBoard,moves,6,new SearchContext());
+        SearchContext testContext = new SearchContext(testBoard.sideToMove);
+        testBM.bestMoveAtDepth(testBoard,4,testContext);
 
-        System.out.println(testBM.getBestMoveDuringIteration());
-        System.out.println("value: "+testBM.getBestValueDuringIteration());
-        System.out.println("Runtime: "+testBM.getRuntimeDuringIteration());
-       assertEquals(0,testBM.getBestValueDuringIteration());
-        assertEquals(new Move(12,2,Piece.BLACK),testBM.getBestMoveDuringIteration());
+        System.out.println(testBM.bestMove);
+        System.out.println(testBM.bestPath);
+        System.out.println(testBM.bestValue);
+
+        assertEquals(new Move(4,84,Piece.KING),testBM.bestMove);
+        assertEquals(0,testBM.bestValue);
     }
 
 }
