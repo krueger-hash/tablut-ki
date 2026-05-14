@@ -15,38 +15,37 @@ public class AlphaBeta {
 //        return 0;
 //    }
 
-    ///////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////
     /// reine Alpha-Beta-Suche
-    ///////////////////
+    /// ////////////////
     //Wrapper für den Aufruf der Alpha-Beta-Suche. Alternativ hätte man auch alles in eine Funktion mit Fallunterscheidung reinpacken können. Ich fand aber die Zweiteilung in Min-Max aber besser, da analog zur GKI-VL
-    static int alphaBetaSearch(Board state, int depth, int alpha, int beta){
-        if (state.sideToMove == maxPlayer){
-            return alphaBetaMax(state,depth,alpha,beta);
+    static int alphaBetaSearch(Board state, int depth, int alpha, int beta) {
+        if (state.sideToMove == maxPlayer) {
+            return alphaBetaMax(state, depth, alpha, beta);
         }
-        if (state.sideToMove == minPlayer){
-            return alphaBetaMin(state,depth,alpha,beta);
-        }
-        else {
+        if (state.sideToMove == minPlayer) {
+            return alphaBetaMin(state, depth, alpha, beta);
+        } else {
             throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
         }
     }
 
     //Alpha-Beta-Max basierend auf GKI-VL WS2526 05A01 Folie 14
-    static int alphaBetaMax(Board state, int depth, int alpha, int beta){
-        if(depth == 0 || state.gameIsEnd()){
+    static int alphaBetaMax(Board state, int depth, int alpha, int beta) {
+        if (depth == 0 || state.gameIsEnd()) {
             return BoardEvaluator.evaluate(state);
         }
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
-        for (Move move : moves){
+        for (Move move : moves) {
 
             state.makeMove(move);
-            int score = alphaBetaMin(state,depth-1,alpha,beta); // Aufruf von ABMin
+            int score = alphaBetaMin(state, depth - 1, alpha, beta); // Aufruf von ABMin
             state.unmakeMove(); //unmakeMove vor den returns!
 
-            if (score >= beta){
+            if (score >= beta) {
                 return beta; //Cutoff
             }
-            if (score > alpha){
+            if (score > alpha) {
                 alpha = score;
             }
         }
@@ -54,31 +53,31 @@ public class AlphaBeta {
     }
 
     //Alpha-Beta-Min basierend auf GKI-VL WS2526 05A01 Folie 14
-    static int alphaBetaMin(Board state, int depth, int alpha, int beta){
-        if(depth == 0 || state.gameIsEnd()){
+    static int alphaBetaMin(Board state, int depth, int alpha, int beta) {
+        if (depth == 0 || state.gameIsEnd()) {
             return BoardEvaluator.evaluate(state);
         }
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
-        for (Move move : moves){
+        for (Move move : moves) {
 
             state.makeMove(move);
-            int score = alphaBetaMax(state,depth-1,alpha,beta); //Aufruf von ABMax
+            int score = alphaBetaMax(state, depth - 1, alpha, beta); //Aufruf von ABMax
             state.unmakeMove();
 
-            if (score <= alpha){
+            if (score <= alpha) {
                 return alpha; //Cutoff
             }
-            if (score < beta){
+            if (score < beta) {
                 beta = score;
             }
         }
         return beta;
     }
 
-    ///////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////
     /// Alpha-Beta mit Zugsortierung
-    ///////////////////
-    static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta){
+    /// ////////////////
+    static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta) {
         SearchContext context = new SearchContext(3600_000);
 //        throw new RuntimeException();
         System.err.println("WARNING: AlphaBetaSearch ohne Context aufgerufen!");
@@ -91,57 +90,97 @@ public class AlphaBeta {
     }
 
     // bei Erreichen des Zeitlimits wird unmakeMove nicht! aufgerufen. Wir könnten das noch sauber beheben mit catch-Blöcken, aber es ist wohl besser mit Deep-Copy zu begin von BestMove
-    static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta, SearchContext context) throws SearchStoppedException{
-        if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
-        if(depth == 0 || state.gameIsEnd()){
+    static int sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta, SearchContext context) throws SearchStoppedException {
+        if (context.shouldStop()) {
+            throw new SearchStoppedException("Zeitlimit erreicht");
+        }
+        if (depth == 0 || state.gameIsEnd()) {
             return BoardEvaluator.evaluate(state);
         }
+
+        // Prüfen aller Züge
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         //Zugsortierung
         sortMoves(state, moves);
 
         // * Max-Player
-        if (state.sideToMove == maxPlayer) {
-        // Rekursiver Aufruf
-            for (Move move : moves) {
-                if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
+        for (Move move : moves) {
+            if (context.shouldStop()) {
+                throw new SearchStoppedException("Zeitlimit erreicht");
+            }
 
-                state.makeMove(move);
-                int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta,context);
-                state.unmakeMove();
+            state.makeMove(move);
+            context.bestSequence.push(move);
+            int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta, context);
+            state.unmakeMove();
+            context.bestSequence.pop();
 
+            if (state.sideToMove == maxPlayer) {
                 if (score >= beta) {
                     return beta; //Cutoff
                 }
                 if (score > alpha) {
                     alpha = score;
                 }
-            }
-            return alpha;
-        }
-
-        // * Min-Player
-        else if (state.sideToMove == minPlayer){
-            // Rekursiver Aufruf
-            for (Move move : moves){
-                if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
-
-                state.makeMove(move);
-                int score = sortedAlphaBetaSearch(state,depth-1,alpha,beta,context);
-                state.unmakeMove();
-
-                if (score <= alpha){
+            } else if (state.sideToMove == minPlayer) {
+                if (score <= alpha) {
                     return alpha; //Cutoff
                 }
-                if (score < beta){
+                if (score < beta) {
                     beta = score;
                 }
+            } else {
+                throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
             }
+        }
+        if (state.sideToMove == maxPlayer) {
+            return alpha;
+        } else {
             return beta;
         }
-        else {
-            throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
-        }
+
+        //        if (state.sideToMove == maxPlayer) {
+//        // Rekursiver Aufruf
+//            for (Move move : moves) {
+//                if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
+//
+//                state.makeMove(move);
+//                int score = sortedAlphaBetaSearch(state, depth - 1, alpha, beta,context);
+//                state.unmakeMove();
+//
+//                if (score >= beta) {
+//                    return beta; //Cutoff
+//                }
+//                if (score > alpha) {
+//                    alpha = score;
+//                }
+//            }
+//            return alpha;
+//        }
+//
+//        // * Min-Player
+//        else if (state.sideToMove == minPlayer){
+//            // Rekursiver Aufruf
+//            for (Move move : moves){
+//                if(context.shouldStop()){throw new SearchStoppedException("Zeitlimit erreicht");}
+//
+//                state.makeMove(move);
+//                int score = sortedAlphaBetaSearch(state,depth-1,alpha,beta,context);
+//                state.unmakeMove();
+//
+//                if (score <= alpha){
+//                    return alpha; //Cutoff
+//                }
+//                if (score < beta){
+//                    beta = score;
+//                }
+//            }
+//            return beta;
+//        }
+//        else {
+//            throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
+//        }
+
     }
 
     static int evalMove(Move move, Board state){
