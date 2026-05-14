@@ -136,21 +136,29 @@ public class BestMoveTest {
 
     }
 
-//    @Test
-//    public void testBestMoveAtDepth(){
-//        String fen = "3K1b3/2b2b3/5b3/3b1b3/5b3/5b3/5b3/5b3/5b3 b 0";
-//        Board testBoard = Board.fenToBoard(fen);
-//        testBoard.printBoard();
-//
-//        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
-//        BestMove testBM = new BestMove();
-//        testBM.bestMoveAtDepth(testBoard,moves,8,new SearchContext());
-//
-//        System.out.println(testBM.getBestMoveDuringIteration());
-//        System.out.println("value: "+testBM.getBestValueDuringIteration());
-//        System.out.println("Runtime: "+testBM.getRuntimeDuringIteration());
-//       assertEquals(0,testBM.getBestValueDuringIteration());
-//        assertEquals(new Move(12,2,Piece.BLACK),testBM.getBestMoveDuringIteration());
-//    }
+    @Test
+    public void testBestMoveAtDepth(){
+        String fen = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0"; // nach 4ten Halbzug sollte Stalemate durch Stellungswiederholung sein ?
+//        String fen1 = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0";
+//        String fen2 = "2b2b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/4Kb3 b 1";
+//        String fen3 = "5b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/2b1Kb3 w 2";
+//        String fen4 = "4Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/2b2b3 b 3";
+//        Board.fenToBoard(fen1).printBoard();
+//        Board.fenToBoard(fen2).printBoard();
+//        Board.fenToBoard(fen3).printBoard();
+//        Board.fenToBoard(fen4).printBoard();
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+
+        ArrayList<Move> moves = Board.generateLegalMoves(testBoard, testBoard.sideToMove);
+        BestMove testBM = new BestMove();
+        testBM.bestMoveAtDepth(testBoard,moves,6,new SearchContext());
+
+        System.out.println(testBM.getBestMoveDuringIteration());
+        System.out.println("value: "+testBM.getBestValueDuringIteration());
+        System.out.println("Runtime: "+testBM.getRuntimeDuringIteration());
+       assertEquals(0,testBM.getBestValueDuringIteration());
+        assertEquals(new Move(12,2,Piece.BLACK),testBM.getBestMoveDuringIteration());
+    }
 
 }
