@@ -108,7 +108,7 @@ public class BestMoveInTime{
         for (Move move : moves){
             state.makeMove(move);
             //Aufruf mit depth-1, da die erste Ebene (die moves) bereits generiert wurde; d.h. wird mit depth = 1 aufgerufen, wird der Wert des ersten Halbzugs ausgewertet
-            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth-1,ALPHA_INIT,BETA_INIT);
+            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth-1,ALPHA_INIT,BETA_INIT).value;
             state.unmakeMove();
 
             if(isMaxing) {
