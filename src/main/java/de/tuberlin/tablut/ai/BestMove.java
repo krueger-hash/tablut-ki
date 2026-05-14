@@ -1,6 +1,7 @@
 package de.tuberlin.tablut.ai;
 
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.concurrent.*;
 
 import lombok.Getter;
@@ -30,6 +31,10 @@ public class BestMove {
     private long runtimeDuringIteration;
     @Getter
     private int maxDepth;
+    @Getter
+    private ArrayList<Move> bestSequence = null;
+    @Getter
+    private ArrayList<Move> bestSequenceDuringIteration = null;
 
     BestMove(){
         this.bestValue = 0;
@@ -61,6 +66,7 @@ public class BestMove {
             this.bestMove = this.bestMoveDuringIteration;
             this.bestValue = this.bestValueDuringIteration;
             this.maxDepth = depth;
+            this.bestSequence = this.bestSequenceDuringIteration;
             System.out.println(this.maxDepth);
 
             //weitere sinnvolle Abbruchbedingungen?
@@ -96,6 +102,7 @@ public class BestMove {
 
         for (Move move : moves){
             if(context.shouldStop()){break;}
+            context.bestSequence.push(move);
             state.makeMove(move);
             //Aufruf mit depth-1, da die erste Ebene (die moves) bereits generiert wurde; d.h. wird mit depth = 1 aufgerufen, wird der Wert des ersten Halbzugs ausgewertet
             int value;
@@ -105,6 +112,7 @@ public class BestMove {
                 break;
             }
             state.unmakeMove();
+            context.bestSequence.pop();
 
             if(isMaxing) {
                 if (value > this.bestValueDuringIteration) {
@@ -118,6 +126,7 @@ public class BestMove {
                     this.bestMoveDuringIteration = move;
                 }
             }
+            this.bestSequenceDuringIteration = new ArrayList<>(context.bestSequence); // Move Stack aus Suche in Liste konvertieren
         }
         this.runtimeDuringIteration = System.currentTimeMillis() - tStart;
         return;

@@ -2,9 +2,13 @@ package de.tuberlin.tablut.ai;
 
 import lombok.Getter;
 
+import java.util.Stack;
+
 public class SearchContext {
 
-    private volatile boolean stopped;
+    private boolean stopped;
+
+    public Stack<Move> bestSequence;
 
     @Getter
     private final long endTime;
@@ -25,6 +29,9 @@ public class SearchContext {
     SearchContext(int msTime){
         this.stopped = false;
         this.endTime = System.currentTimeMillis() + msTime;
+        this.bestSequence = new Stack<Move>();
     }
+
+
 
 }
