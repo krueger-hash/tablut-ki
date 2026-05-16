@@ -57,7 +57,7 @@ public class AlphaBetaTest {
 
         assertEquals(
                 AlphaBeta.alphaBetaSearch(board,2,-200000,200000),
-                AlphaBeta.sortedAlphaBetaSearch(board,2,-200000,200000)
+                AlphaBeta.sortedAlphaBetaSearch(board,2,-200000,200000).value
         );
     }
 
