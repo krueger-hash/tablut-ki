@@ -1,5 +1,6 @@
 package de.tuberlin.tablut.ai;
 
+import de.tuberlin.tablut.ai.PerformanceTest.PerformanceTest;
 import org.junit.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

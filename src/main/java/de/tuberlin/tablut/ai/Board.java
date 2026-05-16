@@ -728,7 +728,7 @@ public class Board {
         return new Board(white, whiteKing, black, sideToMove);
     }
 
-    static Board fenToBoard(String fen){
+    public static Board fenToBoard(String fen){
         String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist)
         if (parts.length < 2) {throw new IllegalArgumentException("FEN unvollständig. Startspieler angegeben?");}
 
