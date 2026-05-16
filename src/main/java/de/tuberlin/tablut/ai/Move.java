@@ -63,7 +63,7 @@ public class Move {
         String origin = Arrays.toString(Bitboard90.bitToMatrix(this.from));
         String target = Arrays.toString(Bitboard90.bitToMatrix(this.to));
 
-        return "Move{"
+        return "Move<row,col>{"
                 + moved +" "
                 + origin
                 +"->"
