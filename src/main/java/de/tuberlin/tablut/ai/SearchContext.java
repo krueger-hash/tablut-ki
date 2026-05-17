@@ -22,6 +22,10 @@ public class SearchContext {
 
     @Getter
     private final long endTime;
+    @Getter
+    private long leafs;
+    @Getter
+    private long positions;
 
     public boolean shouldStop() {
         if(stopped){
@@ -33,21 +37,23 @@ public class SearchContext {
         }
         return false;
     }
-    SearchContext(){
-        System.err.println("WARNING: Default Time and Player BLACK in SearchContext!");
+    public SearchContext(){
         this(3600_000,Player.BLACK); // default Zeitlimit 1h
+        System.err.println("WARNING: Default Time and Player BLACK in SearchContext!");
     }
-    SearchContext(int msTime){
-        System.err.println("WARNING: Default BLACK in SearchContext!");
+    public SearchContext(int msTime){
         this(msTime, Player.BLACK);
+        System.err.println("WARNING: Default BLACK in SearchContext!");
     }
-    SearchContext(Player side){
+    public SearchContext(Player side){
         System.err.println("WARNING: Default time in SearchContext!");
         this(3600_000, side);
     }
-    SearchContext(int msTime, Player current){
+    public SearchContext(int msTime, Player current){
         this.stopped = false;
         this.endTime = System.currentTimeMillis() + msTime;
+        this.leafs = 0;
+        this.positions = 0;
 //        this.moveStack = new Stack<Move>();
 //        this.bestSequence = new ArrayList<Move>();
         this.isMaxing = current == BoardEvaluator.MAX_PLAYER;
@@ -56,6 +62,13 @@ public class SearchContext {
 //        this.bestAB = null;
     }
 
+    public void incrementLeafs() {
+        this.leafs++;
+    }
+
+    public void incrementPositions() {
+        this.positions++;
+    }
 //    public void resetBestValue(){
 //        if(isMaxing){this.bestValueDuringIteration = ALPHA_INIT;}
 //        else{this.bestValueDuringIteration = BETA_INIT;}

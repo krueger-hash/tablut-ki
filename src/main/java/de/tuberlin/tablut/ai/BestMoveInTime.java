@@ -3,10 +3,8 @@ package de.tuberlin.tablut.ai;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-public class BestMoveInTime{
-//public class BestMoveInTime implements Runnable{
+public class BestMoveInTime {
 
     private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
     private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
@@ -14,48 +12,28 @@ public class BestMoveInTime{
     private static final int ALPHA_INIT = -1_000_000;
     private static final int BETA_INIT = 1_000_000;
 
-
-    private volatile Move bestMove; //volatile Variable, damit Future sie überschreiben kann und ein Ergebnis auch bei Timeout geliefert wird
+    private volatile Move bestMove;
     private volatile int bestValue;
+    private volatile int maxDepth;
+    private volatile long leafs;
+    private volatile long positions;
+    private volatile long runtime;
+    private volatile ABResult bestResult;
 
     private volatile Move bestMoveDuringIteration;
     private volatile int bestValueDuringIteration;
 
     private final CompletableFuture<Move> future;
 
-    BestMoveInTime(Board originalState, int msTime) {
-        Board state = Board.deepCopy(originalState);
-        this.future = CompletableFuture.supplyAsync( ()-> {
-
-            long tStart = System.currentTimeMillis();
-
-            // * Logik von BestMove
-            ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
-            this.bestMove = moves.getFirst();
-            this.bestValue = 0;// der erste Move erstmal als Ausgangspunkt
-
-            //iterative Tiefensuche
-            for (int depth = 1; ; depth++) {
-
-                long iterationStart = System.currentTimeMillis();
-                this.bestMoveAtDepth(state, moves, depth);
-                long iterationEnd = System.currentTimeMillis();
-
-                this.bestMove = this.bestMoveDuringIteration;
-                this.bestValue = this.bestValueDuringIteration;
-
-                //Abbruchbedingung sinnvoll?
-                long remainingTime = msTime - (iterationEnd - tStart);
-                long iterationTime = iterationEnd - iterationStart;
-                if(iterationTime > remainingTime){break;}
-
-            }
-
+    public BestMoveInTime(Board originalState, int msTime) {
+        this.future = CompletableFuture.supplyAsync(() -> {
+            SearchReport report = searchInTime(originalState, msTime, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            updateFromReport(report);
             return this.bestMove;
-        }).orTimeout(msTime,TimeUnit.MILLISECONDS);
+        }).orTimeout(msTime, TimeUnit.MILLISECONDS);
     }
 
-    public Move getMove(){
+    public Move getMove() {
         try {
             return future.join();
         } catch (Exception e) {
@@ -66,6 +44,7 @@ public class BestMoveInTime{
     public int getBestValueDuringIteration() {
         return bestValueDuringIteration;
     }
+
     public Move getBestMoveDuringIteration() {
         return bestMoveDuringIteration;
     }
@@ -74,58 +53,149 @@ public class BestMoveInTime{
         return bestValue;
     }
 
-    //Illustration der Anwendung
+    public static SearchReport searchInTime(Board originalState, int msTime, int maxDepth, SearchFunction search) {
+        long start = System.currentTimeMillis();
+        SearchContext context = new SearchContext(msTime, originalState.sideToMove);
+        SearchReport lastCompleted = emptyReport(originalState, start);
+
+        for (int depth = 1; depth <= maxDepth; depth++) {
+            long iterationStart = System.currentTimeMillis();
+            Board state = Board.deepCopy(originalState);
+
+            try {
+                ABResult result = search.search(state, depth, context);
+                long now = System.currentTimeMillis();
+                lastCompleted = new SearchReport(
+                        result.getBestMove(),
+                        result.getValue(),
+                        depth,
+                        context.getPositions(),
+                        context.getLeafs(),
+                        now - start,
+                        true,
+                        result
+                );
+            } catch (SearchStoppedException e) {
+                break;
+            }
+
+            long iterationTime = System.currentTimeMillis() - iterationStart;
+            long remainingTime = context.getEndTime() - System.currentTimeMillis();
+            if (context.shouldStop() || iterationTime > remainingTime) {
+                break;
+            }
+        }
+
+        return lastCompleted;
+    }
+
+    public static SearchReport searchAtDepth(Board originalState, int depth, int msTime, SearchFunction search) {
+        long start = System.currentTimeMillis();
+        SearchContext context = new SearchContext(msTime, originalState.sideToMove);
+        Board state = Board.deepCopy(originalState);
+
+        try {
+            ABResult result = search.search(state, depth, context);
+            long now = System.currentTimeMillis();
+            return new SearchReport(
+                    result.getBestMove(),
+                    result.getValue(),
+                    depth,
+                    context.getPositions(),
+                    context.getLeafs(),
+                    now - start,
+                    true,
+                    result
+            );
+        } catch (SearchStoppedException e) {
+            long now = System.currentTimeMillis();
+            return new SearchReport(
+                    null,
+                    0,
+                    depth,
+                    context.getPositions(),
+                    context.getLeafs(),
+                    now - start,
+                    false,
+                    null
+            );
+        }
+    }
+
+    private void updateFromReport(SearchReport report) {
+        this.bestMove = report.bestMove();
+        this.bestValue = report.value();
+        this.maxDepth = report.depth();
+        this.leafs = report.leafs();
+        this.positions = report.positions();
+        this.runtime = report.millis();
+        this.bestResult = report.result();
+    }
+
+    private static SearchReport emptyReport(Board originalState, long start) {
+        ArrayList<Move> moves = Board.generateLegalMoves(originalState, originalState.sideToMove);
+        Move fallbackMove = moves.isEmpty() ? null : moves.getFirst();
+        return new SearchReport(fallbackMove, 0, 0, 0, 0, System.currentTimeMillis() - start, false, null);
+    }
+
+    private static ABResult alphaBetaSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
+        return AlphaBeta.sortedAlphaBetaSearch(board, depth, ALPHA_INIT, BETA_INIT, context);
+    }
+
+    // Illustration der Anwendung
     static void main() {
-        String fen ="3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S 48";
+        String fen = "3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S 48";
         Board test = Board.fenToBoard(fen);
 
-        Move niceMove = new BestMoveInTime(test,1).getMove();
+        Move niceMove = new BestMoveInTime(test, 1).getMove();
 
-        //ungetestet :/
+        // ungetestet :/
     }
 
     // während einer Suchtiefe wird der beste Move auf der Iterationsvariable gespeichert, damit bestMove nur basierend auf einer vollständig durchsuchten Ebene zurückgegeben wird;
-    //bestValue benötigt keine intermediate Variable
-    void bestMoveAtDepth(Board state, ArrayList<Move> moves, int depth){
+    // bestValue benötigt keine intermediate Variable
+    ABResult bestMoveAtDepth(Board state, ArrayList<Move> moves, int depth) {
 
-        if (state.sideToMove != maxPlayer && state.sideToMove != minPlayer){
+        if (state.sideToMove != maxPlayer && state.sideToMove != minPlayer) {
             throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
         }
 
         this.bestMoveDuringIteration = this.bestMove;
         boolean isMaxing = (state.sideToMove == maxPlayer);
-        // bestValue muss auf jeder Suchtiefe neu initialisiert werden, da ggf. bei größerer Tiefe identische Züge schlechter bewertet werden können, als mit geringerer Tiefe
-        if(isMaxing){this.bestValueDuringIteration = ALPHA_INIT;}
-        else {this.bestValueDuringIteration = BETA_INIT;}
+        if (isMaxing) {
+            this.bestValueDuringIteration = ALPHA_INIT;
+        } else {
+            this.bestValueDuringIteration = BETA_INIT;
+        }
 
-        //Tiefe 0 ist der Wurzelknoten. dort gibt es noch keine Moves
-        if(depth == 0){
+        if (depth == 0) {
             this.bestValueDuringIteration = BoardEvaluator.evaluate(state);
             this.bestMove = null;
-            return;
+            ABResult result = new ABResult(this.bestValueDuringIteration, new ArrayList<>());
+            this.bestResult = result;
+            return result;
         }
 
-        for (Move move : moves){
+        ABResult bestResultDuringIteration = null;
+        for (Move move : moves) {
             state.makeMove(move);
-            //Aufruf mit depth-1, da die erste Ebene (die moves) bereits generiert wurde; d.h. wird mit depth = 1 aufgerufen, wird der Wert des ersten Halbzugs ausgewertet
-            int value = AlphaBeta.sortedAlphaBetaSearch(state,depth-1,ALPHA_INIT,BETA_INIT).value;
+            ABResult result = AlphaBeta.sortedAlphaBetaSearch(state, depth - 1, ALPHA_INIT, BETA_INIT);
+            int value = result.getValue();
             state.unmakeMove();
 
-            if(isMaxing) {
-                if (value > this.bestValueDuringIteration) {
-                    this.bestValueDuringIteration = value;
-                    this.bestMoveDuringIteration = move;
-                }
-            }
-            else{
-                if (value < this.bestValueDuringIteration) {
-                    this.bestValueDuringIteration = value;
-                    this.bestMoveDuringIteration = move;
-                }
+            boolean isBetter = isMaxing
+                    ? value > this.bestValueDuringIteration
+                    : value < this.bestValueDuringIteration;
+
+            if (bestResultDuringIteration == null || isBetter) {
+                this.bestValueDuringIteration = value;
+                this.bestMoveDuringIteration = move;
+
+                ArrayList<Move> trace = new ArrayList<>(result.getTrace());
+                trace.add(move);
+                bestResultDuringIteration = new ABResult(value, trace);
             }
         }
-        return;
+        return bestResultDuringIteration;
     }
-
-
 }
