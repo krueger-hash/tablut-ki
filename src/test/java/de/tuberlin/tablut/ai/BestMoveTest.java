@@ -30,7 +30,7 @@ public class BestMoveTest {
     public void testBestMoveAtDepth_1B() {
         String fen = "2b6/9/b1K1b4/9/9/2b6/9/9/9 b 20"; // schwarz kann in 3 halbzügen Sieg erzwingen, indem es figur auf [5,2] nach oben bewegt, ansonsten nicht; Tiefe 3 nötig!
         Board testBoard = Board.fenToBoard(fen);
-//        testBoard.printBoard();
+        testBoard.printBoard();
 
         BestMove testBM = new BestMove();
         SearchContext testContext = new SearchContext(Player.BLACK);
@@ -128,7 +128,7 @@ public class BestMoveTest {
     }
 
     @Test
-    public void testBestMoveAtDepth_Stalemate5(){
+    public void testBestMoveAtDepth_StalemateBy50Turn(){
         String fen = "3K2b2/2b6/9/9/9/9/9/9/6b2 b 45"; // BLACK kann nicht gewinnen, aber durch Blockade im ersten Halbzug verhindern, dass WHITE gewinnt
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
@@ -147,7 +147,7 @@ public class BestMoveTest {
     }
 
     @Test
-    public void testBestMoveAtDepth(){
+    public void testBestMoveAtDepth_StalemateByRepetition(){
         String fen = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0"; // nach 4ten Halbzug sollte Stalemate durch Stellungswiederholung sein ?
 //        String fen1 = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0";
 //        String fen2 = "2b2b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/4Kb3 b 1";

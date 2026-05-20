@@ -40,7 +40,7 @@ public class BestMove {
         // Liste der Ausgangsmoves erstellen zwischen denen gewählt wird und zurücksetzen der statischen Variablen
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         this.bestMove = moves.getFirst(); // hier könnte man die Auswahl auch random machen?
-        this.bestValue = 0;// der erste Move erstmal als Ausgangspunkt
+        this.bestValue = 0; // der erste Move erstmal als Ausgangspunkt
 
         //iterative Tiefensuche
         for (int depth = 1;; depth++) {

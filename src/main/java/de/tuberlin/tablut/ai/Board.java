@@ -11,7 +11,7 @@ public class Board {
     public static final  Bitboard90 THRONE = new Bitboard90(1L << 44, 0L);
 
     private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
-    private static final int STALEMATE_REPETITION_LIMIT = 3;
+    private static final int STALEMATE_REPETITION_LIMIT = 2;
 
     //////////////////////////////////////////////////
     /// Zustand des Spiels
