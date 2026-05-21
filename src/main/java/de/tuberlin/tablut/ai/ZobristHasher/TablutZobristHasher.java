@@ -37,7 +37,7 @@ public class TablutZobristHasher {
         pieceSquareKeys = new long[pieces.length][ENCODED_SQUARE_COUNT];
 
         for (Piece piece : pieces) {
-            if (piece == Piece.EMPTY) {
+            if (piece == Piece.EMPTY || piece == Piece.BLOCKED || piece == Piece.THRONE) {
                 continue;
             }
 
