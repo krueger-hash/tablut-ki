@@ -1,8 +1,13 @@
 package de.tuberlin.tablut.ai;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Arrays;
 import java.util.Objects;
 
+@Getter
+@Setter
 public class Move {
 
     //Das spielfeld wird einfach durchnummeriert, entsprechend den Bits, also von 0 bis 89 von oben links nach unten rechts
