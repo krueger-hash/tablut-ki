@@ -1,4 +1,4 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms;
 
 public class SearchStoppedException extends Exception {
 

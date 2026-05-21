@@ -1,9 +1,6 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms;
 
 import lombok.Getter;
-
-import java.util.ArrayList;
-import java.util.Stack;
 
 public class SearchContext {
     private boolean stopped;

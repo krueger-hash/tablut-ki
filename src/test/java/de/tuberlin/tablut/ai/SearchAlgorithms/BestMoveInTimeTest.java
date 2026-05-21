@@ -1,11 +1,9 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms;
 
-import org.junit.Ignore;
+import de.tuberlin.tablut.ai.*;
 import org.junit.Test;
-import org.w3c.dom.ls.LSOutput;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 import static org.junit.Assert.*;
 
@@ -144,9 +142,7 @@ public class BestMoveInTimeTest {
     }
 
     private static boolean sameMove(Move first, Move second) {
-        return first.from == second.from
-                && first.to == second.to
-                && first.movedPiece == second.movedPiece;
+        return first.equals(second);
     }
 
 
@@ -159,7 +155,7 @@ public class BestMoveInTimeTest {
         BestMoveInTime test = new BestMoveInTime(Board.deepCopy(t), 0);
 
         try {
-            BestMoveInTime.searchAtDepth(t, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            BestMoveInTime.searchAtDepth(t, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
         } catch (Exception ignored) {
         }
 
@@ -181,7 +177,7 @@ public class BestMoveInTimeTest {
         Board testBoard = Board.fenToBoard(fen);
         boolean finished = false;
         try {
-             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
             assertEquals(100_000, result.value());
             finished = true;
         }catch (Exception ignored){}
@@ -196,7 +192,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
             assertEquals(100_000, result.value());
             finished = true;
         } catch (Exception ignored) {
@@ -213,7 +209,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
             assertEquals(-100_000, result.value());
             finished = true;
         } catch (Exception ignored) {
@@ -230,7 +226,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 1, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 1, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
             assertEquals(-100_000, result.value());
             finished = true;
         } catch (Exception ignored) {
@@ -247,7 +243,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
             assertEquals(-100_000, result.value());
             finished = true;
         } catch (Exception ignored) {
@@ -264,7 +260,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 4, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 4, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
             assertEquals(-100_000, result.value());
             finished = true;
         } catch (Exception ignored) {
@@ -281,7 +277,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 5, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 5, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
             assertEquals(new Move(12,2,Piece.BLACK),result.bestMove());
             assertEquals(0,result.value());
             finished = true;
@@ -300,7 +296,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 5, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch);
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 5, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
             assertEquals(new Move(4,84,Piece.KING),result.bestMove());
             assertEquals(0,result.value());
             finished = true;

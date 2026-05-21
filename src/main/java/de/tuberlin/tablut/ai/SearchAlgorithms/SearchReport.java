@@ -1,6 +1,8 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms;
 
-import lombok.Getter;
+import de.tuberlin.tablut.ai.Move;
+
+import java.util.List;
 
 
 public record SearchReport(
@@ -11,7 +13,7 @@ public record SearchReport(
         long leafs,
         long millis,
         boolean completed,
-        ABResult result
+        List<Move> rootToLeafTrace
 ) {
     public double seconds() {
         return millis / 1000.0;

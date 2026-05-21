@@ -1,4 +1,6 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms;
+
+import de.tuberlin.tablut.ai.Move;
 
 public class Trace {
     Move move;

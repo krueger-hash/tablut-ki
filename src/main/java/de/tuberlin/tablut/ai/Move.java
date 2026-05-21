@@ -1,13 +1,16 @@
 package de.tuberlin.tablut.ai;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 import java.util.Objects;
 
 public class Move {
 
     //Das spielfeld wird einfach durchnummeriert, entsprechend den Bits, also von 0 bis 89 von oben links nach unten rechts
-
+    @Getter
     int from;
+    @Getter
     int to;
     Piece movedPiece;
 
@@ -18,7 +21,7 @@ public class Move {
     }
 
     // alternativer Constructor, der schematisch von der konkreten Implementierung von Bitboard unabhängig ist (da er in Abhängigkeit der cols das entsprechende Bit berechnet)
-    Move(int fromCol, int fromRow, int toCol, int toRow, Piece moved){
+    public Move(int fromCol, int fromRow, int toCol, int toRow, Piece moved){
         this.from = fromCol + Bitboard90.cols * fromRow;
         this.to = toCol + Bitboard90.cols * toRow;
         this. movedPiece = moved;

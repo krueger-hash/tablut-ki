@@ -581,7 +581,7 @@ public class Board {
     //TODO:
     // Methode zum Überprüfen des Spielendes
 
-    boolean gameIsEnd(){
+    public boolean gameIsEnd(){
         return (this.hasBlackWon() || this.hasWhiteWon() || this.isStalemate());
     }
 
@@ -792,7 +792,7 @@ public class Board {
     }
 
     //Funktion gibt ein das Board zurück, das nach einem Move entsteht. ZugSpieler werden durch Auslesen der Klassenattribute geupdatet.
-    static Board boardAfterMove(Board board, Move move){
+    public static Board boardAfterMove(Board board, Move move){
         Board newBoard = deepCopy(board);
         newBoard.applyMove(move);
         newBoard.sideToMove = Board.oppositeSide(board.sideToMove);

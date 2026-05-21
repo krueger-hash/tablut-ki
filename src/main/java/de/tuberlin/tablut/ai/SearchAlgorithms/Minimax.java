@@ -1,4 +1,8 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms;
+
+import de.tuberlin.tablut.ai.Board;
+import de.tuberlin.tablut.ai.BoardEvaluator;
+import de.tuberlin.tablut.ai.Move;
 
 import java.util.ArrayList;
 

@@ -1,14 +1,14 @@
 package de.tuberlin.tablut.ai.PerformanceTest;
 
-import de.tuberlin.tablut.ai.ABResult;
-import de.tuberlin.tablut.ai.AlphaBeta;
+import de.tuberlin.tablut.ai.SearchAlgorithms.ABResult;
+import de.tuberlin.tablut.ai.SearchAlgorithms.AlphaBeta;
 import de.tuberlin.tablut.ai.BestMoveInTime;
 import de.tuberlin.tablut.ai.Board;
-import de.tuberlin.tablut.ai.Minimax;
+import de.tuberlin.tablut.ai.SearchAlgorithms.Minimax;
 import de.tuberlin.tablut.ai.Move;
-import de.tuberlin.tablut.ai.SearchContext;
-import de.tuberlin.tablut.ai.SearchReport;
-import de.tuberlin.tablut.ai.SearchStoppedException;
+import de.tuberlin.tablut.ai.SearchAlgorithms.SearchContext;
+import de.tuberlin.tablut.ai.SearchAlgorithms.SearchReport;
+import de.tuberlin.tablut.ai.SearchAlgorithms.SearchStoppedException;
 
 import java.util.List;
 import java.util.Locale;
@@ -64,8 +64,8 @@ public class PerformanceTestSearch {
         System.out.println();
         System.out.println("Experiment 3 - max 2min search");
         System.out.println("Position: " + fen);
-        printTimedResult("Minimax", BestMoveInTime.searchInTime(board, TWO_MINUTES_MS, PRACTICAL_MAX_DEPTH, Minimax::minimaxSearch));
-        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, TWO_MINUTES_MS, PRACTICAL_MAX_DEPTH, PerformanceTestSearch::alphaBetaSearch));
+        printTimedResult("Minimax", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, Minimax::minimaxSearch));
+        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
     }
 
     private static void printTimedResult(String algorithm, SearchReport report) {

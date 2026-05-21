@@ -1,11 +1,7 @@
 package de.tuberlin.tablut.ai;
 
+import de.tuberlin.tablut.ai.SearchAlgorithms.*;
 import lombok.Getter;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 public class BestMoveInTime {
 
@@ -27,6 +23,7 @@ public class BestMoveInTime {
         this.msTime = msTime;
     }
 
+    // TODO: getter methods for other search algorithms e.g. minimax
     public Move getMove() {
         finalReport = searchInTime(
                 originalState,
@@ -36,7 +33,9 @@ public class BestMoveInTime {
         return finalReport.bestMove();
     }
 
+    // calls search algorithm with time limit and default max depth
     public static SearchReport searchInTime(Board originalState, int msTime, SearchFunction search) {
+
         return searchInTime(originalState, Integer.MAX_VALUE, msTime, search);
     }
 
@@ -50,7 +49,7 @@ public class BestMoveInTime {
             Board state = Board.deepCopy(originalState);
 
             try {
-                lastCompleted = searchAtDepth(state, depth, msTime, search);
+                lastCompleted = searchAtDepth(state, depth, start, search, context);
             } catch (SearchStoppedException e) {
                 break;
             }
@@ -61,13 +60,14 @@ public class BestMoveInTime {
                 break;
             }
         }
+        System.out.println("Runtime: "+(System.currentTimeMillis()-start));
 
         return lastCompleted;
     }
 
-    public static SearchReport searchAtDepth(Board originalState, int depth, int msTime, SearchFunction search) throws SearchStoppedException {
-        long start = System.currentTimeMillis();
-        SearchContext context = new SearchContext(msTime);
+    public static SearchReport searchAtDepth(Board originalState, int depth, long startTime, SearchFunction search, SearchContext context) throws SearchStoppedException {
+//        long start = System.currentTimeMillis();
+//        SearchContext context = new SearchContext(msTime);
         Board state = Board.deepCopy(originalState);
 
         ABResult result = search.search(state, depth, context);
@@ -78,9 +78,10 @@ public class BestMoveInTime {
                 depth,
                 context.getPositions(),
                 context.getLeafs(),
-                now - start,
+                now - startTime,
                 true,
-                result
+                result.getTrace().reversed()
+
         );
     }
 

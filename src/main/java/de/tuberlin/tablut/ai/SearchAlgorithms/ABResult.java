@@ -1,8 +1,8 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms;
 
+import de.tuberlin.tablut.ai.Move;
 import lombok.Getter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ABResult {
