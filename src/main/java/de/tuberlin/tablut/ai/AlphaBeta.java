@@ -122,7 +122,7 @@ public class AlphaBeta {
 
             if (isMaxing) {
                 if (score >= beta ) {
-                    return new ABResult(beta,bestPath); //Cutoff
+                    return new ABResult(beta,null); //Cutoff
                 }
                 if (score > alpha) {
                     alpha = score;
@@ -131,7 +131,7 @@ public class AlphaBeta {
                 }
             } else {
                 if (score <= alpha) {
-                    return new ABResult(alpha,bestPath); //Cutoff
+                    return new ABResult(alpha,null); //Cutoff
                 }
                 if (score < beta) {
                     beta = score;
@@ -141,9 +141,9 @@ public class AlphaBeta {
             }
         }
         if (isMaxing) {
-            return new ABResult(alpha,bestPath, context);
+            return new ABResult(alpha,bestPath);
         } else {
-            return new ABResult(beta,bestPath, context);
+            return new ABResult(beta,bestPath);
         }
     }
 

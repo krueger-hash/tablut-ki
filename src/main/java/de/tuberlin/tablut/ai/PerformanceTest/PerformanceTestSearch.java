@@ -42,8 +42,8 @@ public class PerformanceTestSearch {
         System.out.println();
         System.out.println("Experiment 1 - 1s search");
         System.out.println("Position: " + fen);
-        printTimedResult("Minimax", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, PRACTICAL_MAX_DEPTH, Minimax::minimaxSearch));
-        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, PRACTICAL_MAX_DEPTH, PerformanceTestSearch::alphaBetaSearch));
+        printTimedResult("Minimax", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, Minimax::minimaxSearch));
+        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, PerformanceTestSearch::alphaBetaSearch));
     }
 
     // Experiment 2:
@@ -53,8 +53,8 @@ public class PerformanceTestSearch {
         System.out.println();
         System.out.println("Experiment 2 - depth 4, max 2min");
         System.out.println("Position: " + fen);
-        printDepthResult("Minimax", BestMoveInTime.searchAtDepth(board, DEPTH_FOUR, TWO_MINUTES_MS, Minimax::minimaxSearch));
-        printDepthResult("Alpha-Beta", BestMoveInTime.searchAtDepth(board, DEPTH_FOUR, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
+        printDepthResult("Minimax", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, Minimax::minimaxSearch));
+        printDepthResult("Alpha-Beta", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
     }
 
     // Experiment 3:

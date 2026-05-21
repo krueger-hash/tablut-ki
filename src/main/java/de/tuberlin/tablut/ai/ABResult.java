@@ -1,36 +1,25 @@
 package de.tuberlin.tablut.ai;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class ABResult {
+    @Getter
     int value;
-    ArrayList<Move> trace;
-    SearchContext context;
-//    Trace trace;
+    List<Move> trace;
 
-    public ABResult(int value, ArrayList<Move> trace) {
-        this(value, trace, null);
-    }
-
-    public ABResult(int value, ArrayList<Move> trace, SearchContext context) {
+    public ABResult(int value, List<Move> trace) {
         this.value = value;
         this.trace = trace;
-        this.context = context;
     }
 
-    public int getValue() {
-        return value;
-    }
-
-    public ArrayList<Move> getTrace() {
+    public List<Move> getTrace() {
         return trace;
     }
 
-    public SearchContext getContext() {
-        return context;
-    }
-
-    public Move getBestMove() {
+    public Move getBestMoveAtNode() {
         if (trace == null || trace.isEmpty()) {
             return null;
         }

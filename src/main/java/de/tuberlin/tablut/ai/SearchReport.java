@@ -1,5 +1,8 @@
 package de.tuberlin.tablut.ai;
 
+import lombok.Getter;
+
+
 public record SearchReport(
         Move bestMove,
         int value,

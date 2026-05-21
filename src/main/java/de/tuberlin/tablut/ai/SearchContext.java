@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public class SearchContext {
-
-    final boolean isMaxing;
     private boolean stopped;
 
 //    public Stack<Move> moveStack;
@@ -38,28 +36,14 @@ public class SearchContext {
         return false;
     }
     public SearchContext(){
-        this(3600_000,Player.BLACK); // default Zeitlimit 1h
-        System.err.println("WARNING: Default Time and Player BLACK in SearchContext!");
+        System.err.println("WARNING: Default time in SearchContext!");
+        this(3600_000);
     }
     public SearchContext(int msTime){
-        this(msTime, Player.BLACK);
-        System.err.println("WARNING: Default BLACK in SearchContext!");
-    }
-    public SearchContext(Player side){
-        System.err.println("WARNING: Default time in SearchContext!");
-        this(3600_000, side);
-    }
-    public SearchContext(int msTime, Player current){
         this.stopped = false;
         this.endTime = System.currentTimeMillis() + msTime;
         this.leafs = 0;
         this.positions = 0;
-//        this.moveStack = new Stack<Move>();
-//        this.bestSequence = new ArrayList<Move>();
-        this.isMaxing = current == BoardEvaluator.MAX_PLAYER;
-//        if(isMaxing){this.bestValueDuringIteration = ALPHA_INIT;}
-//        else{this.bestValueDuringIteration = BETA_INIT;}
-//        this.bestAB = null;
     }
 
     public void incrementLeafs() {
@@ -69,24 +53,6 @@ public class SearchContext {
     public void incrementPositions() {
         this.positions++;
     }
-//    public void resetBestValue(){
-//        if(isMaxing){this.bestValueDuringIteration = ALPHA_INIT;}
-//        else{this.bestValueDuringIteration = BETA_INIT;}
-//    }
-
-//    public void updateIfBetterValue(int value){
-//        // besserer Wert für Max-Spieler
-//        if (this.isMaxing && value > this.bestValueDuringIteration){
-//            this.bestValueDuringIteration = value;
-//            this.bestSequence = new ArrayList<Move>(moveStack);
-//        }
-//        // besserer Wert für Min-Spieler
-//        if (!this.isMaxing && value < this.bestValueDuringIteration){
-//            this.bestValueDuringIteration = value;
-//            this.bestSequence = new ArrayList<Move>(moveStack);
-//        }
-//    }
-
 
 
 }
