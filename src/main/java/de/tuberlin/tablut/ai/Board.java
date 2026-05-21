@@ -1,39 +1,35 @@
 package de.tuberlin.tablut.ai;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Board {
 
-    public long whiteLow = (1L << 24) | (1L << 34) | (1L << 42) | (1L << 43) | (1L << 45) | (1L << 46) | (1L << 54);
-    public long whiteHigh = (1L);
-
-    public long whiteKingLow = 1L << 44;
-    public long whiteKingHigh = 0L;
-
-    public long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) |
-            (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
-    public long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
-
+    // konstante Randbedingungen (Feld und Regeln)
     public static final long BLOCKED_LOW = (1L << 0) | (1L << 8);
     public static final long BLOCKED_HIGH = (1L << 16) | (1L << 24);
+    public static final Bitboard90 BLOCKED_PIECES = new Bitboard90(BLOCKED_LOW, BLOCKED_HIGH);
+    public static final  Bitboard90 THRONE = new Bitboard90(1L << 44, 0L);
 
+    private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
+    private static final int STALEMATE_REPETITION_LIMIT = 2;
 
+    //////////////////////////////////////////////////
+    /// Zustand des Spiels
+    // * Stellung der Figuren
     public Bitboard90 white;
     public Bitboard90 whiteKing;
     public Bitboard90 black;
 
+    // * Spieler, der am Zug ist
+    public Player sideToMove = Player.BLACK; // In Tablut black (attackers) starts.
 
-    public static final Bitboard90 BLOCKED_PIECES = new Bitboard90(BLOCKED_LOW, BLOCKED_HIGH);
-    public static final  Bitboard90 THRONE = new Bitboard90(1L << 44, 0L);
-    private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
-    private static final int STALEMATE_REPETITION_LIMIT = 3;
+    // * Anzahl Züge ohne geschlagene Figur
+    public int movesWithoutCapture = 0;
 
-    // In Tablut black (attackers) starts.
-    public Player sideToMove = Player.BLACK;
-    private int movesWithoutCapture = 0;
+    //Stack der Änderungen am Board (insbesondere für Suche wichtig)
+    public final Stack<BoardStateChange> boardStateChanges = new Stack<>();
+
+    // * Tracking der vergangenen BoardStates
     private boolean stalemateTrackingInitialized = false;
     private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
 
@@ -51,10 +47,17 @@ public class Board {
     //Konstruktoren:
     //Startaufstellung:
     public Board() {
+        long whiteLow = (1L << 24) | (1L << 34) | (1L << 42) | (1L << 43) | (1L << 45) | (1L << 46) | (1L << 54);
+        long whiteHigh = (1L);
+        long whiteKingLow = 1L << 44;
+        long whiteKingHigh = 0L;
+        long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) | (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
+        long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
+
         this.white = new Bitboard90(whiteLow, whiteHigh);
         this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
         this.black = new Bitboard90(blackLow, blackHigh);
-        resetStalemateTracking();
+//        this.resetStalemateTracking(Player.BLACK);
     }
 
     public Board(Bitboard90 white,
@@ -70,11 +73,29 @@ public class Board {
                  Bitboard90 black,
                  Player sideToMove) {
 
+        this(white, whiteKing, black, sideToMove,0);
+
+        //default Werte // eigenltich redundant
+        this.movesWithoutCapture = 0;
+//        resetStalemateTracking(sideToMove);
+    }
+
+    public Board(Bitboard90 white,
+                 Bitboard90 whiteKing,
+                 Bitboard90 black,
+                 Player sideToMove,
+                 int movesWithoutCapture){
+
         this.white = white;
         this.whiteKing = whiteKing;
         this.black = black;
         this.sideToMove=sideToMove;
-        resetStalemateTracking(sideToMove);
+        this.movesWithoutCapture = movesWithoutCapture;
+
+        // eingestelltes Board in besuchte Positionen speichern
+        this.positionCounts.put(this.currentPositionKey(), 1);
+
+        this.stalemateTrackingInitialized = true; // Legacy?
     }
 
     void main() {
@@ -118,10 +139,102 @@ public class Board {
     }
 
 
-    //die Züge ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
+
+    // TODO: makeMove unmakeMove - check if there is another way to pass hits from makeMove to unmakeMove, then to return it from makeMove
+    // führt einen kompletten zug aus
+    // 1. applyMove
+    //2. steine schlagen
+    //3. aktiver Spieler wechselt
+    //4. stalemateCounter inkrementieren
+    public void makeMove (Move move){
+
+        //Steine schlagen
+        List<Hit> hits = this.checkHit(move);
+        this.applyHits(hits);
+
+        //Bewegung anwenden
+        this.applyMove(move);
+
+        //aktuelle Anzahl an Zügen ohne Schlagen auf Stack legen
+        BoardStateChange change = new BoardStateChange(
+                move,
+                hits,
+                this.movesWithoutCapture
+        );
+        this.boardStateChanges.push(change);
+
+        //Counter für Züge ohne Schlagen inkrementieren oder auf 0 zurücksetzen
+        if (hits.isEmpty()){
+            this.movesWithoutCapture++;
+        } else {
+            this.movesWithoutCapture = 0;
+        }
+
+        //Spieler am Zug wechseln
+        this.sideToMove = Board.oppositeSide(this.sideToMove);
+
+        //Map mit Stellungszähler inkrementieren
+        this.positionCounts.merge(this.currentPositionKey(), 1, Integer::sum);
+        return;
+    }
+
+    public void unmakeMove (){
+        BoardStateChange change = boardStateChanges.pop();
+        List<Hit> hits = change.hits;
+        Move move = change.move;
+
+        // Zug entfernen
+//        System.out.println(positionCounts.get(currentPositionKey()));
+//        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
+
+        // If a position has count of 0 it gets removed from the map
+        // PositionCounts now only contains active positions from the current path
+        PositionKey key = currentPositionKey();
+        int newCount = positionCounts.getOrDefault(key, 0) - 1;
+        if (newCount <= 0) positionCounts.remove(key);
+        else positionCounts.put(key, newCount);
+//        System.out.println(positionCounts.get(currentPositionKey()));
+
+        for (Hit h : hits) {
+            switch(h.piece()){
+                case Piece.BLACK:
+                    Bitboard90.setBit(black, h.position());
+                    break;
+                case Piece.KING:
+                    Bitboard90.setBit(whiteKing, h.position());
+                    break;
+                case Piece.WHITE:
+                    Bitboard90.setBit(white, h.position());
+            }
+        }
+
+        switch(move.movedPiece){
+            case Piece.BLACK:
+                Bitboard90.removeBit(black, move.to);
+                Bitboard90.setBit(black, move.from);
+                break;
+            case Piece.KING:
+                Bitboard90.removeBit(whiteKing, move.to);
+                Bitboard90.setBit(whiteKing, move.from);
+                break;
+            case Piece.WHITE:
+                Bitboard90.removeBit(white, move.to);
+                Bitboard90.setBit(white, move.from);
+        }
+
+        // letzte Anzahl an Zügen ohne Schlagen von Stack entfernen und speichern
+        movesWithoutCapture = change.formerMovesWithoutHit;
+
+
+        //Spieler am Zug zurück wechseln
+        this.sideToMove = Board.oppositeSide(this.sideToMove);
+
+
+    }
+
+    //die Bewegung ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
     public void applyMove(Move move) {
-        ArrayList<Hit> hits = checkHit(move);
-        this.hit(hits);
+
         if (move.movedPiece == Piece.KING) {
             if (getPieceAt(move.from) == Piece.KING &&
                     (getPieceAt(move.to) == Piece.EMPTY || getPieceAt(move.to) == Piece.BLOCKED)) {
@@ -147,8 +260,8 @@ public class Board {
         }
     }
 
-    public void hit(ArrayList<Hit> hits){
-        if (hits == null) return;
+    public void applyHits(List<Hit> hits) {
+        if (hits == null || hits.isEmpty()) return;
         for (Hit h : hits) {
             if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
             if (h.piece() == Piece.BLACK) {
@@ -163,261 +276,23 @@ public class Board {
         }
     }
 
-    //gibt den geschlagenen Piece zurück
-    //gibt EMPTY zurück, wenn keine Figur geschlagen werden kann
-   /* public ArrayList<Hit> checkHit(Move move) {
-        int pos = move.to;
-
-        ArrayList<Hit> hits = new ArrayList<>();        // Liste mit Hit(Piece, position)
-        ArrayList<Piece> hitPieces = new ArrayList<>(); // Liste NUR mit Pieces
-
-        boolean kingOnThrone = getPieceAt(44) == Piece.KING;
-        boolean throneEmpty = !kingOnThrone;
-
-        // WEISS oder K&Ouml;NIG schl&auml;gt SCHWARZ
-        if (move.movedPiece == Piece.WHITE || move.movedPiece == Piece.KING) {
-
-            // LINKS
-            if (getPieceAt(pos - 1) == Piece.BLACK &&
-                    (getPieceAt(pos - 2) == Piece.WHITE || getPieceAt(pos - 2) == Piece.KING
-                            || Bitboard90.getBit(BLOCKED_PIECES, pos - 2)
-                            || (Bitboard90.getBit(THRONE, pos - 2) && throneEmpty))) {
-
-                hits.add(new Hit(Piece.BLACK, pos - 1));
-                hitPieces.add(Piece.BLACK);
-            }
-
-            // RECHTS
-            if (getPieceAt(pos + 1) == Piece.BLACK &&
-                    (getPieceAt(pos + 2) == Piece.WHITE || getPieceAt(pos + 2) == Piece.KING
-                            || Bitboard90.getBit(BLOCKED_PIECES, pos + 2)
-                            || (Bitboard90.getBit(THRONE, pos + 2) && throneEmpty))) {
-
-                hits.add(new Hit(Piece.BLACK, pos + 1));
-                hitPieces.add(Piece.BLACK);
-            }
-
-            // OBEN
-            if (getPieceAt(pos - 10) == Piece.BLACK &&
-                    (getPieceAt(pos - 20) == Piece.WHITE || getPieceAt(pos - 20) == Piece.KING
-                            || Bitboard90.getBit(BLOCKED_PIECES, pos - 20)
-                            || (Bitboard90.getBit(THRONE, pos - 20) && throneEmpty))) {
-
-                hits.add(new Hit(Piece.BLACK, pos - 10));
-                hitPieces.add(Piece.BLACK);
-            }
-
-            // UNTEN
-            if (getPieceAt(pos + 10) == Piece.BLACK &&
-                    (getPieceAt(pos + 20) == Piece.WHITE || getPieceAt(pos + 20) == Piece.KING
-                            || Bitboard90.getBit(BLOCKED_PIECES, pos + 20)
-                            || (Bitboard90.getBit(THRONE, pos + 20) && throneEmpty))) {
-
-                hits.add(new Hit(Piece.BLACK, pos + 10));
-                hitPieces.add(Piece.BLACK);
-            }
+    // Helper function to initialize hits list
+    private static List<Hit> addHit(List<Hit> hits, Hit hit) {
+        if (hits.isEmpty()) {
+            hits = new ArrayList<>(4);
         }
-
-        // SCHWARZ schl&auml;gt WEISS oder K&Ouml;NIG
-        else if (move.movedPiece == Piece.BLACK) {
-
-            // LINKS
-            if (getPieceAt(pos - 1) == Piece.WHITE &&
-                    (getPieceAt(pos - 2) == Piece.BLACK
-                            || Bitboard90.getBit(BLOCKED_PIECES, pos - 2)
-                            || (Bitboard90.getBit(THRONE, pos - 2) && throneEmpty))) {
-
-                hits.add(new Hit(Piece.WHITE, pos - 1));
-                hitPieces.add(Piece.WHITE);
-            }
-
-            // RECHTS
-            if (getPieceAt(pos + 1) == Piece.WHITE &&
-                    (getPieceAt(pos + 2) == Piece.BLACK
-                            || Bitboard90.getBit(BLOCKED_PIECES, pos + 2)
-                            || (Bitboard90.getBit(THRONE, pos + 2) && throneEmpty))) {
-
-                hits.add(new Hit(Piece.WHITE, pos + 1));
-                hitPieces.add(Piece.WHITE);
-            }
-
-            // OBEN
-            if (getPieceAt(pos - 10) == Piece.WHITE &&
-                    (getPieceAt(pos - 20) == Piece.BLACK
-                            || Bitboard90.getBit(BLOCKED_PIECES, pos - 20)
-                            || (Bitboard90.getBit(THRONE, pos - 20) && throneEmpty))) {
-
-                hits.add(new Hit(Piece.WHITE, pos - 10));
-                hitPieces.add(Piece.WHITE);
-            }
-
-            // UNTEN
-            if (getPieceAt(pos + 10) == Piece.WHITE &&
-                    (getPieceAt(pos + 20) == Piece.BLACK
-                            || Bitboard90.getBit(BLOCKED_PIECES, pos + 20)
-                            || (Bitboard90.getBit(THRONE, pos + 20) && throneEmpty))) {
-
-                hits.add(new Hit(Piece.WHITE, pos + 10));
-                hitPieces.add(Piece.WHITE);
-            }
-
-            // K&ouml;nig auf dem Thron
-            if (pos == 34 || pos == 43 || pos == 45 || pos == 54) {
-                if (getPieceAt(44) == Piece.KING
-                        && getPieceAt(34) == Piece.BLACK
-                        && getPieceAt(43) == Piece.BLACK
-                        && getPieceAt(45) == Piece.BLACK
-                        && getPieceAt(54) == Piece.BLACK) {
-
-                    hits.add(new Hit(Piece.KING, 44));
-                    hitPieces.add(Piece.KING);
-                }
-            }
-
-            // K&ouml;nig oben am Thron (34)
-            if (getPieceAt(34) == Piece.KING
-                    && getPieceAt(33) == Piece.BLACK
-                    && getPieceAt(35) == Piece.BLACK
-                    && getPieceAt(24) == Piece.BLACK
-                    && (move.to == 33 || move.to == 35 || move.to == 24)) {
-
-                hits.add(new Hit(Piece.KING, 34));
-                hitPieces.add(Piece.KING);
-            }
-
-            // K&ouml;nig links am Thron (43)
-            if (getPieceAt(43) == Piece.KING
-                    && getPieceAt(33) == Piece.BLACK
-                    && getPieceAt(42) == Piece.BLACK
-                    && getPieceAt(53) == Piece.BLACK
-                    && (move.to == 33 || move.to == 42 || move.to == 53)) {
-
-                hits.add(new Hit(Piece.KING, 43));
-                hitPieces.add(Piece.KING);
-            }
-
-            // K&ouml;nig rechts am Thron (45)
-            if (getPieceAt(45) == Piece.KING
-                    && getPieceAt(35) == Piece.BLACK
-                    && getPieceAt(46) == Piece.BLACK
-                    && getPieceAt(55) == Piece.BLACK
-                    && (move.to == 35 || move.to == 46 || move.to == 55)) {
-
-                hits.add(new Hit(Piece.KING, 45));
-                hitPieces.add(Piece.KING);
-            }
-
-            // K&ouml;nig unten am Thron (54)
-            if (getPieceAt(54) == Piece.KING
-                    && getPieceAt(55) == Piece.BLACK
-                    && getPieceAt(53) == Piece.BLACK
-                    && getPieceAt(64) == Piece.BLACK
-                    && (move.to == 43 || move.to == 55 || move.to == 64)) {
-
-                hits.add(new Hit(Piece.KING, 54));
-                hitPieces.add(Piece.KING);
-            }
-
-            // K&ouml;nig wie normaler Stein
-            if (getPieceAt(pos - 1) == Piece.KING
-                    && (getPieceAt(pos - 2) == Piece.BLACK
-                    || Bitboard90.getBit(BLOCKED_PIECES, pos - 2)
-                    || (Bitboard90.getBit(THRONE, pos - 2) && throneEmpty))
-                    && (pos - 1 != 34 && pos - 1 != 43 && pos - 1 != 44 && pos - 1 != 45 && pos - 1 != 54)) {
-
-                hits.add(new Hit(Piece.KING, pos - 1));
-                hitPieces.add(Piece.KING);
-            }
-
-            if (getPieceAt(pos + 1) == Piece.KING
-                    && (getPieceAt(pos + 2) == Piece.BLACK
-                    || Bitboard90.getBit(BLOCKED_PIECES, pos + 2)
-                    || (Bitboard90.getBit(THRONE, pos + 2) && throneEmpty))
-                    && (pos + 1 != 34 && pos + 1 != 43 && pos + 1 != 44 && pos + 1 != 45 && pos + 1 != 54)) {
-
-                hits.add(new Hit(Piece.KING, pos + 1));
-                hitPieces.add(Piece.KING);
-            }
-
-            if (getPieceAt(pos - 10) == Piece.KING
-                    && (getPieceAt(pos - 20) == Piece.BLACK
-                    || Bitboard90.getBit(BLOCKED_PIECES, pos - 20)
-                    || (Bitboard90.getBit(THRONE, pos - 20) && throneEmpty))
-                    && (pos - 10 != 34 && pos - 10 != 43 && pos - 10 != 44 && pos - 10 != 45 && pos - 10 != 54)) {
-
-                hits.add(new Hit(Piece.KING, pos - 10));
-                hitPieces.add(Piece.KING);
-            }
-
-            if (getPieceAt(pos + 10) == Piece.KING
-                    && (getPieceAt(pos + 20) == Piece.BLACK
-                    || Bitboard90.getBit(BLOCKED_PIECES, pos + 20)
-                    || (Bitboard90.getBit(THRONE, pos + 20) && throneEmpty))
-                    && (pos + 10 != 34 && pos + 10 != 43 && pos + 10 != 44 && pos + 10 != 45 && pos + 10 != 54)) {
-
-                hits.add(new Hit(Piece.KING, pos + 10));
-                hitPieces.add(Piece.KING);
-            }
-
-
-            // K&ouml;nig auf dem Thron: Wei&szlig;er Stein kann geschlagen werden, wenn er zwischen K&ouml;nig und 3 Schwarzen steht
-            if (getPieceAt(44) == Piece.KING) {
-
-                // Wei&szlig; oben (34)
-                if (pos == 24 && getPieceAt(34) == Piece.WHITE
-                        && getPieceAt(43) == Piece.BLACK
-                        && getPieceAt(45) == Piece.BLACK
-                        && getPieceAt(54) == Piece.BLACK) {
-
-                    hits.add(new Hit(Piece.WHITE, pos+10));
-                    hitPieces.add(Piece.WHITE);
-                }
-
-                // Wei&szlig; links (43)
-                if (pos == 42 && getPieceAt(43) == Piece.WHITE
-                        && getPieceAt(34) == Piece.BLACK
-                        && getPieceAt(45) == Piece.BLACK
-                        && getPieceAt(54) == Piece.BLACK) {
-
-                    hits.add(new Hit(Piece.WHITE, pos+1));
-                    hitPieces.add(Piece.WHITE);
-                }
-
-                // Wei&szlig; rechts (45)
-                if (pos == 46 && getPieceAt(45) == Piece.WHITE
-                        && getPieceAt(34) == Piece.BLACK
-                        && getPieceAt(43) == Piece.BLACK
-                        && getPieceAt(54) == Piece.BLACK) {
-
-                    hits.add(new Hit(Piece.WHITE, pos-1));
-                    hitPieces.add(Piece.WHITE);
-                }
-
-                // Wei&szlig; unten (54)
-                if (pos == 64 && getPieceAt(54) == Piece.WHITE
-                        && getPieceAt(34) == Piece.BLACK
-                        && getPieceAt(43) == Piece.BLACK
-                        && getPieceAt(45) == Piece.BLACK) {
-
-                    hits.add(new Hit(Piece.WHITE, pos-10));
-                    hitPieces.add(Piece.WHITE);
-                }
-            }
-
-        }
-
-        // wichtig: beide Listen weitergeben
-        registerMoveForStalemate(move, hitPieces);
-
+        hits.add(hit);
         return hits;
-    }*/
+    }
 
-    public ArrayList<Hit> checkHit(Move move) {
+    public List<Hit> checkHit(Move move) {
+
 
         int pos = move.to;
         Piece mover = move.movedPiece;
 
-        ArrayList<Hit> hits = new ArrayList<>(4);
+//        ArrayList<Hit> hits = new ArrayList<>(4);
+        List<Hit> hits = Collections.emptyList();
 
         // Vorbereitete Bitboards
         Bitboard90 whiteAll = Bitboard90.or(white, whiteKing);
@@ -431,7 +306,7 @@ public class Board {
 
             for (int d : DIR) {
                 int adj = pos + d;
-                int behind = pos + 2*d;
+                int behind = pos + 2 * d;
 
                 // Grenzen prüfen
                 if (adj < 0 || adj >= 90) continue;
@@ -449,7 +324,7 @@ public class Board {
                         || Bitboard90.getBit(BLOCKED_PIECES, behind)
                         || (Bitboard90.getBit(THRONE, behind) && throneEmpty)) {
 
-                    hits.add(new Hit(Piece.BLACK, adj));
+                    hits = this.addHit(hits, new Hit(Piece.BLACK, adj));
                 }
             }
 
@@ -480,12 +355,16 @@ public class Board {
                         || Bitboard90.getBit(BLOCKED_PIECES, behind)
                         || (Bitboard90.getBit(THRONE, behind) && throneEmpty)) {
 
-                    hits.add(new Hit(adjKing ? Piece.KING : Piece.WHITE, adj));
+                    hits = addHit(hits, new Hit(adjKing ? Piece.KING : Piece.WHITE, adj));
                 }
             }
 
             // --- König-Sonderfälle separat ---
-            hits.addAll(checkKingSpecialCaptures(pos));
+            if (hits.isEmpty()) {
+                hits = checkKingSpecialCaptures(pos);
+            } else {
+                hits.addAll(checkKingSpecialCaptures(pos));
+            }
 
             return hits;
         }
@@ -564,15 +443,14 @@ public class Board {
         return hits;
     }
 
-
-
-    // Prints labeled 9x9 board visualizing pieces and throne
-    public  void printBoard() {
-        System.out.println("    0 1 2 3 4 5 6 7 8");
+    @Override
+    public String toString() {
+        StringBuilder boardString = new StringBuilder();
+        boardString.append("    0 1 2 3 4 5 6 7 8\n");
         for (int row = 0; row < 9; row++) {
-            StringBuilder line = new StringBuilder();
-            line.append(row).append(" | ");
+            boardString.append(row).append(" | ");
             for (int col = 0; col < 9; col++) {
+
                 int pos = row * Bitboard90.cols + col;
                 Piece piece = getPieceAt(pos);
 
@@ -590,15 +468,20 @@ public class Board {
                 } else {
                     symbol = '.';
                 }
+                boardString.append(symbol);
 
-                line.append(symbol);
                 if (col < 8) {
-                    line.append(' ');
+                    boardString.append(' ');
                 }
             }
-            line.append(" |");
-            System.out.println(line);
+            boardString.append(" |\n");
         }
+        return boardString.toString();
+    }
+
+    // Prints labeled 9x9 board visualizing pieces and throne
+    public  void printBoard() {
+        System.out.println(this);
     }
 
     // Calculates all possible moves for a given bitboard and player type.
@@ -698,6 +581,10 @@ public class Board {
     //TODO:
     // Methode zum Überprüfen des Spielendes
 
+    public boolean gameIsEnd(){
+        return (this.hasBlackWon() || this.hasWhiteWon() || this.isStalemate());
+    }
+
      boolean hasBlackWon (){
         if(whiteKing.high + whiteKing.low == 0) {return true;} //Ist kein König mehr auf dem Board, sind beide vom Zahlenwert 0
         else {return false;}
@@ -707,6 +594,8 @@ public class Board {
         //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. es existiert ein gesetztes Bit
         int bitCount = Bitboard90.and(whiteKing, BLOCKED_PIECES).bitCount();
         if (bitCount == 1) {
+//            System.out.println("White has won.");
+//            this.printBoard();
             return true;
         }
         else {return false;}
@@ -718,54 +607,56 @@ public class Board {
             return false;
         }
 
-        ensureStalemateTrackingInitialized();
+//        ensureStalemateTrackingInitialized(); // welchen Sinn hat das hier?; wenn erst hier sichergegangen wird, dass Tracking stattfindet, ist es zu spät, da ggf. der ursprungszug fehlt
 
         // *50 Zuege ohne geschlagene Figur;
         if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
+//            System.out.println("Stalemate durch 50 Züge Regel");
             return true;
         }
 
         // *wiederholte Stellung (Zyklenfreiheit),
         if (positionCounts.getOrDefault(currentPositionKey(), 0) >= STALEMATE_REPETITION_LIMIT) {
+//            System.out.println("Stalemate durch wiederholte Stellung");
             return true;
         }
 
         // *kein Zug moeglich
-        return hasNoLegalMovesForSideToMove();
-    }
-
-    public void resetStalemateTracking() {
-        resetStalemateTracking(Player.BLACK);
-    }
-
-    public void resetStalemateTracking(Player sideToMove) {
-        this.sideToMove = sideToMove;
-        this.movesWithoutCapture = 0;
-        this.stalemateTrackingInitialized = false;
-        this.positionCounts.clear();
-    }
-
-    private void ensureStalemateTrackingInitialized() {
-        if (stalemateTrackingInitialized) {
-            return;
+        if (hasNoLegalMovesForSideToMove()){
+//            System.out.println("Stalemate durch 'keine möglichen Züge'");
+            return true;
         }
-        positionCounts.put(currentPositionKey(), 1);
-        stalemateTrackingInitialized = true;
+        return false;
     }
 
-    private void registerMoveForStalemate(Move move, List<Piece> hitPieces) {
-        if (move == null) {
-            return;
-        }
+//    public void resetStalemateTracking(Player sideToMove) {
+//        this.sideToMove = sideToMove;
+//        this.movesWithoutCapture = 0;
+//        this.stalemateTrackingInitialized = false;
+//        this.positionCounts.clear();
+//    }
 
-        ensureStalemateTrackingInitialized();
+//    private void ensureStalemateTrackingInitialized() {
+//        if (stalemateTrackingInitialized) {
+//            return;
+//        }
+//        positionCounts.put(this.currentPositionKey(), 1);
+//        stalemateTrackingInitialized = true;
+//    }
 
-        boolean captureOccurred = hitPieces != null && !hitPieces.isEmpty();
-        movesWithoutCapture = captureOccurred ? 0 : movesWithoutCapture + 1;
-        sideToMove = oppositeSide(move.movedPiece==Piece.BLACK?Player.BLACK:Player.WHITE);
-
-        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
-    }
+//    private void registerMoveForStalemate(Move move, List<Piece> hitPieces) {
+//        if (move == null) {
+//            return;
+//        }
+//
+//        ensureStalemateTrackingInitialized();
+//
+//        boolean captureOccurred = hitPieces != null && !hitPieces.isEmpty();
+//        movesWithoutCapture = captureOccurred ? 0 : movesWithoutCapture + 1;
+//        sideToMove = oppositeSide(move.movedPiece==Piece.BLACK?Player.BLACK:Player.WHITE);
+//
+//        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
+//    }
 
     private boolean hasNoLegalMovesForSideToMove() {
         if (sideToMove == Player.BLACK) {
@@ -777,22 +668,18 @@ public class Board {
 
     private PositionKey currentPositionKey() {
         return new PositionKey(
-                white.low,
-                white.high,
-                whiteKing.low,
-                whiteKing.high,
-                black.low,
-                black.high,
-                sideToMove
+                this.white.low,
+                this.white.high,
+                this.whiteKing.low,
+                this.whiteKing.high,
+                this.black.low,
+                this.black.high,
+                this.sideToMove
         );
     }
 
     public static Player oppositeSide(Player side) {
         return side == Player.BLACK ? Player.WHITE : Player.BLACK;
-    }
-
-    private Piece oppositeSide(Piece side) {
-        return side == Piece.BLACK ? Piece.WHITE : Piece.BLACK;
     }
 
     static Board transformPointString(String pointString) {
@@ -841,7 +728,7 @@ public class Board {
         return new Board(white, whiteKing, black, sideToMove);
     }
 
-    static Board fenToBoard(String fen){
+    public static Board fenToBoard(String fen){
         String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist)
         if (parts.length < 2) {throw new IllegalArgumentException("FEN unvollständig. Startspieler angegeben?");}
 
@@ -889,17 +776,34 @@ public class Board {
         else {
             throw new IllegalArgumentException ("undefinierter Symbol für Startseite: "+ side);
         }
-        return new Board(white,whiteKing,black,sideToMove);
+
+        // * 50-Züge-Regel Parameter auslesen
+        if (parts.length > 2){
+            int capturelessMoves = Integer.parseInt(parts[2]);
+            return new Board(white, whiteKing, black, sideToMove, capturelessMoves);
+        }
+
+        //Return, falls nur sideToMove und Stellung angegeben sind
+        return new Board(white, whiteKing, black, sideToMove);
+
+
+
+
     }
 
     //Funktion gibt ein das Board zurück, das nach einem Move entsteht. ZugSpieler werden durch Auslesen der Klassenattribute geupdatet.
-    static Board boardAfterMove(Board board, Move move){
+    public static Board boardAfterMove(Board board, Move move){
         Board newBoard = deepCopy(board);
         newBoard.applyMove(move);
         newBoard.sideToMove = Board.oppositeSide(board.sideToMove);
         return newBoard;
     }
 
-
+    public boolean isStalemateTrackingInitialized() {
+        return stalemateTrackingInitialized;
+    }
+    public Map<PositionKey, Integer> getPositionCounts() {
+        return positionCounts;
+    }
 }
 

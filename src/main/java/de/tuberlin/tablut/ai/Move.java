@@ -1,7 +1,15 @@
 package de.tuberlin.tablut.ai;
 
-import java.util.Arrays;
+import lombok.Getter;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.Arrays;
+import java.util.Objects;
+
+@Getter
+@Setter
 public class Move {
 
     //Das spielfeld wird einfach durchnummeriert, entsprechend den Bits, also von 0 bis 89 von oben links nach unten rechts
@@ -17,29 +25,28 @@ public class Move {
     }
 
     // alternativer Constructor, der schematisch von der konkreten Implementierung von Bitboard unabhängig ist (da er in Abhängigkeit der cols das entsprechende Bit berechnet)
-    Move(int fromX, int fromY, int toX, int toY, Piece moved){
-        this.from = fromX + Bitboard90.cols * fromY;
-        this.to = toX + Bitboard90.cols * toY;
+    public Move(int fromCol, int fromRow, int toCol, int toRow, Piece moved){
+        this.from = fromCol + Bitboard90.cols * fromRow;
+        this.to = toCol + Bitboard90.cols * toRow;
         this. movedPiece = moved;
     }
 
-    static Move inputToMove(Board board,int fromX,int fromY, int toX, int toY){
+    static Move inputToMove(Board board,int fromCol,int fromRow, int toCol, int toRow){
 
         Piece moved;
-        if(Bitboard90.getBitAsMatrix(board.white,fromY,fromX)){
+        if(Bitboard90.getBitAsMatrix(board.white,fromRow,fromCol)){
             moved = Piece.WHITE;
         }
-        else if(Bitboard90.getBitAsMatrix(board.whiteKing,fromY, fromX)){
+        else if(Bitboard90.getBitAsMatrix(board.whiteKing,fromRow, fromCol)){
             moved = Piece.KING;
         }
-        else if(Bitboard90.getBitAsMatrix(board.black,fromY, fromX)) {
+        else if(Bitboard90.getBitAsMatrix(board.black,fromRow, fromCol)) {
             moved = Piece.BLACK;
         }
         else {
-            throw new IllegalArgumentException("No Piece at Position: x="+fromX+" y="+fromY);
+            throw new IllegalArgumentException("No Piece at Position: col="+fromCol+" row="+fromRow);
         }
-
-        return new Move(fromX,fromY,toX,toY,moved); // hier ist der alternative Konstruktor genutzt
+        return new Move(fromCol,fromRow,toCol,toRow,moved); // hier ist der alternative Konstruktor genutzt
     }
 
     // gibt Ursprung und Ziel des Moves als einen Int Array zur
@@ -64,11 +71,23 @@ public class Move {
         String origin = Arrays.toString(Bitboard90.bitToMatrix(this.from));
         String target = Arrays.toString(Bitboard90.bitToMatrix(this.to));
 
-        return "Move{"
+        return "Move<row,col>{"
                 + moved +" "
                 + origin
                 +"->"
                 + target
                 +"}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Move move = (Move) o;
+        return from == move.from && to == move.to && movedPiece == move.movedPiece;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(from, to, movedPiece);
     }
 }

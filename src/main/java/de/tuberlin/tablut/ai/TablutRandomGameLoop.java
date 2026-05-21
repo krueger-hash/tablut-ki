@@ -19,6 +19,14 @@ public class TablutRandomGameLoop {
     private Board board = new Board();
     private Player localPlayer = Player.BLACK;
 
+
+    private static final int EXPECTED_MOVES = 60; // Total expected moves by current player in the entire game
+    private static final int MIN_EXPECTED_MOVES = 10; // Expect that the game has always at least 10 moves left
+    private static final int MAX_SEARCH_DEPTH = 6; // Maximum search depth for alpha-beta search
+    private static final long SAFETY_BUFFER_MS = 500; // Used to calculate hard time limit for the alpha beta search (max time to use)
+    private long remainingMs = 300_000; // Remaining Ms for the entire game
+    private int moveNumber = 0; // Number of moves made by the current player
+
     public static void run(String[] args) {
         ClientOptions options = ClientOptions.fromArgs(args);
         try {
@@ -154,7 +162,9 @@ public class TablutRandomGameLoop {
         if ("start".equals(state)) {
             localPlayer = Player.BLACK;
             System.out.println("Playing BLACK and moving first");
-            makeRandomMove(in, out);
+//            makeRandomMove(in, out);
+            board.sideToMove = localPlayer;
+            playMove(out, in, board);
         } else if ("wait".equals(state)) {
             localPlayer = Player.WHITE;
             System.out.println("Playing WHITE and waiting for BLACK");
@@ -184,14 +194,15 @@ public class TablutRandomGameLoop {
                         Integer.parseInt(parts[2].trim())
                 );
                 // apply opponent move
-                board.applyMove(opponentMove);
+                board.makeMove(opponentMove);
                 System.out.println("Opponent Player");
                 board.printBoard();
                 System.out.println("Opponent played " + line.substring("move ".length()));
                 // TODO: currently respond with random move - later -> respond with calculated move
-                makeRandomMove(in, out);
-                System.out.println("Our Move");
-                board.printBoard();
+//                makeRandomMove(in, out);
+                // TODO: evaluate strucutre and time management?
+                board.sideToMove = localPlayer;
+                playMove(out, in, board);
                 continue;
             }
             if (line.startsWith("err")) {
@@ -199,6 +210,46 @@ public class TablutRandomGameLoop {
             }
             throw new IOException("Unexpected game message: " + line);
         }
+    }
+
+    public long calculateMoveBudgetMs(){
+        int expectedMovesLeft = Math.max(MIN_EXPECTED_MOVES, EXPECTED_MOVES - moveNumber);
+        // Distribute time equally between expected moves in the game
+        long budget = remainingMs / expectedMovesLeft;
+        // Never use full time, due to uncertainty (Network effects, Java overhead, Server-Communication)
+        long hardLimit = remainingMs - SAFETY_BUFFER_MS;
+
+        // TODO: check whether this is needed
+        // 10 ms to ensure methode never results in to low ms (for bestMovesInTime logic)
+        return Math.max(10, Math.min(budget, hardLimit));
+    }
+
+    private void playMove(BufferedWriter out, BufferedReader in, Board board) throws IOException{
+        long moveBudgetMs = calculateMoveBudgetMs();
+        Move move = new BestMoveInTime(Board.deepCopy(board), (int)moveBudgetMs).getMove();
+
+        System.out.println("Our Calculated Best Move: "+ move);
+        int[] indices = Move.moveToIndizes(move);
+        String moveMessage = indices[0] + "," + indices[1] + "," + indices[2] + "," + indices[3];
+        send(out, "move " + moveMessage);
+
+        String response = read(in);
+        if (response == null) {
+            throw new IOException("Connection closed after move " + moveMessage);
+        }
+        if (response.startsWith("err")) {
+            throw new IOException("Server rejected generated move " + moveMessage + ": " + response);
+        }
+        // parse the new time
+        parseConfigLine(response);
+
+        System.out.println("New Time Account: " + remainingMs + " ms");
+//        expectCommand(response, "time");
+
+        board.makeMove(move);
+
+        System.out.println("New Board After Our Move");
+        board.printBoard();
     }
 
     private void makeRandomMove(BufferedReader in, BufferedWriter out) throws IOException {
@@ -249,6 +300,10 @@ public class TablutRandomGameLoop {
         if ("start_pos".equals(key) && !value.isBlank()) {
             board = Board.fenToBoard(String.join("", value.split("\\s+")));
         }
+        if ("time".equals(key) && !value.isBlank()) {
+            remainingMs = (long) (Double.parseDouble(value) * 1000);
+        }
+
     }
 
     private void sendAndExpectOk(BufferedReader in, BufferedWriter out, String command) throws IOException {
