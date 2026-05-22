@@ -14,8 +14,8 @@ public class BestMoveInTimeTest {
         Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 b 20");
         // TODO - board somehow mutates original board when stopped
         Move move = new BestMoveInTime(Board.deepCopy(board), 1000).getMove();
-        board.printBoard();
-        System.out.println(move);
+//        board.printBoard();
+//        System.out.println(move);
         assertNotNull(move);
         assertTrue(containsMove(Board.generateLegalMoves(board, board.sideToMove), move));
     }
@@ -77,8 +77,8 @@ public class BestMoveInTimeTest {
             8 | X . . . . . B . W |
          */
         Move expected = new Move(8, 8, 7, 8, Piece.WHITE);
-        System.out.println("Test Black Best Move");
-        board.printBoard();
+//        System.out.println("Test Black Best Move");
+//        board.printBoard();
 
         assertOnlyLegalMove(board, expected);
         assertSameMove(expected, new BestMoveInTime(board, 1000).getMove());
@@ -99,24 +99,24 @@ public class BestMoveInTimeTest {
             7 | . . . . . . . . K |
             8 | X . . . . . . . X |
          */
-        board.printBoard();
+//        board.printBoard();
         Move expected = new Move(8, 7, 8, 8, Piece.KING);
         BestMoveInTime test = new BestMoveInTime(board, 1000);
         Move bestMove = test.getMove();
-        System.out.println(bestMove);
-        System.out.println(test.getFinalReport().value());
+//        System.out.println(bestMove);
+//        System.out.println(test.getFinalReport().value());
         assertSameMove(expected, bestMove); // technisch gesehen, sind hier die Züge auch egal, da jederzeit der Sieg durch Weiß erzwungen werden kann ...
     }
 
     @Test
     public void testBestMoveInTimeCaptureWhitePiece() {
         Board board = Board.fenToBoard("9/9/5k3/9/8b/8w/2b6/9/9 b");
-        board.printBoard();
+//        board.printBoard();
         Move expected = new Move(2, 6, 8, 6, Piece.BLACK);
         BestMoveInTime test = new BestMoveInTime(board, 1000);
         Move bestMove = test.getMove();
-        System.out.println(bestMove);
-        System.out.println(test.getFinalReport().value());
+//        System.out.println(bestMove);
+//        System.out.println(test.getFinalReport().value());
         assertSameMove(expected, bestMove); // das ist nach aktueller Implementierung nicht der beste Move, da schwarz in 2 Zügen verliert und somit alle Züge gleichwertig sind
     }
 
@@ -188,7 +188,7 @@ public class BestMoveInTimeTest {
     public void testBestMoveAtDepth_1W() {
         String fen = "2b6/9/b1K1b4/9/2b6/9/9/9/9 w 20"; // weiß hat in 2 halbzügen verloren
         Board testBoard = Board.fenToBoard(fen);
-        testBoard.printBoard();
+//        testBoard.printBoard();
         boolean finished = false;
 
         try {
@@ -205,7 +205,7 @@ public class BestMoveInTimeTest {
     public void testBestMoveAtDepth_2b() {
         String fen = "9/9/9/9/9/9/9/9/4K2b1 b 20"; // weiß hat in 2 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
-        testBoard.printBoard();
+//        testBoard.printBoard();
         boolean finished = false;
 
         try {
@@ -222,7 +222,7 @@ public class BestMoveInTimeTest {
     public void testBestMoveAtDepth_2w() {
         String fen = "9/9/9/9/9/9/9/9/4K2b1 w 20"; // weiß hat in 1 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
-        testBoard.printBoard();
+//        testBoard.printBoard();
         boolean finished = false;
 
         try {
@@ -239,7 +239,7 @@ public class BestMoveInTimeTest {
     public void testBestMoveAtDepth_3w() {
         String fen = "9/9/9/9/9/9/9/4K5/2b6 w 20"; // weiß hat in 3 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
-        testBoard.printBoard();
+//        testBoard.printBoard();
         boolean finished = false;
 
         try {
@@ -256,7 +256,7 @@ public class BestMoveInTimeTest {
     public void testBestMoveAtDepth_3b() {
         String fen = "9/9/9/9/9/9/9/4K5/2b6 b 20"; // weiß hat in 4 halbzügen gewonnen
         Board testBoard = Board.fenToBoard(fen);
-        testBoard.printBoard();
+//        testBoard.printBoard();
         boolean finished = false;
 
         try {
@@ -273,7 +273,7 @@ public class BestMoveInTimeTest {
     public void testBestMoveAtDepth_StalemateBy50TurnRule(){
         String fen = "3K2b2/2b6/9/9/9/9/9/9/6b2 b 45"; // BLACK kann nicht gewinnen, aber durch Blockade im ersten Halbzug verhindern, dass WHITE gewinnt
         Board testBoard = Board.fenToBoard(fen);
-        testBoard.printBoard();
+//        testBoard.printBoard();
         boolean finished = false;
 
         try {
@@ -292,7 +292,7 @@ public class BestMoveInTimeTest {
     public void testBestMoveAtDepth_StalemateByRepetition(){
         String fen = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0"; // nach 4ten Halbzug sollte Stalemate durch Stellungswiederholung sein ?
         Board testBoard = Board.fenToBoard(fen);
-        testBoard.printBoard();
+//        testBoard.printBoard();
         boolean finished = false;
 
         try {
