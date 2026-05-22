@@ -41,23 +41,32 @@ public class BestMoveInTime {
         SearchContext context = new SearchContext(msTime);
         SearchReport lastCompleted = null;
 
+        // * Iterative Tiefensuche
         for (int depth = 1; depth <= maxDepth; depth++) {
             long iterationStart = System.currentTimeMillis();
             Board state = Board.deepCopy(originalState);
 
+            // * Aufruf der Tiefensuche auf fester Ebene; Timeout über Exception umgesetzt
             try {
                 lastCompleted = searchAtDepth(state, depth, start, search, context);
             } catch (SearchStoppedException e) {
                 break;
             }
 
+            // * weitere Abbruchbedingungen für Tiefensuche
+            // Sieg erkannt
+            if (originalState.sideToMove == BoardEvaluator.MAX_PLAYER && lastCompleted.value() > BoardEvaluator.ASSUME_BLACK_VICTORY_SCORE){ break;}
+            if (originalState.sideToMove == BoardEvaluator.MIN_PLAYER && lastCompleted.value() < BoardEvaluator.ASSUME_WHITE_VICTORY_SCORE){ break;}
+
+            // Nicht mehr genug Zeit für weitere Tiefen -
+            // TODO: besserer Check
             long iterationTime = System.currentTimeMillis() - iterationStart;
             long remainingTime = context.getEndTime() - System.currentTimeMillis();
             if (context.shouldStop() || iterationTime > remainingTime) {
                 break;
             }
         }
-        System.out.println("Runtime: "+(System.currentTimeMillis()-start));
+//        System.out.println("Runtime: "+(System.currentTimeMillis()-start));
 
         return lastCompleted;
     }
