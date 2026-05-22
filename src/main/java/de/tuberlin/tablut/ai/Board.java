@@ -324,7 +324,7 @@ public class Board {
                         || Bitboard90.getBit(BLOCKED_PIECES, behind)
                         || (Bitboard90.getBit(THRONE, behind) && throneEmpty)) {
 
-                    hits = this.addHit(hits, new Hit(Piece.BLACK, adj));
+                    hits = Board.addHit(hits, new Hit(Piece.BLACK, adj));
                 }
             }
 
