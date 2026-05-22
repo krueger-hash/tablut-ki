@@ -13,11 +13,6 @@ public class AlphaBeta {
     private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
 
 
-    //nur Mock-Up, damit ich nicht die ganze Zeit rote Linien sehen muss
-//    static int evaluateState(Board state){
-//        return 0;
-//    }
-
     /// ////////////////////////////////////////////////////////////////////
     /// reine Alpha-Beta-Suche
     /// ////////////////
