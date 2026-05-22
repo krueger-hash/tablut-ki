@@ -1,7 +1,7 @@
 package de.tuberlin.tablut.ai;
 
+import de.tuberlin.tablut.ai.PerformanceTest.PerformanceTest;
 import org.junit.Test;
-import org.junit.Ignore;
 
 import java.util.List;
 

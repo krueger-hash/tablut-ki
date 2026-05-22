@@ -5,10 +5,7 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static de.tuberlin.tablut.ai.Board.generateLegalMoves;
 import static org.junit.Assert.assertTrue;
@@ -132,7 +129,7 @@ public class BoardTest {
         );
 
         Move move = new Move(22, 12, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
         boolean containsBlack = false;
@@ -154,7 +151,7 @@ public class BoardTest {
         );
 
         Move move = new Move(37, 38, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
         boolean containsBlack = false;
@@ -176,7 +173,7 @@ public class BoardTest {
         );
 
         Move move = new Move(22, 12, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
 
         board.applyHits(hits);
 
@@ -198,7 +195,7 @@ public class BoardTest {
         );
 
         Move move = new Move(24, 34, Piece.BLACK);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -220,7 +217,7 @@ public class BoardTest {
         );
 
         Move move = new Move(43, 33, Piece.BLACK);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -242,7 +239,7 @@ public class BoardTest {
         );
 
         Move move = new Move(22, 12, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -261,7 +258,7 @@ public class BoardTest {
         );
 
         Move move = new Move(3, 2, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -284,7 +281,7 @@ public class BoardTest {
         );
 
         Move move = new Move(41, 42, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -306,7 +303,7 @@ public class BoardTest {
         );
 
         Move move = new Move(23, 22, Piece.BLACK);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -328,7 +325,7 @@ public class BoardTest {
         );
 
         Move move = new Move(40, 30, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -351,7 +348,7 @@ public class BoardTest {
         );
 
         Move move = new Move(12, 11, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -369,7 +366,7 @@ public class BoardTest {
         );
 
         Move move = new Move(13, 12, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -387,7 +384,7 @@ public class BoardTest {
         );
 
         Move move = new Move(47, 46, Piece.WHITE);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -410,7 +407,7 @@ public class BoardTest {
         );
 
         Move move = new Move(47, 46, Piece.BLACK);
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
 
 
@@ -433,7 +430,7 @@ public class BoardTest {
         );
 
         Move move = new Move(14, 24, Piece.BLACK); // Schwarz zieht auf 24
-        ArrayList<Hit> hits = board.checkHit(move);
+        List<Hit> hits = board.checkHit(move);
         board.applyHits(hits);
         boolean containsWhite = false;
         for (Hit h : hits) {

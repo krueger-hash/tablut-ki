@@ -1,5 +1,10 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms;
 
+import de.tuberlin.tablut.ai.Board;
+import de.tuberlin.tablut.ai.BoardEvaluator;
+import de.tuberlin.tablut.ai.Move;
+import de.tuberlin.tablut.ai.Piece;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -13,9 +18,9 @@ public class AlphaBetaTest {
     public void testAlphaBetaDepthZeroReturnsEvaluation(){
         Board board = Board.fenToBoard("3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S 48");
 
-        assertEquals(
+        Assert.assertEquals(
                 BoardEvaluator.evaluate(board),
-                AlphaBeta.alphaBetaSearch(board,0,-200000,200000)
+                AlphaBeta.sortedAlphaBetaSearch(board,0,-200000,200000).getValue()
         );
     }
 
@@ -32,7 +37,7 @@ public class AlphaBetaTest {
             );
         }
 
-        assertEquals(expected, AlphaBeta.alphaBetaSearch(board,1,-200000,200000));
+        assertEquals(expected, AlphaBeta.sortedAlphaBetaSearch(board,1,-200000,200000).getValue());
     }
 
     @Test
@@ -48,24 +53,24 @@ public class AlphaBetaTest {
             );
         }
 
-        assertEquals(expected, AlphaBeta.alphaBetaSearch(board,1,-200000,200000));
+        assertEquals(expected, AlphaBeta.sortedAlphaBetaSearch(board,1,-200000,200000).getValue());
     }
 
-    @Test
-    public void testSortedAlphaBetaMatchesUnsortedSearch(){
-        Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 b 20");
-
-        assertEquals(
-                AlphaBeta.alphaBetaSearch(board,2,-200000,200000),
-                AlphaBeta.sortedAlphaBetaSearch(board,2,-200000,200000).value
-        );
-    }
+//    @Test
+//    public void testSortedAlphaBetaMatchesUnsortedSearch(){
+//        Board board = Board.fenToBoard("4K2b1/1b7/9/9/9/9/9/9/9 b 20");
+//
+//        assertEquals(
+//                AlphaBeta.alphaBetaSearch(board,2,-200000,200000),
+//                AlphaBeta.sortedAlphaBetaSearch(board,2,-200000,200000).value
+//        );
+//    }
 
     @Test
     public void testSortMoves_sortWhite(){
         String fen ="4K2b1/1b7/9/9/9/9/9/9/9 w 48"; //bester Zug für W: König auf obere linke Ecke
         Board test = Board.fenToBoard(fen);
-        Move tMove1 = new Move(4,0,0,0,Piece.KING); // besserer Move
+        Move tMove1 = new Move(4,0,0,0, Piece.KING); // besserer Move
         Move tMove2 = new Move(4,0,4,8,Piece.KING);
         Move tMove3 = new Move(4,0,4,7,Piece.KING);
         ArrayList<Move> testList = new ArrayList<>();

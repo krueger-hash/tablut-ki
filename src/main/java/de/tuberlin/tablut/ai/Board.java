@@ -149,7 +149,7 @@ public class Board {
     public void makeMove (Move move){
 
         //Steine schlagen
-        ArrayList<Hit> hits = this.checkHit(move);
+        List<Hit> hits = this.checkHit(move);
         this.applyHits(hits);
 
         //Bewegung anwenden
@@ -180,12 +180,19 @@ public class Board {
 
     public void unmakeMove (){
         BoardStateChange change = boardStateChanges.pop();
-        ArrayList<Hit> hits = change.hits;
+        List<Hit> hits = change.hits;
         Move move = change.move;
 
         // Zug entfernen
 //        System.out.println(positionCounts.get(currentPositionKey()));
-        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
+//        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
+
+        // If a position has count of 0 it gets removed from the map
+        // PositionCounts now only contains active positions from the current path
+        PositionKey key = currentPositionKey();
+        int newCount = positionCounts.getOrDefault(key, 0) - 1;
+        if (newCount <= 0) positionCounts.remove(key);
+        else positionCounts.put(key, newCount);
 //        System.out.println(positionCounts.get(currentPositionKey()));
 
         for (Hit h : hits) {
@@ -253,8 +260,8 @@ public class Board {
         }
     }
 
-    public void applyHits(ArrayList<Hit> hits){
-        if (hits == null) return;
+    public void applyHits(List<Hit> hits) {
+        if (hits == null || hits.isEmpty()) return;
         for (Hit h : hits) {
             if (h.piece() == Piece.EMPTY || h.piece() == Piece.THRONE) continue;
             if (h.piece() == Piece.BLACK) {
@@ -269,13 +276,23 @@ public class Board {
         }
     }
 
+    // Helper function to initialize hits list
+    private static List<Hit> addHit(List<Hit> hits, Hit hit) {
+        if (hits.isEmpty()) {
+            hits = new ArrayList<>(4);
+        }
+        hits.add(hit);
+        return hits;
+    }
 
-    public ArrayList<Hit> checkHit(Move move) {
+    public List<Hit> checkHit(Move move) {
+
 
         int pos = move.to;
         Piece mover = move.movedPiece;
 
-        ArrayList<Hit> hits = new ArrayList<>(4);
+//        ArrayList<Hit> hits = new ArrayList<>(4);
+        List<Hit> hits = Collections.emptyList();
 
         // Vorbereitete Bitboards
         Bitboard90 whiteAll = Bitboard90.or(white, whiteKing);
@@ -289,7 +306,7 @@ public class Board {
 
             for (int d : DIR) {
                 int adj = pos + d;
-                int behind = pos + 2*d;
+                int behind = pos + 2 * d;
 
                 // Grenzen prüfen
                 if (adj < 0 || adj >= 90) continue;
@@ -307,7 +324,7 @@ public class Board {
                         || Bitboard90.getBit(BLOCKED_PIECES, behind)
                         || (Bitboard90.getBit(THRONE, behind) && throneEmpty)) {
 
-                    hits.add(new Hit(Piece.BLACK, adj));
+                    hits = this.addHit(hits, new Hit(Piece.BLACK, adj));
                 }
             }
 
@@ -338,12 +355,16 @@ public class Board {
                         || Bitboard90.getBit(BLOCKED_PIECES, behind)
                         || (Bitboard90.getBit(THRONE, behind) && throneEmpty)) {
 
-                    hits.add(new Hit(adjKing ? Piece.KING : Piece.WHITE, adj));
+                    hits = addHit(hits, new Hit(adjKing ? Piece.KING : Piece.WHITE, adj));
                 }
             }
 
             // --- König-Sonderfälle separat ---
-            hits.addAll(checkKingSpecialCaptures(pos));
+            if (hits.isEmpty()) {
+                hits = checkKingSpecialCaptures(pos);
+            } else {
+                hits.addAll(checkKingSpecialCaptures(pos));
+            }
 
             return hits;
         }
@@ -560,7 +581,7 @@ public class Board {
     //TODO:
     // Methode zum Überprüfen des Spielendes
 
-    boolean gameIsEnd(){
+    public boolean gameIsEnd(){
         return (this.hasBlackWon() || this.hasWhiteWon() || this.isStalemate());
     }
 
@@ -707,7 +728,7 @@ public class Board {
         return new Board(white, whiteKing, black, sideToMove);
     }
 
-    static Board fenToBoard(String fen){
+    public static Board fenToBoard(String fen){
         String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist)
         if (parts.length < 2) {throw new IllegalArgumentException("FEN unvollständig. Startspieler angegeben?");}
 
@@ -771,7 +792,7 @@ public class Board {
     }
 
     //Funktion gibt ein das Board zurück, das nach einem Move entsteht. ZugSpieler werden durch Auslesen der Klassenattribute geupdatet.
-    static Board boardAfterMove(Board board, Move move){
+    public static Board boardAfterMove(Board board, Move move){
         Board newBoard = deepCopy(board);
         newBoard.applyMove(move);
         newBoard.sideToMove = Board.oppositeSide(board.sideToMove);

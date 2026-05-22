@@ -1,4 +1,8 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.PerformanceTest;
+
+import de.tuberlin.tablut.ai.Board;
+import de.tuberlin.tablut.ai.Move;
+import de.tuberlin.tablut.ai.Player;
 
 import java.util.ArrayList;
 
