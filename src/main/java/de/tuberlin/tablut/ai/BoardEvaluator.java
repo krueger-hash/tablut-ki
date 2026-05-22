@@ -17,7 +17,8 @@ public final class BoardEvaluator {
     ALPHA und BETA INIT müssen entsprechend angepasst werden, damit keine hohen Siege abgeschnitten werden;
     Zahlen erstmal großzügig gewählt
      */
-    public static final int ASSUME_VICTORY_SCORE = 80_000;
+    public static final int ASSUME_BLACK_VICTORY_SCORE = 80_000;
+    public static final int ASSUME_WHITE_VICTORY_SCORE = -ASSUME_BLACK_VICTORY_SCORE;
     public static final int ALPHA_INIT = -120_000;
     public static final int BETA_INIT = 120_000;
 
@@ -31,6 +32,20 @@ public final class BoardEvaluator {
         if (board == null) {
             throw new IllegalArgumentException("board must not be null");
         }
+//        /////////////////////////////////////////////////////7
+//        /// Terminale Scores (Material, Mobility)
+//        //////////////////////////////////////////////////////
+//        // Stalemate ist terminal, da die KI sich das trotzdem erarbeiten muss
+//        if(board.isStalemate()){
+//            return 0;
+//        }
+//        // Siegbedingungen additiv, damit die KI bei erkannter Niederlage trotzdem weiterhin die besten Züge probiert
+//        if(board.hasBlackWon()){
+//            return WIN_SCORE;
+//        }
+//        if(board.hasWhiteWon()){
+//            return -WIN_SCORE;
+//        }
 
         // Returns the overall score of the current board. Max player maximizes, min player minimizes
         return boardScore(board);
@@ -74,8 +89,9 @@ public final class BoardEvaluator {
         //////////////////////////////////////////////////////
         //Position des Königs finden für folgende Berechnungen
         int kingPosition = findKingPosition(board);
+        //Wenn kein König mehr auf Feld ist (Schwarz hat gewonnen), dann folgende Bewertungen überspringen
         if (kingPosition == -1) {
-            throw new RuntimeException("Kein König für Bewertung der Königsposition gefunden! -> BlackWonCheck fehlerhaft?");
+            return score;
         }
 
         // * King distance to escape squares. Larger distance is better for black.
