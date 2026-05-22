@@ -9,32 +9,27 @@ public final class BoardEvaluator {
     private static final int KING_DISTANCE_WEIGHT = 30;
     private static final int KING_OPEN_ESCAPE_WEIGHT = 2_500;
     private static final int KING_PRESSURE_WEIGHT = 600;
-    private static final int KING_DANGER_WEIGHT = 900;
+    private static final int KING_DANGER_WEIGHT = 1500;
     private static final int MOBILITY_WEIGHT = 4;
+
+    /*
+    Aktuell ist Wertebereich für Score ohne Victory [-4676,4364];
+    ALPHA und BETA INIT müssen entsprechend angepasst werden, damit keine hohen Siege abgeschnitten werden;
+    Zahlen erstmal großzügig gewählt
+     */
+    public static final int ASSUME_VICTORY_SCORE = 80_000;
+    public static final int ALPHA_INIT = -120_000;
+    public static final int BETA_INIT = 120_000;
+
 
     private static final int[] ESCAPE_SQUARES = {0, 8, 80, 88};
     private static final int[] DIRECTIONS = {-Bitboard90.cols, Bitboard90.cols, -1, 1};
 
-    private BoardEvaluator() {
-    }
-
-    // Max_player maximizes the value, Min player mimimizes the value
+    // Max_player maximizes the value, Min player minimizes the value
     public static int evaluate(Board board){
 
         if (board == null) {
             throw new IllegalArgumentException("board must not be null");
-        }
-
-        // Win or loose - Extreme high value, this will return the value instant
-        if(board.hasBlackWon()){
-            return WIN_SCORE;
-        }
-        if(board.hasWhiteWon()){
-            return -WIN_SCORE;
-        }
-
-        if(board.isStalemate()){
-            return 0;
         }
 
         // Returns the overall score of the current board. Max player maximizes, min player minimizes
@@ -43,6 +38,22 @@ public final class BoardEvaluator {
 
     private static int boardScore(Board board) {
         int score = 0;
+        /////////////////////////////////////////////////////7
+        /// Terminale Scores (Material, Mobility)
+        //////////////////////////////////////////////////////
+        // Stalemate ist terminal, da die KI sich das trotzdem erarbeiten muss
+        if(board.isStalemate()){
+            return 0;
+        }
+        // Siegbedingungen additiv, damit die KI bei erkannter Niederlage trotzdem weiterhin die besten Züge probiert
+        if(board.hasBlackWon()){
+            score += WIN_SCORE;
+        }
+        if(board.hasWhiteWon()){
+            score -= WIN_SCORE;
+        }
+
+
 
         /////////////////////////////////////////////////////7
         /// Allgemeine Scores (Material, Mobility)
@@ -76,11 +87,15 @@ public final class BoardEvaluator {
         else {score -= WIN_SCORE;} // wenn es 2 offene Linien nach einem weißen Zug gibt, hat Weiß im Folgezug gewonnen, aber das Spiel ist nicht vorbei
 
         // * Direct pressure around the king is valuable for black.
+        // Bewertung so, dass bei maximaler Bedrohung (nur 1 Piece fehlt zum schlagen) die volle DANGER-WEIGHT angewendet wird; dazwischen gleichförmig
         int hostileSides = countHostileSidesAroundKing(board, kingPosition);
-        score += KING_PRESSURE_WEIGHT * hostileSides;
-        if (isKingInImmediateDanger(kingPosition, hostileSides)) {
-            score += KING_DANGER_WEIGHT;
+        if(kingIsOnThrone(kingPosition)){
+            score += KING_DANGER_WEIGHT * hostileSides/3; //
         }
+        else if (kingIsNextToThrone(kingPosition)) {
+            score += KING_DANGER_WEIGHT * hostileSides/2;
+        }
+        else {score += hostileSides* KING_DANGER_WEIGHT;}
 
         return score;
     }
@@ -155,18 +170,12 @@ public final class BoardEvaluator {
         return true;
     }
 
-//    private static boolean kingIsOnThrone(Board board){
-//        return Bitboard90.xor(board.whiteKing,Board.THRONE).bitCount() == 1;
-//    }
+    // Diese Implementierung sind sehr stark abhängig von der detaillierten Implementierung des Bitboards und des Boards, wenn bspw. die Zeilen/Spalten im Bitboard geändert werden, stimmt hier gar nichts mehr. darüber hinaus sehr anfällig für Flüchtigkeitsfehler bei den Zahlen
     private static boolean kingIsOnThrone(int kingPosition){
-        return kingPosition == 1;
+        return kingPosition == 44;
     }
     private static boolean kingIsNextToThrone(int kingPosition){
-        for (int direction : DIRECTIONS) {
-            int adjacentPosition = kingPosition + direction;
-            if (adjacentPosition == 44) {return true;}
-        }
-        return false;
+        return (kingPosition == 43 || kingPosition == 45 || kingPosition == 34 || kingPosition == 54);
     }
 
     // Returns the number of hostile squares around the king
