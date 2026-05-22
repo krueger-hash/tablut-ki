@@ -5,12 +5,9 @@ import lombok.Getter;
 
 public class BestMoveInTime {
 
-    private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
-    private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
 
-
-    private static final int ALPHA_INIT = -1_000_000;
-    private static final int BETA_INIT = 1_000_000;
+    private static final int ALPHA_INIT = BoardEvaluator.ALPHA_INIT;
+    private static final int BETA_INIT = BoardEvaluator.BETA_INIT;
 
     private final Board originalState;
     private final int msTime;
