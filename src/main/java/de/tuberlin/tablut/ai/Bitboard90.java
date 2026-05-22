@@ -290,10 +290,10 @@ Grundsätzliche Ideen im Code:
         System.out.print("\n");
     }
 
-    //gibt die entsprechende Zeile und Splte zu einem BitWert zurück
+    //gibt die entsprechende Zeile und Spalte zu einem BitWert zurück
     static int[] bitToMatrix(int bit){
         int col = bit % cols;
-        int row = Math.floorDiv(bit,cols);
+        int row = bit / cols;//Math.floorDiv(bit,cols); // mit floor unnötig, da immer nur positive Werte verwendet werden
         return new int[]{row,col};
     }
 
