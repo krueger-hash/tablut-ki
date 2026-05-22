@@ -155,6 +155,20 @@ public final class BoardEvaluator {
         return true;
     }
 
+//    private static boolean kingIsOnThrone(Board board){
+//        return Bitboard90.xor(board.whiteKing,Board.THRONE).bitCount() == 1;
+//    }
+    private static boolean kingIsOnThrone(int kingPosition){
+        return kingPosition == 1;
+    }
+    private static boolean kingIsNextToThrone(int kingPosition){
+        for (int direction : DIRECTIONS) {
+            int adjacentPosition = kingPosition + direction;
+            if (adjacentPosition == 44) {return true;}
+        }
+        return false;
+    }
+
     // Returns the number of hostile squares around the king
     private static int countHostileSidesAroundKing(Board board, int kingPosition) {
         int hostileSides = 0;
