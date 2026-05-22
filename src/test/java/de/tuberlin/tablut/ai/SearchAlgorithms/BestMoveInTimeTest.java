@@ -270,7 +270,7 @@ public class BestMoveInTimeTest {
     }
 
     @Test
-    public void testBestMoveAtDepth_Stalemate5(){
+    public void testBestMoveAtDepth_StalemateBy50TurnRule(){
         String fen = "3K2b2/2b6/9/9/9/9/9/9/6b2 b 45"; // BLACK kann nicht gewinnen, aber durch Blockade im ersten Halbzug verhindern, dass WHITE gewinnt
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
@@ -289,7 +289,7 @@ public class BestMoveInTimeTest {
     }
 
     @Test
-    public void testBestMoveAtDepth(){
+    public void testBestMoveAtDepth_StalemateByRepetition(){
         String fen = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0"; // nach 4ten Halbzug sollte Stalemate durch Stellungswiederholung sein ?
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
