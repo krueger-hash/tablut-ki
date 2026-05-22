@@ -5,16 +5,6 @@ import lombok.Getter;
 public class SearchContext {
     private boolean stopped;
 
-//    public Stack<Move> moveStack;
-//    public ArrayList<Move> bestSequence;
-//
-//    public int bestValueDuringIteration;
-//    public ABResult bestAB;
-
-    private static final int ALPHA_INIT = -1_000_000;
-    private static final int BETA_INIT = 1_000_000;
-
-
     @Getter
     private final long endTime;
     @Getter
