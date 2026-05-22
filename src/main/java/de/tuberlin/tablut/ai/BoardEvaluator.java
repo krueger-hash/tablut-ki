@@ -49,17 +49,22 @@ public final class BoardEvaluator {
         int whiteCount = board.white.bitCount(); // 0 - 8
         score += MATERIAL_WEIGHT * (blackCount - 2 * whiteCount);
 
+
+
+        // * Bewertung der Position des Königs
         int kingPosition = findKingPosition(board);
-        // fallback code
         if (kingPosition == -1) {
-            return WIN_SCORE;
+            throw new RuntimeException("Kein König für Bewertung der Königsposition gefunden! -> BlackWonCheck fehlerhaft?");
         }
 
         // King distance to escape squares. Larger distance is better for black.
         score += KING_DISTANCE_WEIGHT * minDistanceToEscape(kingPosition);
 
         // Free escape lines are very dangerous for black.
-        score -= KING_OPEN_ESCAPE_WEIGHT * countOpenEscapeLines(board, kingPosition);
+        int openLines = countOpenEscapeLines(board, kingPosition);
+        if (openLines <= 1) {score -= KING_OPEN_ESCAPE_WEIGHT * openLines;}
+        else {score -= WIN_SCORE;} // wenn es 2 offene Linien nach einem weißen Zug gibt, hat Weiß im Folgezug gewonnen, aber das Spiel ist nicht vorbei
+
 
         // Direct pressure around the king is valuable for black.
         int hostileSides = countHostileSidesAroundKing(board, kingPosition);
@@ -76,6 +81,7 @@ public final class BoardEvaluator {
         return score;
     }
 
+    //Gibt Index der Position des Königs aus Spanne 0-89
     private static int findKingPosition(Board board) {
         if (board.whiteKing.low != 0) {
             return Long.numberOfTrailingZeros(board.whiteKing.low);
