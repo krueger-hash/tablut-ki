@@ -44,39 +44,43 @@ public final class BoardEvaluator {
     private static int boardScore(Board board) {
         int score = 0;
 
-        // Material - White pieces are weighted higher because there are fewer defenders.
+        /////////////////////////////////////////////////////7
+        /// Allgemeine Scores (Material, Mobility)
+        //////////////////////////////////////////////////////
+        // * Material - White pieces are weighted higher because there are fewer defenders.
         int blackCount = board.black.bitCount(); // 0 - 16
         int whiteCount = board.white.bitCount(); // 0 - 8
         score += MATERIAL_WEIGHT * (blackCount - 2 * whiteCount);
 
+        // * Mobility - Black wants many options and wants to restrict white.
+        int blackMoves = Board.generateLegalMoves(board, Player.BLACK).size();
+        int whiteMoves = Board.generateLegalMoves(board, Player.WHITE).size();
+        score += MOBILITY_WEIGHT * (blackMoves - whiteMoves);
 
 
-        // * Bewertung der Position des Königs
+        /////////////////////////////////////////////////////7
+        /// Scores abhängig vom König
+        //////////////////////////////////////////////////////
+        //Position des Königs finden für folgende Berechnungen
         int kingPosition = findKingPosition(board);
         if (kingPosition == -1) {
             throw new RuntimeException("Kein König für Bewertung der Königsposition gefunden! -> BlackWonCheck fehlerhaft?");
         }
 
-        // King distance to escape squares. Larger distance is better for black.
+        // * King distance to escape squares. Larger distance is better for black.
         score += KING_DISTANCE_WEIGHT * minDistanceToEscape(kingPosition);
 
-        // Free escape lines are very dangerous for black.
+        // * Free escape lines are very dangerous for black.
         int openLines = countOpenEscapeLines(board, kingPosition);
         if (openLines <= 1) {score -= KING_OPEN_ESCAPE_WEIGHT * openLines;}
         else {score -= WIN_SCORE;} // wenn es 2 offene Linien nach einem weißen Zug gibt, hat Weiß im Folgezug gewonnen, aber das Spiel ist nicht vorbei
 
-
-        // Direct pressure around the king is valuable for black.
+        // * Direct pressure around the king is valuable for black.
         int hostileSides = countHostileSidesAroundKing(board, kingPosition);
         score += KING_PRESSURE_WEIGHT * hostileSides;
         if (isKingInImmediateDanger(kingPosition, hostileSides)) {
             score += KING_DANGER_WEIGHT;
         }
-
-        // Mobility - Black wants many options and wants to restrict white.
-        int blackMoves = Board.generateLegalMoves(board, Player.BLACK).size();
-        int whiteMoves = Board.generateLegalMoves(board, Player.WHITE).size();
-        score += MOBILITY_WEIGHT * (blackMoves - whiteMoves);
 
         return score;
     }
@@ -186,7 +190,7 @@ public final class BoardEvaluator {
     // Returns true if position is hostile to the king, e.g. Back, Blocked, Throne
     private static boolean isHostileToKing(Board board, int position) {
         Piece piece = board.getPieceAt(position);
-        return piece == Piece.BLACK || piece == Piece.THRONE;
+        return piece == Piece.BLACK || piece == Piece.THRONE || piece == Piece.BLOCKED;
     }
 
     // Returns if position is playable - not in the separation layer or outside the game
