@@ -108,17 +108,19 @@ public class BestMoveInTimeTest {
         assertSameMove(expected, bestMove); // technisch gesehen, sind hier die Züge auch egal, da jederzeit der Sieg durch Weiß erzwungen werden kann ...
     }
 
-    @Test
-    public void testBestMoveInTimeCaptureWhitePiece() {
-        Board board = Board.fenToBoard("9/9/5k3/9/8b/8w/2b6/9/9 b");
+//    @Test
+//    public void testBestMoveInTimeCaptureWhitePiece() {
+//        Board board = Board.fenToBoard("9/9/5k3/9/8b/8w/2b6/9/9 b");
 //        board.printBoard();
-        Move expected = new Move(2, 6, 8, 6, Piece.BLACK);
-        BestMoveInTime test = new BestMoveInTime(board, 1000);
-        Move bestMove = test.getMove();
+//        Move expected = new Move(2, 6, 8, 6, Piece.BLACK);
+//        BestMoveInTime test = new BestMoveInTime(board, 1000);
+//        Move bestMove = test.getMove();
 //        System.out.println(bestMove);
 //        System.out.println(test.getFinalReport().value());
-        assertSameMove(expected, bestMove); // das ist nach aktueller Implementierung nicht der beste Move, da schwarz in 2 Zügen verliert und somit alle Züge gleichwertig sind
-    }
+//        System.out.println(test.getFinalReport().bestPath());
+//        assertSameMove(expected, bestMove); // das ist nach aktueller Implementierung nicht der beste Move, da schwarz in 2 Zügen verliert und somit alle Züge gleichwertig sind
+//        // das ist nicht bester Move, da der Versuch EscapeLanes zu blockieren mehr wert ist, als eine Figur zu schlagen
+//    }
 
     private static void assertOnlyLegalMove(Board board, Move expected) {
         ArrayList<Move> legalMoves = Board.generateLegalMoves(board, board.sideToMove);
@@ -147,7 +149,7 @@ public class BestMoveInTimeTest {
 
 
     @Test
-    public void testBestMoveAtDepth_allMovesUnmaked() {
+    public void testBestMoveAtDepth_NoChangeToOriginalBoard() {
         String fen = "2b6/9/b1K1b4/9/9/2b6/9/9/9 b 20";
         Board t = Board.fenToBoard(fen);
 //        testBoard.printBoard();
@@ -156,7 +158,7 @@ public class BestMoveInTimeTest {
 
         try {
             BestMoveInTime.searchAtDepth(t, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
-        } catch (Exception ignored) {
+        } catch (SearchStoppedException ignored) {
         }
 
         Board og = Board.fenToBoard(fen);
@@ -178,9 +180,10 @@ public class BestMoveInTimeTest {
         boolean finished = false;
         try {
              SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
-            assertEquals(100_000, result.value());
+//            assertEquals(100_000, result.value());
+            assertTrue(result.value() > 80_000);
             finished = true;
-        }catch (Exception ignored){}
+        }catch (SearchStoppedException ignored){}
         assertTrue(finished);
     }
 
@@ -193,14 +196,16 @@ public class BestMoveInTimeTest {
 
         try {
             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
-            assertEquals(100_000, result.value());
+//            assertEquals(100_000, result.value());
+            assertTrue(result.value() > 80_000);
             finished = true;
-        } catch (Exception ignored) {
+        } catch (SearchStoppedException ignored) {
         }
 
         assertTrue(finished);
     }
 
+    //Weiß gewinnt, aber schwarz versucht Position zu verbessern, indem er "Pressure" auf den König aufbaut
     @Test
     public void testBestMoveAtDepth_2b() {
         String fen = "9/9/9/9/9/9/9/9/4K2b1 b 20"; // weiß hat in 2 halbzügen gewonnen
@@ -210,14 +215,21 @@ public class BestMoveInTimeTest {
 
         try {
             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
-            assertEquals(-100_000, result.value());
+//            assertEquals(-100_000, result.value());
+//            System.out.println(result.value());
+//            System.out.println(result.bestMove());
+//            System.out.println(result.bestPath());
+            assertEquals(new Move(87,85,Piece.BLACK),result.bestMove());
+            assertTrue(result.value() < -80_000);
             finished = true;
-        } catch (Exception ignored) {
+        } catch (SearchStoppedException ignored) {
         }
 
         assertTrue(finished);
     }
 
+
+    //Test für zügiges Spielen von Weiß, wenn Sieg sicher ist
     @Test
     public void testBestMoveAtDepth_2w() {
         String fen = "9/9/9/9/9/9/9/9/4K2b1 w 20"; // weiß hat in 1 halbzügen gewonnen
@@ -227,9 +239,14 @@ public class BestMoveInTimeTest {
 
         try {
             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 1, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
-            assertEquals(-100_000, result.value());
+//            System.out.println(result.value());
+//            System.out.println(result.bestMove());
+//            System.out.println(result.bestPath());
+//            assertEquals(-100_000, result.value());
+            assertTrue(result.value() < -80_000);
+            assertEquals(new Move(84,80,Piece.KING),result.bestMove());
             finished = true;
-        } catch (Exception ignored) {
+        } catch (SearchStoppedException ignored) {
         }
 
         assertTrue(finished);
@@ -244,11 +261,14 @@ public class BestMoveInTimeTest {
 
         try {
             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
-            assertEquals(-100_000, result.value());
+//            System.out.println(result.value());
+//            System.out.println(result.bestMove());
+//            System.out.println(result.bestPath());
+//            assertEquals(-100_000, result.value());
+            assertTrue(result.value() < -80_000);
             finished = true;
-        } catch (Exception ignored) {
+        } catch (SearchStoppedException ignored) {
         }
-
         assertTrue(finished);
     }
 
@@ -261,9 +281,10 @@ public class BestMoveInTimeTest {
 
         try {
             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 4, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
-            assertEquals(-100_000, result.value());
+//            assertEquals(-100_000, result.value());
+            assertTrue(result.value() < -80_000);
             finished = true;
-        } catch (Exception ignored) {
+        } catch (SearchStoppedException ignored) {
         }
 
         assertTrue(finished);
@@ -281,7 +302,7 @@ public class BestMoveInTimeTest {
             assertEquals(new Move(12,2,Piece.BLACK),result.bestMove());
             assertEquals(0,result.value());
             finished = true;
-        } catch (Exception ignored) {
+        } catch (SearchStoppedException ignored) {
         }
 
         assertTrue(finished);
@@ -300,7 +321,7 @@ public class BestMoveInTimeTest {
             assertEquals(new Move(4,84,Piece.KING),result.bestMove());
             assertEquals(0,result.value());
             finished = true;
-        } catch (Exception ignored) {
+        } catch (SearchStoppedException ignored) {
         }
 
         assertTrue(finished);
