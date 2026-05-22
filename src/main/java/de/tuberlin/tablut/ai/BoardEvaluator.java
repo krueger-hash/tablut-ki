@@ -11,6 +11,7 @@ public final class BoardEvaluator {
     private static final int KING_PRESSURE_WEIGHT = 600;
     private static final int KING_DANGER_WEIGHT = 1500;
     private static final int MOBILITY_WEIGHT = 4;
+    private static final int TWO_OPEN_CORNERS_FOR_KING = 10_000;
 
     /*
     Aktuell ist Wertebereich für Score ohne Victory [-4676,4364];
@@ -100,7 +101,7 @@ public final class BoardEvaluator {
         // * Free escape lines are very dangerous for black.
         int openLines = countOpenEscapeLines(board, kingPosition);
         if (openLines <= 1) {score -= KING_OPEN_ESCAPE_WEIGHT * openLines;}
-        else {score -= WIN_SCORE;} // wenn es 2 offene Linien nach einem weißen Zug gibt, hat Weiß im Folgezug gewonnen, aber das Spiel ist nicht vorbei
+        else {score -= TWO_OPEN_CORNERS_FOR_KING;} // wenn es 2 offene Linien nach einem weißen Zug gibt, hat Weiß im Folgezug gewonnen, aber das Spiel ist nicht vorbei; WIN_SCORE/2 ist verhindert, dass Suche nicht bis Terminalknoten fortgesetzt wird, der relevante Zug, aber auf jeden Fall gewinnt
 
         // * Direct pressure around the king is valuable for black.
         // Bewertung so, dass bei maximaler Bedrohung (nur 1 Piece fehlt zum schlagen) die volle DANGER-WEIGHT angewendet wird; dazwischen gleichförmig
