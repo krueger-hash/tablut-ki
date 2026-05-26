@@ -10,7 +10,7 @@ public class Board {
     public static final Bitboard90 BLOCKED_PIECES = new Bitboard90(BLOCKED_LOW, BLOCKED_HIGH);
     public static final  Bitboard90 THRONE = new Bitboard90(1L << 44, 0L);
 
-    private static final int STALEMATE_NO_CAPTURE_LIMIT = 50;
+    private static final int STALEMATE_NO_CAPTURE_LIMIT = 100;
     private static final int STALEMATE_REPETITION_LIMIT = 2;
 
     //////////////////////////////////////////////////
@@ -609,7 +609,7 @@ public class Board {
 
 //        ensureStalemateTrackingInitialized(); // welchen Sinn hat das hier?; wenn erst hier sichergegangen wird, dass Tracking stattfindet, ist es zu spät, da ggf. der ursprungszug fehlt
 
-        // *50 Zuege ohne geschlagene Figur;
+        // *50 Zuege (bzw. 100 Halbzüge) ohne geschlagene Figur;
         if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
 //            System.out.println("Stalemate durch 50 Züge Regel");
             return true;
@@ -729,7 +729,7 @@ public class Board {
     }
 
     public static Board fenToBoard(String fen){
-        String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist)
+        String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist, 50-Züge Regel)
         if (parts.length < 2) {throw new IllegalArgumentException("FEN unvollständig. Startspieler angegeben?");}
 
         //Boardzustand bauen
@@ -774,7 +774,7 @@ public class Board {
             sideToMove = Player.WHITE;
         }
         else {
-            throw new IllegalArgumentException ("undefinierter Symbol für Startseite: "+ side);
+            throw new IllegalArgumentException ("undefiniertes Symbol für Startseite: "+ side);
         }
 
         // * 50-Züge-Regel Parameter auslesen
