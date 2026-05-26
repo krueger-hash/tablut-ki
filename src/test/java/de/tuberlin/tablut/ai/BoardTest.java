@@ -642,6 +642,22 @@ public class BoardTest {
     }
 
     @Test
+    public void testIsStalemateWhenZobristPositionRepeats() {
+        Board board = Board.fenToBoard("9/9/9/9/w3K3b/9/9/9/9 w");
+
+        board.makeMove(new Move(40, 41, Piece.WHITE));
+        board.makeMove(new Move(48, 47, Piece.BLACK));
+        board.makeMove(new Move(41, 40, Piece.WHITE));
+        board.makeMove(new Move(47, 48, Piece.BLACK));
+
+        assertTrue("Repeated Zobrist position should be stalemate", board.isStalemate());
+
+        board.unmakeMove();
+
+        assertFalse(board.isStalemate(), "Unmaking the repeated position should decrement history");
+    }
+
+    @Test
     public void testFenToMove(){
         String fen ="3bbb3/4b4/4w4/b3w3b/bbwwKwwbb/b3w3b/4w4/4b4/3bbb3 S 48";
         Board test = Board.fenToBoard(fen);
