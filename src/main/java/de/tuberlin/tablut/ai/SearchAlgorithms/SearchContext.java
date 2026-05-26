@@ -1,5 +1,6 @@
 package de.tuberlin.tablut.ai.SearchAlgorithms;
 
+import de.tuberlin.tablut.ai.BoardEvaluator;
 import de.tuberlin.tablut.ai.Move;
 import de.tuberlin.tablut.ai.Piece;
 import lombok.Getter;
@@ -75,16 +76,20 @@ public class SearchContext {
     public int getHistoryHeuristicScore(Move move) {
         int to = move.getTo();
         int from = move.getFrom();
+        int score;
         Piece piece =move.getMovedPiece();if(piece == Piece.BLACK){
-            return this.historyHeuristicB[from][to];
+            score = this.historyHeuristicB[from][to];
         }
         else if(piece == Piece.WHITE){
-            return this.historyHeuristicW[from][to];
+            score = this.historyHeuristicW[from][to];
         }
         else if(piece == Piece.KING){
-            return this.historyHeuristicK[from][to];
+            score = this.historyHeuristicK[from][to];
         }
         else throw new RuntimeException("Undefined Piece for getting HistoryScore");
+
+        //TODO: Ist das min unnötig und ggf. nur ein Performance-Speedbump?
+        return Math.min(score * BoardEvaluator.HISTORY_HEURISTIC_WEIGHT,60_000);
     }
 
 

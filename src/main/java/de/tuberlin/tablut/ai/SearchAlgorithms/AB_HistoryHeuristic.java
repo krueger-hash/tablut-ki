@@ -97,7 +97,7 @@ public class AB_HistoryHeuristic {
         state.makeMove(move);
         int result = BoardEvaluator.evaluate(state);
         //HistoryHeuristik liefert Bonus-Score für Zugsortierung
-        result += context.getHistoryHeuristicScore(move) * BoardEvaluator.HISTORY_HEURISTIC_WEIGHT;
+        result += context.getHistoryHeuristicScore(move);
         state.unmakeMove();
 //        System.out.println("Move:"+move+" - Result:" +result);
 //        System.out.println("Moves without Capture: " + state.movesWithoutCapture);

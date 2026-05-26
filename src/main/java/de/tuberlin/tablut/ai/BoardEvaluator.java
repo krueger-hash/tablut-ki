@@ -21,8 +21,8 @@ public final class BoardEvaluator {
      */
     public static final int ASSUME_BLACK_VICTORY_SCORE = 80_000;
     public static final int ASSUME_WHITE_VICTORY_SCORE = -ASSUME_BLACK_VICTORY_SCORE;
-    public static final int ALPHA_INIT = -120_000;
-    public static final int BETA_INIT = 120_000;
+    public static final int ALPHA_INIT = -1_000_000;
+    public static final int BETA_INIT = 1_000_000;
 
 
     private static final int[] ESCAPE_SQUARES = {0, 8, 80, 88};
