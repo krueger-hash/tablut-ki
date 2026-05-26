@@ -1,5 +1,7 @@
 package de.tuberlin.tablut.ai.SearchAlgorithms;
 
+import de.tuberlin.tablut.ai.Move;
+import de.tuberlin.tablut.ai.Piece;
 import lombok.Getter;
 
 public class SearchContext {
@@ -11,6 +13,11 @@ public class SearchContext {
     private long leafs;
     @Getter
     private long positions;
+
+    //History Heuristik Matrizen
+    private final int[][] historyHeuristicW = new int[90][90];
+    private final int[][] historyHeuristicB = new int[90][90];
+    private final int[][] historyHeuristicK = new int[90][90];
 
     public boolean shouldStop() {
         if(stopped){
@@ -31,6 +38,15 @@ public class SearchContext {
         this.endTime = System.currentTimeMillis() + msTime;
         this.leafs = 0;
         this.positions = 0;
+
+        //Initialisiere HistoryHeuristic Matrizen mit Nullwerten
+        for(int from = 0; from < 90; from++){
+            for(int to = 0; to <90; to++){
+                this.historyHeuristicB[from][to]=0;
+                this.historyHeuristicW[from][to]=0;
+                this.historyHeuristicK[from][to]=0;
+            }
+        }
     }
 
     public void incrementLeafs() {
@@ -39,6 +55,36 @@ public class SearchContext {
 
     public void incrementPositions() {
         this.positions++;
+    }
+
+    public void incrementHistoryHeuristic(Move move, int depth){
+        int to = move.getTo();
+        int from = move.getFrom();
+        Piece piece =move.getMovedPiece();
+        if(piece == Piece.BLACK){
+            this.historyHeuristicB[from][to] += depth*depth;
+        }
+        else if(piece == Piece.WHITE){
+            this.historyHeuristicW[from][to] += depth*depth;
+        }
+        else if(piece == Piece.KING){
+            this.historyHeuristicK[from][to] += depth*depth;
+        }
+        else throw new RuntimeException("Undefined Piece for setting HistoryScore");
+    }
+    public int getHistoryHeuristicScore(Move move) {
+        int to = move.getTo();
+        int from = move.getFrom();
+        Piece piece =move.getMovedPiece();if(piece == Piece.BLACK){
+            return this.historyHeuristicB[from][to];
+        }
+        else if(piece == Piece.WHITE){
+            return this.historyHeuristicW[from][to];
+        }
+        else if(piece == Piece.KING){
+            return this.historyHeuristicK[from][to];
+        }
+        else throw new RuntimeException("Undefined Piece for getting HistoryScore");
     }
 
 
