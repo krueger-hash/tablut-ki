@@ -1,7 +1,7 @@
 package de.tuberlin.tablut.ai;
 
 import de.tuberlin.tablut.ai.ZobristHasher.TablutZobristHasher;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 import java.util.*;
 
@@ -36,7 +36,7 @@ public class Board {
     private boolean stalemateTrackingInitialized = false;
 
     private final TablutZobristHasher zobristHasher;
-    private final Long2IntOpenHashMap positionHistory = new Long2IntOpenHashMap();
+    private final LongArrayList positionHistory = new LongArrayList();
 
     //Konstruktoren:
     //Startaufstellung:
@@ -94,7 +94,7 @@ public class Board {
         long positionHash = this.zobristHasher.hashPosition(this);
 
         // Add base position to history of played positions
-        this.positionHistory.addTo(positionHash, 1);
+        this.positionHistory.add(positionHash);
 
         this.stalemateTrackingInitialized = true; // Legacy?
     }
@@ -122,7 +122,8 @@ public class Board {
         );
         copy.movesWithoutCapture = board.movesWithoutCapture;
         copy.stalemateTrackingInitialized = board.stalemateTrackingInitialized;
-        copy.positionHistory.putAll(board.positionHistory);
+        copy.positionHistory.clear();
+        copy.positionHistory.addAll(board.positionHistory);
         copy.zobristHasher.hashPosition(copy);
         return copy;
     }
@@ -179,7 +180,7 @@ public class Board {
 
         // Update position history
         long positionHash = this.zobristHasher.updateHashPosition(move, hits);
-        this.positionHistory.addTo(positionHash, 1);
+        this.positionHistory.add(positionHash);
         return;
     }
 
@@ -192,12 +193,7 @@ public class Board {
 //        System.out.println(positionCounts.get(currentPositionKey()));
 //        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
 
-        // If a position has count of 0 it gets removed from the map
-        long positionHash = this.zobristHasher.getCurrentHash();
-        int oldCount = positionHistory.addTo(positionHash, -1);
-        if (oldCount <= 1) {
-            positionHistory.remove(positionHash);
-        }
+        positionHistory.removeLong(positionHistory.size() - 1);
 
 
 //        PositionKey key = currentPositionKey();
@@ -241,8 +237,6 @@ public class Board {
         this.sideToMove = Board.oppositeSide(this.sideToMove);
 
         this.zobristHasher.updateHashPosition(move, hits);
-
-
     }
 
     //die Bewegung ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
@@ -629,7 +623,7 @@ public class Board {
         }
 
         // *wiederholte Stellung (Zyklenfreiheit),
-        if (positionHistory.get(zobristHasher.getCurrentHash()) >= STALEMATE_REPETITION_LIMIT) {
+        if (hasRepeatedCurrentPosition()) {
 //            System.out.println("Stalemate durch wiederholte Stellung");
             return true;
         }
@@ -639,6 +633,22 @@ public class Board {
 //            System.out.println("Stalemate durch 'keine möglichen Züge'");
             return true;
         }
+        return false;
+    }
+
+    private boolean hasRepeatedCurrentPosition() {
+        long currentHash = zobristHasher.getCurrentHash();
+        int repetitions = 1;
+
+        for (int i = positionHistory.size() - 3; i >= 0; i -= 2) {
+            if (positionHistory.getLong(i) == currentHash) {
+                repetitions++;
+                if (repetitions >= STALEMATE_REPETITION_LIMIT) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
