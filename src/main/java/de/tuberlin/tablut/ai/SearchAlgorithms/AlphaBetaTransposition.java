@@ -7,7 +7,7 @@ import de.tuberlin.tablut.ai.Player;
 
 import java.util.*;
 
-public class AlphaBetaTransposition {
+public class AlphaBetaTransposition extends AlphaBeta{
 
     private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
     private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
@@ -79,15 +79,21 @@ public class AlphaBetaTransposition {
 
         TranspositionKey key = new TranspositionKey(state.getCurrentHash(), state.movesWithoutCapture);
         TranspositionEntry cached = transpositionTable.get(key);
+        // depth >= depth is critical - cache result from depth-2 search is not trustworthy when doing a depth-5 search, didn't look far enough ahead
         if (cached != null && cached.depth >= depth) {
+            // previous search fully explored this node within the window and found the true value
             if (cached.bound == Bound.EXACT) {
                 return cached.toResult();
             }
+            // previous search cut off because a child was too good for the maximizer - true value is at least this
             if (cached.bound == Bound.LOWER) {
                 alpha = Math.max(alpha, cached.value);
-            } else if (cached.bound == Bound.UPPER) {
+            }
+            // previous search cut off because a child was too bad for the maximizer - true value is at most this
+            else if (cached.bound == Bound.UPPER) {
                 beta = Math.min(beta, cached.value);
             }
+            // if alpha >= beta, window has closed - node is irrelevant to the parent
             if (alpha >= beta) {
                 return cached.toResult();
             }
@@ -111,34 +117,44 @@ public class AlphaBetaTransposition {
             int score = child.value;
 
             if (isMaxing) {
+                // good move - minimizing player above would never allow this position - they already have a better option
+                // store a lower bound true value >= beta
                 if (score >= beta ) {
                     transpositionTable.put(key, new TranspositionEntry(depth, beta, Bound.LOWER, null));
-                    return new ABResult(beta,null); //Cutoff
+                    return new ABResult(beta, new ArrayList<>()); //Cutoff
                 }
+                // update our best-known result wihtin the window
                 if (score > alpha) {
                     alpha = score;
-                    bestPath = new ArrayList<Move>(child.trace);
+                    bestPath = new ArrayList<Move>(child.trace != null ? child.trace : List.of());
                     bestPath.add(move);
                 }
             } else {
+                // move too bad for maximizing player that he'd never allow it. Store upper bound (true value <= alpha
                 if (score <= alpha) {
                     transpositionTable.put(key, new TranspositionEntry(depth, alpha, Bound.UPPER, null));
-                    return new ABResult(alpha,null); //Cutoff
+                    return new ABResult(alpha, new ArrayList<>()); //Cutoff
                 }
+                // update our best-known result wihtin the window
                 if (score < beta) {
                     beta = score;
-                    bestPath = new ArrayList<Move>(child.trace);
+                    bestPath = new ArrayList<Move>(child.trace != null ? child.trace : List.of());
                     bestPath.add(move);
                 }
             }
         }
         int value = isMaxing ? alpha : beta;
         Bound bound;
+        // alpha never improved - every child was worse than what maximizer already had elsewhere, don't know true value, only <= originalAlpha -> Upper bound
         if (value <= originalAlpha) {
             bound = Bound.UPPER;
-        } else if (value >= originalBeta) {
+        }
+        // only possible for a min node where beta never moved. True value >= originalBeta -> Lower bound
+        else if (value >= originalBeta) {
             bound = Bound.LOWER;
-        } else {
+        }
+        // Value was found within the window, it's the true minimax value -> Exact
+        else {
             bound = Bound.EXACT;
         }
         transpositionTable.put(key, new TranspositionEntry(depth, value, bound, bestPath));
@@ -146,41 +162,6 @@ public class AlphaBetaTransposition {
             return new ABResult(alpha,bestPath);
         } else {
             return new ABResult(beta,bestPath);
-        }
-    }
-
-    static int evalMove(Move move, Board state){
-        state.makeMove(move);
-        int result = BoardEvaluator.evaluate(state);
-        state.unmakeMove();
-//        System.out.println("Move:"+move+" - Result:" +result);
-//        System.out.println("Moves without Capture: " + state.movesWithoutCapture);
-        return result;
-    }
-
-    static void sortMoves(Board state,ArrayList<Move> moves){
-        Player sideToMove = state.sideToMove;
-
-        Map<Move, Integer> scores = new HashMap<>();
-        for (Move move : moves) {
-            scores.put(move, evalMove(move, state));
-        }
-
-        //Zugsortierung absteigend
-        if (sideToMove == maxPlayer) {
-            moves.sort(
-                    Comparator.comparingInt(
-                            ((Move move) -> scores.get(move))
-                    ).reversed()
-            );
-        }
-        //Zugsortierung aufsteigend
-        else {
-            moves.sort(
-                    Comparator.comparingInt(
-                            ((Move move) -> scores.get(move))
-                    )
-            );
         }
     }
 }
