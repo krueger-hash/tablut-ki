@@ -813,5 +813,9 @@ public class Board {
     public boolean isStalemateTrackingInitialized() {
         return stalemateTrackingInitialized;
     }
+
+    public long getCurrentHash() {
+        return zobristHasher.getCurrentHash();
+    }
 }
 

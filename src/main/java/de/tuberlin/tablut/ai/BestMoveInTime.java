@@ -25,10 +25,11 @@ public class BestMoveInTime {
 
     // TODO: getter methods for other search algorithms e.g. minimax
     public Move getMove() {
+        AlphaBetaTransposition search = new AlphaBetaTransposition();
         finalReport = searchInTime(
                 originalState,
                 msTime,
-                BestMoveInTime::alphaBetaSearch
+                search::search
         );
         return finalReport.bestMove();
     }
