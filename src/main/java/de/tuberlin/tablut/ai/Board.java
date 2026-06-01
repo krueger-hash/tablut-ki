@@ -1,5 +1,8 @@
 package de.tuberlin.tablut.ai;
 
+import de.tuberlin.tablut.ai.ZobristHasher.TablutZobristHasher;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+
 import java.util.*;
 
 public class Board {
@@ -31,18 +34,9 @@ public class Board {
 
     // * Tracking der vergangenen BoardStates
     private boolean stalemateTrackingInitialized = false;
-    private final Map<PositionKey, Integer> positionCounts = new HashMap<>();
 
-    private record PositionKey(
-            long whiteLow,
-            long whiteHigh,
-            long whiteKingLow,
-            long whiteKingHigh,
-            long blackLow,
-            long blackHigh,
-            Player sideToMove
-    ) {
-    }
+    private final TablutZobristHasher zobristHasher;
+    private final LongArrayList positionHistory = new LongArrayList();
 
     //Konstruktoren:
     //Startaufstellung:
@@ -54,10 +48,10 @@ public class Board {
         long blackLow = (1L << 3) | (1L << 4) | (1L << 5) | (1L << 14) | (1L << 30) | (1L << 38) | (1L << 40) | (1L << 41) | (1L << 47) | (1L << 48) | (1L << 50) | (1L << 58);
         long blackHigh = (1L << 10) | (1L << 19) | (1L << 20) | (1L << 21);
 
-        this.white = new Bitboard90(whiteLow, whiteHigh);
-        this.whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
-        this.black = new Bitboard90(blackLow, blackHigh);
-//        this.resetStalemateTracking(Player.BLACK);
+        Bitboard90 white = new Bitboard90(whiteLow, whiteHigh);
+        Bitboard90 whiteKing = new Bitboard90(whiteKingLow, whiteKingHigh);
+        Bitboard90 black = new Bitboard90(blackLow, blackHigh);
+        this(white, whiteKing, black);
     }
 
     public Board(Bitboard90 white,
@@ -92,8 +86,15 @@ public class Board {
         this.sideToMove=sideToMove;
         this.movesWithoutCapture = movesWithoutCapture;
 
-        // eingestelltes Board in besuchte Positionen speichern
-        this.positionCounts.put(this.currentPositionKey(), 1);
+        // initialize zobrist hasher
+        // New zobrist hasher with default seed
+        this.zobristHasher = new TablutZobristHasher();
+
+        // Create hash for current board starting position
+        long positionHash = this.zobristHasher.hashPosition(this);
+
+        // Add base position to history of played positions
+        this.positionHistory.add(positionHash);
 
         this.stalemateTrackingInitialized = true; // Legacy?
     }
@@ -121,7 +122,9 @@ public class Board {
         );
         copy.movesWithoutCapture = board.movesWithoutCapture;
         copy.stalemateTrackingInitialized = board.stalemateTrackingInitialized;
-        copy.positionCounts.putAll(board.positionCounts);
+        copy.positionHistory.clear();
+        copy.positionHistory.addAll(board.positionHistory);
+        copy.zobristHasher.hashPosition(copy);
         return copy;
     }
 
@@ -161,6 +164,8 @@ public class Board {
                 hits,
                 this.movesWithoutCapture
         );
+
+
         this.boardStateChanges.push(change);
 
         //Counter für Züge ohne Schlagen inkrementieren oder auf 0 zurücksetzen
@@ -173,8 +178,9 @@ public class Board {
         //Spieler am Zug wechseln
         this.sideToMove = Board.oppositeSide(this.sideToMove);
 
-        //Map mit Stellungszähler inkrementieren
-        this.positionCounts.merge(this.currentPositionKey(), 1, Integer::sum);
+        // Update position history
+        long positionHash = this.zobristHasher.updateHashPosition(move, hits);
+        this.positionHistory.add(positionHash);
         return;
     }
 
@@ -187,12 +193,13 @@ public class Board {
 //        System.out.println(positionCounts.get(currentPositionKey()));
 //        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
 
-        // If a position has count of 0 it gets removed from the map
-        // PositionCounts now only contains active positions from the current path
-        PositionKey key = currentPositionKey();
-        int newCount = positionCounts.getOrDefault(key, 0) - 1;
-        if (newCount <= 0) positionCounts.remove(key);
-        else positionCounts.put(key, newCount);
+        positionHistory.removeLong(positionHistory.size() - 1);
+
+
+//        PositionKey key = currentPositionKey();
+//        int newCount = positionCounts.getOrDefault(key, 0) - 1;
+//        if (newCount <= 0) positionCounts.remove(key);
+//        else positionCounts.put(key, newCount);
 //        System.out.println(positionCounts.get(currentPositionKey()));
 
         for (Hit h : hits) {
@@ -229,7 +236,7 @@ public class Board {
         //Spieler am Zug zurück wechseln
         this.sideToMove = Board.oppositeSide(this.sideToMove);
 
-
+        this.zobristHasher.updateHashPosition(move, hits);
     }
 
     //die Bewegung ausführen, also den alten Stein löschen und einen neuen an der neuen Position einfügen
@@ -616,7 +623,7 @@ public class Board {
         }
 
         // *wiederholte Stellung (Zyklenfreiheit),
-        if (positionCounts.getOrDefault(currentPositionKey(), 0) >= STALEMATE_REPETITION_LIMIT) {
+        if (hasRepeatedCurrentPosition()) {
 //            System.out.println("Stalemate durch wiederholte Stellung");
             return true;
         }
@@ -626,6 +633,22 @@ public class Board {
 //            System.out.println("Stalemate durch 'keine möglichen Züge'");
             return true;
         }
+        return false;
+    }
+
+    private boolean hasRepeatedCurrentPosition() {
+        long currentHash = zobristHasher.getCurrentHash();
+        int repetitions = 1;
+
+        for (int i = positionHistory.size() - 3; i >= 0; i -= 2) {
+            if (positionHistory.getLong(i) == currentHash) {
+                repetitions++;
+                if (repetitions >= STALEMATE_REPETITION_LIMIT) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
@@ -664,18 +687,6 @@ public class Board {
         }
         Bitboard90 whiteSide = Bitboard90.or(white, whiteKing);
         return generateLegalMoves(this, Player.WHITE).isEmpty();
-    }
-
-    private PositionKey currentPositionKey() {
-        return new PositionKey(
-                this.white.low,
-                this.white.high,
-                this.whiteKing.low,
-                this.whiteKing.high,
-                this.black.low,
-                this.black.high,
-                this.sideToMove
-        );
     }
 
     public static Player oppositeSide(Player side) {
@@ -802,8 +813,9 @@ public class Board {
     public boolean isStalemateTrackingInitialized() {
         return stalemateTrackingInitialized;
     }
-    public Map<PositionKey, Integer> getPositionCounts() {
-        return positionCounts;
+
+    public long getCurrentHash() {
+        return zobristHasher.getCurrentHash();
     }
 }
 

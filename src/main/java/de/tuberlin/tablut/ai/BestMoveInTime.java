@@ -25,7 +25,7 @@ public class BestMoveInTime {
         finalReport = searchInTime(
                 originalState,
                 msTime,
-                BestMoveInTime::alphaBetaSearch
+                AlphaBetaTransposition::search
         );
         return finalReport.bestMove();
     }

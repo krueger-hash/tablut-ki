@@ -3,6 +3,7 @@ package de.tuberlin.tablut.ai.SearchAlgorithms;
 import de.tuberlin.tablut.ai.BoardEvaluator;
 import de.tuberlin.tablut.ai.Move;
 import de.tuberlin.tablut.ai.Piece;
+import de.tuberlin.tablut.ai.SearchAlgorithms.TranspositionTable.TranspositionTable;
 import lombok.Getter;
 
 public class SearchContext {
@@ -19,6 +20,13 @@ public class SearchContext {
     private final int[][] historyHeuristicW = new int[90][90];
     private final int[][] historyHeuristicB = new int[90][90];
     private final int[][] historyHeuristicK = new int[90][90];
+
+    // Transposition Table
+    private final TranspositionTable transpositionTable = new TranspositionTable();
+
+    TranspositionTable getTranspositionTable(){
+        return transpositionTable;
+    }
 
     public boolean shouldStop() {
         if(stopped){

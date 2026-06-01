@@ -10,7 +10,7 @@ public class PerformanceTest {
     public static void main(String[] args) {
 //        Board base = new Board();
 //        System.out.println(perft(base, 1, Player.BLACK));
-        boolean includeOld = true;
+        boolean includeOld = false;
         benchmark(includeOld);
     }
 

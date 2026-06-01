@@ -2,6 +2,7 @@ package de.tuberlin.tablut.ai.PerformanceTest;
 
 import de.tuberlin.tablut.ai.SearchAlgorithms.ABResult;
 import de.tuberlin.tablut.ai.SearchAlgorithms.AlphaBeta;
+import de.tuberlin.tablut.ai.SearchAlgorithms.AlphaBetaTransposition;
 import de.tuberlin.tablut.ai.BestMoveInTime;
 import de.tuberlin.tablut.ai.Board;
 import de.tuberlin.tablut.ai.SearchAlgorithms.Minimax;
@@ -44,6 +45,7 @@ public class PerformanceTestSearch {
         System.out.println("Position: " + fen);
         printTimedResult("Minimax", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, Minimax::minimaxSearch));
         printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, PerformanceTestSearch::alphaBetaSearch));
+        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, AlphaBetaTransposition::search));
     }
 
     // Experiment 2:
@@ -55,6 +57,7 @@ public class PerformanceTestSearch {
         System.out.println("Position: " + fen);
         printDepthResult("Minimax", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, Minimax::minimaxSearch));
         printDepthResult("Alpha-Beta", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
+        printDepthResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, AlphaBetaTransposition::search));
     }
 
     // Experiment 3:
@@ -66,6 +69,7 @@ public class PerformanceTestSearch {
         System.out.println("Position: " + fen);
         printTimedResult("Minimax", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, Minimax::minimaxSearch));
         printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
+        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, AlphaBetaTransposition::search));
     }
 
     private static void printTimedResult(String algorithm, SearchReport report) {
@@ -99,4 +103,5 @@ public class PerformanceTestSearch {
     private static ABResult alphaBetaSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
         return AlphaBeta.sortedAlphaBetaSearch(board, depth, ALPHA_INIT, BETA_INIT, context);
     }
+
 }
