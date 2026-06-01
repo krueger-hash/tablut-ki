@@ -45,7 +45,7 @@ public class PerformanceTestSearch {
         System.out.println("Position: " + fen);
         printTimedResult("Minimax", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, Minimax::minimaxSearch));
         printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, PerformanceTestSearch::alphaBetaSearch));
-        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, new AlphaBetaTransposition()::search));
+        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, AlphaBetaTransposition::search));
     }
 
     // Experiment 2:
@@ -57,7 +57,7 @@ public class PerformanceTestSearch {
         System.out.println("Position: " + fen);
         printDepthResult("Minimax", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, Minimax::minimaxSearch));
         printDepthResult("Alpha-Beta", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
-        printDepthResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, new AlphaBetaTransposition()::search));
+        printDepthResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, AlphaBetaTransposition::search));
     }
 
     // Experiment 3:
@@ -69,7 +69,7 @@ public class PerformanceTestSearch {
         System.out.println("Position: " + fen);
         printTimedResult("Minimax", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, Minimax::minimaxSearch));
         printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
-        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, new AlphaBetaTransposition()::search));
+        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, AlphaBetaTransposition::search));
     }
 
     private static void printTimedResult(String algorithm, SearchReport report) {

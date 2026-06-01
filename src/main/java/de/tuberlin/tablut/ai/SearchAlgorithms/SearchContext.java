@@ -1,5 +1,6 @@
 package de.tuberlin.tablut.ai.SearchAlgorithms;
 
+import de.tuberlin.tablut.ai.SearchAlgorithms.TranspositionTable.TranspositionTable;
 import lombok.Getter;
 
 public class SearchContext {
@@ -21,6 +22,13 @@ public class SearchContext {
     private long leafs;
     @Getter
     private long positions;
+
+    // Transposition Table
+    private final TranspositionTable transpositionTable = new TranspositionTable();
+
+    TranspositionTable getTranspositionTable(){
+        return transpositionTable;
+    }
 
     public boolean shouldStop() {
         if(stopped){
