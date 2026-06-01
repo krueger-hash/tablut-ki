@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static de.tuberlin.tablut.ai.SearchAlgorithms.AlphaBeta.sortMoves;
-import static de.tuberlin.tablut.ai.BoardEvaluator.MAX_PLAYER;
 import static de.tuberlin.tablut.ai.BoardEvaluator.MIN_PLAYER;
 
 public class PrincipalVariation {
@@ -115,7 +114,7 @@ public class PrincipalVariation {
 
         public PrincipalVariation(int maxDepth) {}
 
-        public ABResult pvSearch(Board board, int depth, int alpha, int beta) {
+        public SearchResult pvSearch(Board board, int depth, int alpha, int beta) {
             SearchContext ctx = new SearchContext();
 
             try {
@@ -127,8 +126,8 @@ public class PrincipalVariation {
             }
         }
 
-        private ABResult pvs(Board board, int depth, int alpha, int beta,
-                             SearchContext ctx) throws SearchStoppedException {
+        private SearchResult pvs(Board board, int depth, int alpha, int beta,
+                                 SearchContext ctx) throws SearchStoppedException {
 
             ctx.incrementPositions();
             if (ctx.shouldStop()) throw new SearchStoppedException("Zeitlimit erreicht");
@@ -138,7 +137,7 @@ public class PrincipalVariation {
                 ctx.incrementLeafs();
                 int eval = BoardEvaluator.evaluate(board);
                 if (board.sideToMove == MIN_PLAYER) eval = -eval;
-                return new ABResult(eval, new ArrayList<>());
+                return new SearchResult(eval, new ArrayList<>());
             }
 
             ArrayList<Move> moves = Board.generateLegalMoves(board, board.sideToMove);
@@ -151,7 +150,7 @@ public class PrincipalVariation {
             for (Move move : moves) {
 
                 board.makeMove(move);
-                ABResult child;
+                SearchResult child;
 
                 if (firstMove) {
                     child = pvs(board, depth - 1, -beta, -alpha, ctx);
@@ -180,7 +179,7 @@ public class PrincipalVariation {
                 if (alpha >= beta) break; // Beta-Cutoff
             }
 
-            return new ABResult(bestScore, bestPV);
+            return new SearchResult(bestScore, bestPV);
         }
 
 

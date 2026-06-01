@@ -23,11 +23,11 @@ public class AlphaBetaTransposition extends AlphaBeta{
     /// ////////////////
 
     // Implements SearchFunction — use as instance::search for iterative deepening
-    public static ABResult search(Board state, int depth, SearchContext context) throws SearchStoppedException {
+    public static SearchResult search(Board state, int depth, SearchContext context) throws SearchStoppedException {
         return sortedAlphaBetaSearch(state, depth, ALPHA_INIT, BETA_INIT, context);
     }
 
-    public static ABResult sortedAlphaBetaSearch(
+    public static SearchResult sortedAlphaBetaSearch(
             Board state,
             int depth,
             int alpha,
@@ -49,7 +49,7 @@ public class AlphaBetaTransposition extends AlphaBeta{
         if (depth == 0 || state.gameIsEnd()) {
             context.incrementLeafs();
             int value = BoardEvaluator.evaluate(state);
-            return new ABResult(value,new ArrayList<Move>());
+            return new SearchResult(value,new ArrayList<Move>());
         }
 
         TranspositionTable transpositionTable = context.getTranspositionTable();
@@ -88,7 +88,7 @@ public class AlphaBetaTransposition extends AlphaBeta{
             }
 
             state.makeMove(move);
-            ABResult child = sortedAlphaBetaSearch(state, depth - 1, alpha, beta, context);
+            SearchResult child = sortedAlphaBetaSearch(state, depth - 1, alpha, beta, context);
             state.unmakeMove();
 
             int score = child.value;
@@ -98,7 +98,7 @@ public class AlphaBetaTransposition extends AlphaBeta{
                 // store a lower bound true value >= beta
                 if (score >= beta ) {
                     transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, beta, Bound.LOWER, null));
-                    return new ABResult(beta, new ArrayList<>()); //Cutoff
+                    return new SearchResult(beta, new ArrayList<>()); //Cutoff
                 }
                 // update our best-known result wihtin the window
                 if (score > alpha) {
@@ -110,7 +110,7 @@ public class AlphaBetaTransposition extends AlphaBeta{
                 // move too bad for maximizing player that he'd never allow it. Store upper bound (true value <= alpha
                 if (score <= alpha) {
                     transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, alpha, Bound.UPPER, null));
-                    return new ABResult(alpha, new ArrayList<>()); //Cutoff
+                    return new SearchResult(alpha, new ArrayList<>()); //Cutoff
                 }
                 // update our best-known result wihtin the window
                 if (score < beta) {
@@ -136,9 +136,9 @@ public class AlphaBetaTransposition extends AlphaBeta{
         }
         transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, value, bound, bestPath));
         if (isMaxing) {
-            return new ABResult(alpha,bestPath);
+            return new SearchResult(alpha,bestPath);
         } else {
-            return new ABResult(beta,bestPath);
+            return new SearchResult(beta,bestPath);
         }
     }
 }

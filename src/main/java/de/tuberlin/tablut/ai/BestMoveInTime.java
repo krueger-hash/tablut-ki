@@ -21,11 +21,12 @@ public class BestMoveInTime {
     }
 
     // TODO: getter methods for other search algorithms e.g. minimax
+    PrincipalVariation search = new PrincipalVariation(3);
     public Move getMove() {
         finalReport = searchInTime(
                 originalState,
                 msTime,
-                AlphaBetaTransposition::search
+                BestMoveInTime::negamaxSearch
         );
         return finalReport.bestMove();
     }
@@ -76,22 +77,25 @@ public class BestMoveInTime {
 //        SearchContext context = new SearchContext(msTime);
         Board state = Board.deepCopy(originalState);
 
-        ABResult result = search.search(state, depth, context);
+        SearchResult result = search.search(state, depth, context);
         long now = System.currentTimeMillis();
         return new SearchReport(
                 result.getBestMoveAtNode(),
-                result.getValue(),
+                originalState.sideToMove == BoardEvaluator.MAX_PLAYER ? result.getValue() : -result.getValue(),
                 depth,
                 context.getPositions(),
                 context.getLeafs(),
                 now - startTime,
                 true,
-                result.getTrace().reversed()
-
+                result.getTrace()
         );
     }
 
-    public static ABResult alphaBetaSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
+    public static SearchResult alphaBetaSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
         return AlphaBeta.sortedAlphaBetaSearch(board, depth, ALPHA_INIT, BETA_INIT, context);
+    }
+    public static SearchResult negamaxSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
+        return Negamax.search(board, depth, ALPHA_INIT, BETA_INIT, context);
+
     }
 }

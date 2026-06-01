@@ -75,7 +75,7 @@ public class AlphaBeta {
     /// ////////////////////////////////////////////////////////////////////
     /// Alpha-Beta mit Zugsortierung
     /// ////////////////
-    public static ABResult sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta) {
+    public static SearchResult sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta) {
         SearchContext context = new SearchContext();
         try {
             return sortedAlphaBetaSearch(state, depth, alpha, beta, context);
@@ -86,7 +86,7 @@ public class AlphaBeta {
     }
 
     // bei Erreichen des Zeitlimits wird unmakeMove nicht! aufgerufen. Wir könnten das noch sauber beheben mit catch-Blöcken, aber es ist wohl besser mit Deep-Copy zu begin von BestMove
-    public static ABResult sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta, SearchContext context) throws SearchStoppedException {
+    public static SearchResult sortedAlphaBetaSearch(Board state, int depth, int alpha, int beta, SearchContext context) throws SearchStoppedException {
         context.incrementPositions();
         if (context.shouldStop()) {throw new SearchStoppedException("Zeitlimit erreicht");}
 
@@ -100,7 +100,7 @@ public class AlphaBeta {
         if (depth == 0 || state.gameIsEnd()) {
             context.incrementLeafs();
             int value = BoardEvaluator.evaluate(state);
-            return new ABResult(value,new ArrayList<Move>());
+            return new SearchResult(value,new ArrayList<Move>());
         }
 
         //*Erzeuge alle möglichen Züge
@@ -115,14 +115,14 @@ public class AlphaBeta {
             }
 
             state.makeMove(move);
-            ABResult child = sortedAlphaBetaSearch(state, depth - 1, alpha, beta, context);
+            SearchResult child = sortedAlphaBetaSearch(state, depth - 1, alpha, beta, context);
             state.unmakeMove();
 
             int score = child.value;
 
             if (isMaxing) {
                 if (score >= beta ) {
-                    return new ABResult(beta,null); //Cutoff
+                    return new SearchResult(beta,null); //Cutoff
                 }
                 if (score > alpha) {
                     alpha = score;
@@ -131,7 +131,7 @@ public class AlphaBeta {
                 }
             } else {
                 if (score <= alpha) {
-                    return new ABResult(alpha,null); //Cutoff
+                    return new SearchResult(alpha,null); //Cutoff
                 }
                 if (score < beta) {
                     beta = score;
@@ -141,9 +141,9 @@ public class AlphaBeta {
             }
         }
         if (isMaxing) {
-            return new ABResult(alpha,bestPath);
+            return new SearchResult(alpha,bestPath);
         } else {
-            return new ABResult(beta,bestPath);
+            return new SearchResult(beta,bestPath);
         }
     }
 

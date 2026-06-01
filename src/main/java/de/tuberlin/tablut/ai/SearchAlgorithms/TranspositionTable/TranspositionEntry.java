@@ -1,7 +1,7 @@
 package de.tuberlin.tablut.ai.SearchAlgorithms.TranspositionTable;
 
 import de.tuberlin.tablut.ai.Move;
-import de.tuberlin.tablut.ai.SearchAlgorithms.ABResult;
+import de.tuberlin.tablut.ai.SearchAlgorithms.SearchResult;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class TranspositionEntry {
         this.trace = trace == null ? null : new ArrayList<>(trace);
     }
 
-    public ABResult toResult() {
-        return new ABResult(value, trace == null ? null : new ArrayList<>(trace));
+    public SearchResult toResult() {
+        return new SearchResult(value, trace == null ? null : new ArrayList<>(trace));
     }
 }

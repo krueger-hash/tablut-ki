@@ -16,7 +16,7 @@ public class PVSTest {
 
 
     // Hilfsmethode für PVS-Aufruf
-    private ABResult runPVS(Board board, int depth) throws SearchStoppedException {
+    private SearchResult runPVS(Board board, int depth) throws SearchStoppedException {
         PrincipalVariation pvs = new PrincipalVariation(depth);
         return pvs.pvSearch(board, depth, -INF, INF);
     }
@@ -29,8 +29,8 @@ public class PVSTest {
         String fen = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0";
         Board board = Board.fenToBoard(fen); // Beispielstellung
 
-        ABResult ab = AlphaBeta.sortedAlphaBetaSearch(board, 3, -INF, INF);
-        ABResult pvs = runPVS(board, 3);
+        SearchResult ab = AlphaBeta.sortedAlphaBetaSearch(board, 3, -INF, INF);
+        SearchResult pvs = runPVS(board, 3);
 
         int expected = ab.value;
         if (board.sideToMove == MIN_PLAYER) {
@@ -48,7 +48,7 @@ public class PVSTest {
         SearchReport ab = BestMoveInTime.searchAtDepth(board, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
 
         //ABResult ab = AlphaBeta.sortedAlphaBetaSearch(board, 3, -INF, INF);
-        ABResult pvs = runPVS(board, 3);
+        SearchResult pvs = runPVS(board, 3);
 
         //int expected = ab.value;
         //if (board.sideToMove == MIN_PLAYER) {
@@ -63,8 +63,8 @@ public class PVSTest {
         String fen = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0";
         Board board = Board.fenToBoard(fen); // Beispielstellung
 
-        ABResult ab = AlphaBeta.sortedAlphaBetaSearch(board, 5, -INF, INF);
-        ABResult pvs = runPVS(board, 5);
+        SearchResult ab = AlphaBeta.sortedAlphaBetaSearch(board, 5, -INF, INF);
+        SearchResult pvs = runPVS(board, 5);
 
         assertEquals(ab.value, pvs.value,
                 "PVS und AlphaBeta müssen denselben Wert liefern");
@@ -95,7 +95,7 @@ public class PVSTest {
     public void testPVSDepthZero() throws SearchStoppedException {
         String fen = "4K2b1/1b7/9/9/9/9/9/9/9 b 20";
         Board board = Board.fenToBoard(fen); // Beispielstellung
-        ABResult pvs = runPVS(board, 0);
+        SearchResult pvs = runPVS(board, 0);
 
         int eval = BoardEvaluator.evaluate(board);
 
@@ -113,7 +113,7 @@ public class PVSTest {
     public void testPVIsConsistent() throws SearchStoppedException {
         String fen = "4K2b1/1b7/9/9/9/9/9/9/9 b 20";
         Board board = Board.fenToBoard(fen); // Beispielstellung
-        ABResult pvs = runPVS(board, 4);
+        SearchResult pvs = runPVS(board, 4);
 
         Board clone = deepCopy(board);
 

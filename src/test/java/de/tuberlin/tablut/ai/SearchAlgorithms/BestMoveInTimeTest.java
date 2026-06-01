@@ -102,10 +102,12 @@ public class BestMoveInTimeTest {
 //        board.printBoard();
         Move expected = new Move(8, 7, 8, 8, Piece.KING);
         BestMoveInTime test = new BestMoveInTime(board, 1000);
+        board.printBoard();
         Move bestMove = test.getMove();
 //        System.out.println(bestMove);
-//        System.out.println(test.getFinalReport().value());
-        assertSameMove(expected, bestMove); // technisch gesehen, sind hier die Züge auch egal, da jederzeit der Sieg durch Weiß erzwungen werden kann ...
+        System.out.println(test.getFinalReport().bestPath());
+        System.out.println(test.getFinalReport().value());
+        assertEquals(expected, bestMove); // technisch gesehen, sind hier die Züge auch egal, da jederzeit der Sieg durch Weiß erzwungen werden kann ...
     }
 
 //    @Test
@@ -157,7 +159,7 @@ public class BestMoveInTimeTest {
         BestMoveInTime test = new BestMoveInTime(Board.deepCopy(t), 0);
 
         try {
-            BestMoveInTime.searchAtDepth(t, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+            BestMoveInTime.searchAtDepth(t, 2, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
         } catch (SearchStoppedException ignored) {
         }
 
@@ -179,7 +181,7 @@ public class BestMoveInTimeTest {
         Board testBoard = Board.fenToBoard(fen);
         boolean finished = false;
         try {
-             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+             SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
 //            assertEquals(100_000, result.value());
             assertTrue(result.value() > 80_000);
             finished = true;
@@ -195,7 +197,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
 //            assertEquals(100_000, result.value());
             assertTrue(result.value() > 80_000);
             finished = true;
@@ -214,7 +216,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 2, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
 //            assertEquals(-100_000, result.value());
 //            System.out.println(result.value());
 //            System.out.println(result.bestMove());
@@ -238,7 +240,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 1, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 1, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
 //            System.out.println(result.value());
 //            System.out.println(result.bestMove());
 //            System.out.println(result.bestPath());
@@ -260,7 +262,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 3, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
 //            System.out.println(result.value());
 //            System.out.println(result.bestMove());
 //            System.out.println(result.bestPath());
@@ -280,7 +282,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 4, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 4, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
 //            assertEquals(-100_000, result.value());
             assertTrue(result.value() < -80_000);
             finished = true;
@@ -294,11 +296,11 @@ public class BestMoveInTimeTest {
     public void testBestMoveAtDepth_StalemateBy50TurnRule(){
         String fen = "3K2b2/2b6/9/9/9/9/9/9/6b2 b 95"; // BLACK kann nicht gewinnen, aber durch Blockade im ersten Halbzug verhindern, dass WHITE gewinnt
         Board testBoard = Board.fenToBoard(fen);
-//        testBoard.printBoard();
+        testBoard.printBoard();
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 5, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 5, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
             assertEquals(new Move(12,2,Piece.BLACK),result.bestMove());
             assertEquals(0,result.value());
             finished = true;
@@ -317,7 +319,7 @@ public class BestMoveInTimeTest {
         boolean finished = false;
 
         try {
-            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 5, Integer.MAX_VALUE, BestMoveInTime::alphaBetaSearch, new SearchContext());
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 5, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
             assertEquals(new Move(4,84,Piece.KING),result.bestMove());
             assertEquals(0,result.value());
             finished = true;

@@ -1,15 +1,9 @@
 package de.tuberlin.tablut.ai.PerformanceTest;
 
-import de.tuberlin.tablut.ai.SearchAlgorithms.ABResult;
-import de.tuberlin.tablut.ai.SearchAlgorithms.AlphaBeta;
-import de.tuberlin.tablut.ai.SearchAlgorithms.AlphaBetaTransposition;
+import de.tuberlin.tablut.ai.SearchAlgorithms.*;
 import de.tuberlin.tablut.ai.BestMoveInTime;
 import de.tuberlin.tablut.ai.Board;
-import de.tuberlin.tablut.ai.SearchAlgorithms.Minimax;
 import de.tuberlin.tablut.ai.Move;
-import de.tuberlin.tablut.ai.SearchAlgorithms.SearchContext;
-import de.tuberlin.tablut.ai.SearchAlgorithms.SearchReport;
-import de.tuberlin.tablut.ai.SearchAlgorithms.SearchStoppedException;
 
 import java.util.List;
 import java.util.Locale;
@@ -29,11 +23,16 @@ public class PerformanceTestSearch {
                 "3K2b2/2b6/9/9/9/9/9/9/6b2 b 45"
         );
 
-        for (String fen : defaultPositions) {
-            printExperiment1(fen);
-            printExperiment2(fen);
-            printExperiment3(fen);
-        }
+//        for (String fen : defaultPositions) {
+//            printExperiment1(fen);
+//            printExperiment2(fen);
+//            printExperiment3(fen);
+//        }
+        Board board = Board.fenToBoard(defaultPositions.get(0));
+        int time = 10_000;
+//        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, time, PerformanceTestSearch::alphaBetaSearch));
+        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, time, AlphaBetaTransposition::search));
+        printTimedResult(defaultPositions.get(0), BestMoveInTime.searchInTime(board, time, BestMoveInTime::negamaxSearch));
     }
 
     // Experiment 1:
@@ -100,7 +99,7 @@ public class PerformanceTestSearch {
         return move == null ? "-" : move.toString();
     }
 
-    private static ABResult alphaBetaSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
+    private static SearchResult alphaBetaSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
         return AlphaBeta.sortedAlphaBetaSearch(board, depth, ALPHA_INIT, BETA_INIT, context);
     }
 
