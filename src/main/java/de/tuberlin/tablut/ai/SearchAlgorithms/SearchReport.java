@@ -13,7 +13,7 @@ public record SearchReport(
         long leafs,
         long millis,
         boolean completed,
-        List<Move> rootToLeafTrace
+        List<Move> bestPath
 ) {
     public double seconds() {
         return millis / 1000.0;

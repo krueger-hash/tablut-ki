@@ -7,8 +7,8 @@ import de.tuberlin.tablut.ai.Move;
 import java.util.ArrayList;
 
 public final class Minimax {
-    private static final int ALPHA_INIT = -1_000_000;
-    private static final int BETA_INIT = 1_000_000;
+    private static final int ALPHA_INIT = BoardEvaluator.ALPHA_INIT;
+    private static final int BETA_INIT = BoardEvaluator.BETA_INIT;
 
     private Minimax() {
     }

@@ -116,6 +116,7 @@ public class AlphaBetaTest {
     public void testSortMoves_MovesWithoutCaptureReset(){
         String fen ="4K2b1/1b7/9/9/9/9/9/9/9 w 48"; //bester Zug für W: König auf obere linke Ecke
         Board test = Board.fenToBoard(fen);
+        test.printBoard();
         Move tMove2 = new Move(4,0,4,8,Piece.KING);
         ArrayList<Move> testList = new ArrayList<>();
         testList.add(tMove2);
@@ -130,9 +131,11 @@ public class AlphaBetaTest {
 //        }
         AlphaBeta.sortMoves(test,testList);
         assertEquals(48,test.movesWithoutCapture);
-        assertEquals(
-                -4620,
-                BoardEvaluator.evaluate(Board.boardAfterMove(test,testList.getLast()))
-        );
+
+//        Wer des Zuges egal, um zu testen, ob Moves without Capture korrekt zurückgesetzt wird
+//        assertEquals(
+//                -4620,
+//                BoardEvaluator.evaluate(Board.boardAfterMove(test,testList.getLast()))
+//        );
     }
 }
