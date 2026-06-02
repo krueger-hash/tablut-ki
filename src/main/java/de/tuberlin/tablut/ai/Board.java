@@ -510,39 +510,46 @@ public class Board {
         // one row up, one row down, one column left, one column right (n,s,w,e)
         int[] directions = {-Bitboard90.cols, Bitboard90.cols, -1, 1};
 
-        for (int row = 0; row < Bitboard90.rows; row++) {
-            for (int col = 0; col < Bitboard90.cols - 1; col++) {
-                int from = row * Bitboard90.cols + col;
-                // Select target bitboard based on player
-                // If a piece from target player is found go further, otherwise continue to the next loop
-                if (!belongsToPlayer(board, player, from)) {
-                    continue;
-                }
+//        for (int row = 0; row < Bitboard90.rows; row++) {
+//            for (int col = 0; col < Bitboard90.cols - 1; col++) {
+//                int from = row * Bitboard90.cols + col;
+//                // Select target bitboard based on player
+//                // If a piece from target player is found go further, otherwise continue to the next loop
+//                if (!belongsToPlayer(board, player, from)) {
+//                    continue;
+//                }
+        int[] pieceList;
+        if(player == Player.WHITE){
+            Bitboard90 whitePieces = Bitboard90.or(board.white,board.whiteKing);
+            pieceList = Bitboard90.BitboardToIndexList(whitePieces);
+        }
+        else {
+            pieceList = Bitboard90.BitboardToIndexList(board.black);
+        }
+        for (int from : pieceList) {
+            // Get the piece type of current position: BLACK; WHITE; WHITE_KING
+            Piece movedPiece = resolveMovedPiece(board, player, from);
 
-                // Get the piece type of current position: BLACK; WHITE; WHITE_KING
-                Piece movedPiece = resolveMovedPiece(board, player, from);
-
-                for (int direction : directions) {
-                    int to = from + direction;
-                    while (isLegalMoveTarget(from, to, direction)) {
-                        // Only the empty throne may be crossed.
-                        if (Bitboard90.getBit(THRONE, to) && !Bitboard90.getBit(board.whiteKing, to)) {
-                            to += direction;
-                            continue;
-                        }
-                        // King is allowed to go to one of the four blocked edge squares
-                        if (Bitboard90.getBit(BLOCKED_PIECES, to)) {
-                            if (movedPiece == Piece.KING) {
-                                moves.add(new Move(from, to, movedPiece));
-                            }
-                            break;
-                        }
-                        if (Bitboard90.getBit(occupied, to)) {
-                            break;
-                        }
-                        moves.add(new Move(from, to, movedPiece));
+            for (int direction : directions) {
+                int to = from + direction;
+                while (isLegalMoveTarget(from, to, direction)) {
+                    // Only the empty throne may be crossed.
+                    if (Bitboard90.getBit(THRONE, to) && !Bitboard90.getBit(board.whiteKing, to)) {
                         to += direction;
+                        continue;
                     }
+                    // King is allowed to go to one of the four blocked edge squares
+                    if (Bitboard90.getBit(BLOCKED_PIECES, to)) {
+                        if (movedPiece == Piece.KING) {
+                            moves.add(new Move(from, to, movedPiece));
+                        }
+                        break;
+                    }
+                    if (Bitboard90.getBit(occupied, to)) {
+                        break;
+                    }
+                    moves.add(new Move(from, to, movedPiece));
+                    to += direction;
                 }
             }
         }
@@ -685,7 +692,7 @@ public class Board {
         if (sideToMove == Player.BLACK) {
             return generateLegalMoves(this, Player.BLACK).isEmpty();
         }
-        Bitboard90 whiteSide = Bitboard90.or(white, whiteKing);
+//        Bitboard90 whiteSide = Bitboard90.or(white, whiteKing);
         return generateLegalMoves(this, Player.WHITE).isEmpty();
     }
 

@@ -1,6 +1,7 @@
 package de.tuberlin.tablut.ai;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -299,6 +300,22 @@ Grundsätzliche Ideen im Code:
 
     static int matrixToBit(int row, int col){
         return row*cols+col;
+    }
+
+    static int[] BitboardToIndexList(Bitboard90 board){
+        int[] indexList = new int[board.bitCount()];
+        long lows = board.low;
+        int i = 0;
+        while (lows != 0) {
+            indexList[i++] = Long.numberOfTrailingZeros(lows);
+            lows &= lows - 1;
+        }
+        long highs = board.high;
+        while (highs != 0) {
+            indexList[i++] = 64 + Long.numberOfTrailingZeros(highs);
+            highs &= highs - 1;
+        }
+        return indexList;
     }
 
     /////////////////////////////////////////////////////////////////////////////
