@@ -74,13 +74,16 @@ public class SearchContext {
             this.historyHeuristicB[from][to] += depth*depth;
         }
         else if(piece == Piece.WHITE){
-            this.historyHeuristicW[from][to] += depth*depth;
+            this.historyHeuristicW[from][to] -= depth*depth;
         }
         else if(piece == Piece.KING){
-            this.historyHeuristicK[from][to] += depth*depth;
+            this.historyHeuristicK[from][to] -= depth*depth;
         }
         else throw new RuntimeException("Undefined Piece for setting HistoryScore");
     }
+
+
+
     public int getHistoryHeuristicScore(Move move) {
         int to = move.getTo();
         int from = move.getFrom();
@@ -97,7 +100,13 @@ public class SearchContext {
         else throw new RuntimeException("Undefined Piece for getting HistoryScore");
 
         //TODO: Ist das min unnötig und ggf. nur ein Performance-Speedbump?
-        return Math.min(score * BoardEvaluator.HISTORY_HEURISTIC_WEIGHT,60_000);
+        int CAPPED_SCORE = 60_000;
+        if(Piece.BLACK == piece){
+            return Math.min(score * BoardEvaluator.HISTORY_HEURISTIC_WEIGHT,CAPPED_SCORE);
+        }else{
+            return Math.max(score * BoardEvaluator.HISTORY_HEURISTIC_WEIGHT,-CAPPED_SCORE);
+        }
+
     }
 
 

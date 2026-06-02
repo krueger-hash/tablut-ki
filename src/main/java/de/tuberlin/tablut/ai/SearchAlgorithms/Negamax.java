@@ -45,27 +45,30 @@ public class Negamax {
             return new SearchResult(eval, new ArrayList<>());
         }
 
-        TranspositionTable transpositionTable = context.getTranspositionTable();
 
+        TranspositionTable transpositionTable = context.getTranspositionTable();
         TranspositionKey key = transpositionTable.key(board);
-        TranspositionEntry cached = transpositionTable.get(board);
-        // depth >= depth is critical - cache result from depth-2 search is not trustworthy when doing a depth-5 search, didn't look far enough ahead
-        if (cached != null && cached.getDepth() >= depth) {
-            // previous search fully explored this node within the window and found the true value
-            if (cached.getBound() == Bound.EXACT) {
-                return cached.toResult();
-            }
-            // previous search cut off because a child was too good for the maximizer - true value is at least this
-            else if (cached.getBound() == Bound.LOWER) {
-                alpha = Math.max(alpha, cached.getValue());
-            }
-            // previous search cut off because a child was too bad for the maximizer - true value is at most this
-            else if (cached.getBound() == Bound.UPPER) {
-                beta = Math.min(beta, cached.getValue());
-            }
-            // if alpha >= beta, window has closed - node is irrelevant to the parent
-            if (alpha >= beta) {
-                return cached.toResult();
+        if (SearchControlParameters.TRANSPOSITION_TABLE_ACTIVE) {
+//            TranspositionKey key = transpositionTable.key(board);
+            TranspositionEntry cached = transpositionTable.get(board);
+            // depth >= depth is critical - cache result from depth-2 search is not trustworthy when doing a depth-5 search, didn't look far enough ahead
+            if (cached != null && cached.getDepth() >= depth) {
+                // previous search fully explored this node within the window and found the true value
+                if (cached.getBound() == Bound.EXACT) {
+                    return cached.toResult();
+                }
+                // previous search cut off because a child was too good for the maximizer - true value is at least this
+                else if (cached.getBound() == Bound.LOWER) {
+                    alpha = Math.max(alpha, cached.getValue());
+                }
+                // previous search cut off because a child was too bad for the maximizer - true value is at most this
+                else if (cached.getBound() == Bound.UPPER) {
+                    beta = Math.min(beta, cached.getValue());
+                }
+                // if alpha >= beta, window has closed - node is irrelevant to the parent
+                if (alpha >= beta) {
+                    return cached.toResult();
+                }
             }
         }
 
@@ -77,23 +80,30 @@ public class Negamax {
 
 
         ArrayList<Move> moves = Board.generateLegalMoves(board, board.sideToMove);
-        sortMoves(board, moves, context);
+        if (SearchControlParameters.SORT_MOVES_ACTIVE) {
+            sortMoves(board, moves, context);
+        }
 
         for (Move move : moves) {
 
             board.makeMove(move);
             SearchResult child;
 
-            if (firstMove) {
-                child = search(board, depth - 1, -beta, -alpha, context);
-                firstMove = false;
-            } else {
-                child = search(board, depth - 1, -alpha - 1, -alpha, context);
-
-                if (-child.value > alpha && -child.value < beta) {
+            if (SearchControlParameters.PVS_ACTIVE) {
+                if (firstMove) {
                     child = search(board, depth - 1, -beta, -alpha, context);
+                    firstMove = false;
+                } else {
+                    child = search(board, depth - 1, -alpha - 1, -alpha, context);
+
+                    if (-child.value > alpha && -child.value < beta) {
+                        child = search(board, depth - 1, -beta, -alpha, context);
+                    }
                 }
+            } else {
+                child = search(board, depth - 1, -beta, -alpha, context);
             }
+
             board.unmakeMove();
 
             int score = -child.value;
@@ -109,18 +119,24 @@ public class Negamax {
             if (bestScore > alpha) alpha = bestScore;
             if (alpha >= beta) {
                 // Beta-Cutoff
-                context.incrementHistoryHeuristic(move, depth);
-                transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, beta, Bound.LOWER, null));
+                if (SearchControlParameters.HISTORY_HEURISTICS_ACTIVE) {
+                    context.incrementHistoryHeuristic(move, depth);
+                }
+                if (SearchControlParameters.TRANSPOSITION_TABLE_ACTIVE) {
+                    transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, beta, Bound.LOWER, null));
+                }
 //                System.out.println("Beta-Cutoff");
                 return new SearchResult(bestScore, new ArrayList<>());
             }
         }
-        if(bestScore <= originalAlpha){
-            transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, bestScore, Bound.UPPER, bestPath));
-        }else if(bestScore >= beta){
-            transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, bestScore, Bound.LOWER, bestPath));
-        }else{
-            transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, bestScore, Bound.EXACT, bestPath));
+        if (SearchControlParameters.TRANSPOSITION_TABLE_ACTIVE) {
+            if (bestScore <= originalAlpha) {
+                transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, bestScore, Bound.UPPER, bestPath));
+            } else if (bestScore >= beta) {
+                transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, bestScore, Bound.LOWER, bestPath));
+            } else {
+                transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, bestScore, Bound.EXACT, bestPath));
+            }
         }
 
 //        System.out.println("Exact");
@@ -128,11 +144,17 @@ public class Negamax {
     }
 
     static int evalMove(Move move, Board state, SearchContext context) {
-        state.makeMove(move);
-        int result = BoardEvaluator.evaluate(state);
+        int result = 0;
+        if (SearchControlParameters.SORT_MOVES_BY_VALUE) {
+            state.makeMove(move);
+            result = BoardEvaluator.evaluate(state);
+            state.unmakeMove();
+        }
+
         //HistoryHeuristik liefert Bonus-Score für Zugsortierung
-        result += context.getHistoryHeuristicScore(move);
-        state.unmakeMove();
+        if (SearchControlParameters.HISTORY_HEURISTICS_ACTIVE) {
+            result += context.getHistoryHeuristicScore(move);
+        }
 //        System.out.println("Move:"+move+" - Result:" +result);
 //        System.out.println("Moves without Capture: " + state.movesWithoutCapture);
         return result;
@@ -147,7 +169,7 @@ public class Negamax {
         //Zugsortierung absteigend
         moves.sort(
                 Comparator.comparingInt(
-                        ((Move move) -> scores.get(move))
+                        ((Move move) -> MIN_PLAYER == state.sideToMove ? -scores.get(move) : scores.get(move))
                 ).reversed()
         );
     }
