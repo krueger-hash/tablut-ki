@@ -360,9 +360,13 @@ public class Board {
                 // Prüfe: behind = Schwarz / Blocked / Thron (leer)
                 if (Bitboard90.getBit(black, behind)
                         || Bitboard90.getBit(BLOCKED_PIECES, behind)
-                        || (Bitboard90.getBit(THRONE, behind) && throneEmpty)) {
+//                        || (Bitboard90.getBit(THRONE, behind) && throneEmpty)
+                ) {
 
                     hits = addHit(hits, new Hit(adjKing ? Piece.KING : Piece.WHITE, adj));
+                }
+                if (adjWhite && Bitboard90.getBit(THRONE, behind) && throneEmpty) {
+                    hits = addHit(hits, new Hit(Piece.WHITE, adj));
                 }
             }
 

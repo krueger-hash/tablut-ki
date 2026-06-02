@@ -356,7 +356,7 @@ public class BestMoveInTimeTest {
 
     @Test
     public void testBoard_KingNotWronglyChecked(){
-        String fen = "9/4b4/9/2w1Kb2b/bb3w1bb/4wb2b/9/4b4/3bb4 b 0";
+        String fen = "9/4b4/9/2w1Kb2b/bb3w1bb/4wb2b/9/4b4/4b4 b 0";
         Board testBoard = Board.fenToBoard(fen);
         testBoard.printBoard();
 
