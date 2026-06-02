@@ -7,13 +7,13 @@ import de.tuberlin.tablut.ai.Move;
 import java.util.ArrayList;
 
 public final class Minimax {
-    private static final int ALPHA_INIT = -1_000_000;
-    private static final int BETA_INIT = 1_000_000;
+    private static final int ALPHA_INIT = BoardEvaluator.ALPHA_INIT;
+    private static final int BETA_INIT = BoardEvaluator.BETA_INIT;
 
     private Minimax() {
     }
 
-    public static ABResult minimaxSearch(Board state, int depth, SearchContext context) throws SearchStoppedException {
+    public static SearchResult minimaxSearch(Board state, int depth, SearchContext context) throws SearchStoppedException {
         context.incrementPositions();
         if (context.shouldStop()) {
             throw new SearchStoppedException("Zeitlimit erreicht");
@@ -21,7 +21,7 @@ public final class Minimax {
 
         if (depth == 0 || state.gameIsEnd()) {
             context.incrementLeafs();
-            return new ABResult(BoardEvaluator.evaluate(state), new ArrayList<>());
+            return new SearchResult(BoardEvaluator.evaluate(state), new ArrayList<>());
         }
 
         boolean isMaxing = state.sideToMove == BoardEvaluator.MAX_PLAYER;
@@ -31,7 +31,7 @@ public final class Minimax {
 
         if (moves.isEmpty()) {
             context.incrementLeafs();
-            return new ABResult(BoardEvaluator.evaluate(state), bestPath);
+            return new SearchResult(BoardEvaluator.evaluate(state), bestPath);
         }
 
         for (Move move : moves) {
@@ -40,7 +40,7 @@ public final class Minimax {
             }
 
             state.makeMove(move);
-            ABResult child = minimaxSearch(state, depth - 1, context);
+            SearchResult child = minimaxSearch(state, depth - 1, context);
             state.unmakeMove();
 
             int score = child.getValue();
@@ -51,7 +51,7 @@ public final class Minimax {
             }
         }
 
-        return new ABResult(bestValue, bestPath);
+        return new SearchResult(bestValue, bestPath);
     }
 
     private static boolean isBetterValue(int value, int bestValue, boolean isMaxing) {

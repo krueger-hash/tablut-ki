@@ -7,70 +7,10 @@ import de.tuberlin.tablut.ai.Player;
 
 import java.util.*;
 
-public class AlphaBeta {
+public class AB_HistoryHeuristic {
 
     private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
     private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
-
-
-    /// ////////////////////////////////////////////////////////////////////
-    /// reine Alpha-Beta-Suche
-    /// ////////////////
-    //Wrapper für den Aufruf der Alpha-Beta-Suche. Alternativ hätte man auch alles in eine Funktion mit Fallunterscheidung reinpacken können. Ich fand aber die Zweiteilung in Min-Max aber besser, da analog zur GKI-VL
-//    static int alphaBetaSearch(Board state, int depth, int alpha, int beta) {
-//        if (state.sideToMove == maxPlayer) {
-//            return alphaBetaMax(state, depth, alpha, beta);
-//        }
-//        if (state.sideToMove == minPlayer) {
-//            return alphaBetaMin(state, depth, alpha, beta);
-//        } else {
-//            throw new IllegalStateException("Übergebenes Board hat ungültige .sideToMove");
-//        }
-//    }
-//
-//    //Alpha-Beta-Max basierend auf GKI-VL WS2526 05A01 Folie 14
-//    static int alphaBetaMax(Board state, int depth, int alpha, int beta) {
-//        if (depth == 0 || state.gameIsEnd()) {
-//            return BoardEvaluator.evaluate(state);
-//        }
-//        ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
-//        for (Move move : moves) {
-//
-//            state.makeMove(move);
-//            int score = alphaBetaMin(state, depth - 1, alpha, beta); // Aufruf von ABMin
-//            state.unmakeMove(); //unmakeMove vor den returns!
-//
-//            if (score >= beta) {
-//                return beta; //Cutoff
-//            }
-//            if (score > alpha) {
-//                alpha = score;
-//            }
-//        }
-//        return alpha;
-//    }
-//
-//    //Alpha-Beta-Min basierend auf GKI-VL WS2526 05A01 Folie 14
-//    static int alphaBetaMin(Board state, int depth, int alpha, int beta) {
-//        if (depth == 0 || state.gameIsEnd()) {
-//            return BoardEvaluator.evaluate(state);
-//        }
-//        ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
-//        for (Move move : moves) {
-//
-//            state.makeMove(move);
-//            int score = alphaBetaMax(state, depth - 1, alpha, beta); //Aufruf von ABMax
-//            state.unmakeMove();
-//
-//            if (score <= alpha) {
-//                return alpha; //Cutoff
-//            }
-//            if (score < beta) {
-//                beta = score;
-//            }
-//        }
-//        return beta;
-//    }
 
     /// ////////////////////////////////////////////////////////////////////
     /// Alpha-Beta mit Zugsortierung
@@ -106,7 +46,7 @@ public class AlphaBeta {
         //*Erzeuge alle möglichen Züge
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         //Zugsortierung
-        sortMoves(state, moves);
+        sortMoves(state, moves, context);
 
         // * Schleife über Kinder
         for (Move move : moves) {
@@ -121,22 +61,28 @@ public class AlphaBeta {
             int score = child.value;
 
             if (isMaxing) {
+                //Cutoff
                 if (score >= beta ) {
-                    return new SearchResult(beta,null); //Cutoff
+                    //Inkrementiere HistoryHeuristik, wenn Cutoff ausgelöst wird
+                    context.incrementHistoryHeuristic(move,depth);
+                    return new SearchResult(beta,null);
                 }
                 if (score > alpha) {
                     alpha = score;
                     bestPath = new ArrayList<Move>(child.trace);
-                    bestPath.addFirst(move);
+                    bestPath.add(move);
                 }
             } else {
+                //Cutoff
                 if (score <= alpha) {
-                    return new SearchResult(alpha,null); //Cutoff
+                    //Inkrementiere HistoryHeuristik, wenn Cutoff ausgelöst wird
+                    context.incrementHistoryHeuristic(move,depth);
+                    return new SearchResult(alpha,null);
                 }
                 if (score < beta) {
                     beta = score;
                     bestPath = new ArrayList<Move>(child.trace);
-                    bestPath.addFirst(move);
+                    bestPath.add(move);
                 }
             }
         }
@@ -147,21 +93,23 @@ public class AlphaBeta {
         }
     }
 
-    static int evalMove(Move move, Board state){
+    static int evalMove(Move move, Board state, SearchContext context){
         state.makeMove(move);
         int result = BoardEvaluator.evaluate(state);
+        //HistoryHeuristik liefert Bonus-Score für Zugsortierung
+        result += context.getHistoryHeuristicScore(move);
         state.unmakeMove();
 //        System.out.println("Move:"+move+" - Result:" +result);
 //        System.out.println("Moves without Capture: " + state.movesWithoutCapture);
         return result;
     }
 
-    static void sortMoves(Board state,ArrayList<Move> moves){
+    static void sortMoves(Board state,ArrayList<Move> moves,SearchContext context){
         Player sideToMove = state.sideToMove;
 
         Map<Move, Integer> scores = new HashMap<>();
         for (Move move : moves) {
-            scores.put(move, evalMove(move, state));
+            scores.put(move, evalMove(move, state, context));
         }
 
         //Zugsortierung absteigend
@@ -182,3 +130,4 @@ public class AlphaBeta {
         }
     }
 }
+

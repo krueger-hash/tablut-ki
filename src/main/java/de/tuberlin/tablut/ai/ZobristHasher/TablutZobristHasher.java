@@ -5,6 +5,7 @@ import de.tuberlin.tablut.ai.Hit;
 import de.tuberlin.tablut.ai.Move;
 import de.tuberlin.tablut.ai.Piece;
 import de.tuberlin.tablut.ai.Player;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.Random;
@@ -18,6 +19,8 @@ public class TablutZobristHasher {
 
     private final long[][] pieceSquareKeys;
     private final long blackToMoveKey;
+    @Getter
+    private long currentHash;
 
     private static final long DEFAULT_SEED = 123456789L;
 
@@ -67,9 +70,13 @@ public class TablutZobristHasher {
         if(board.sideToMove == Player.BLACK){
             hash ^= blackToMoveKey;
         }
+        this.currentHash = hash;
         return hash;
     }
 
+    public long updateHashPosition(Move move, List<Hit> hits){
+        return updateHashPosition(this.currentHash, move, hits);
+    }
     // Update hash position with move and hits - should be called after each move
     public long updateHashPosition(long currentHash, Move move, List<Hit> hits) {
         long hash = currentHash;
@@ -86,7 +93,8 @@ public class TablutZobristHasher {
                 }
             }
         }
-
-        return hash ^ blackToMoveKey;
+        hash ^= blackToMoveKey;
+        this.currentHash = hash;
+        return hash;
     }
 }

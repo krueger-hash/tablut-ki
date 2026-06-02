@@ -5,12 +5,12 @@ import lombok.Getter;
 
 import java.util.List;
 
-public class ABResult {
+public class SearchResult {
     @Getter
     int value;
     List<Move> trace;
 
-    public ABResult(int value, List<Move> trace) {
+    public SearchResult(int value, List<Move> trace) {
         this.value = value;
         this.trace = trace;
     }
@@ -23,6 +23,6 @@ public class ABResult {
         if (trace == null || trace.isEmpty()) {
             return null;
         }
-        return trace.getLast();
+        return trace.getFirst();
     }
 }
