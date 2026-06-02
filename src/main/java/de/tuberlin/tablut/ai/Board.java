@@ -599,7 +599,7 @@ public class Board {
         return (this.hasBlackWon() || this.hasWhiteWon() || this.isStalemate());
     }
 
-     boolean hasBlackWon (){
+     public boolean hasBlackWon (){
         if(whiteKing.high + whiteKing.low == 0) {return true;} //Ist kein König mehr auf dem Board, sind beide vom Zahlenwert 0
         else {return false;}
     }

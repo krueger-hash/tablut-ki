@@ -332,4 +332,54 @@ public class BestMoveInTimeTest {
         assertTrue(finished);
     }
 
+    @Test
+    public void testBoard_hitByKing(){
+        String fen = "9/4b4/9/2wb1b2b/bb2Kw1bb/4wb2b/9/4b4/3bb4 w 0";
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+
+        boolean finished = false;
+        try {
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 1, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
+
+            System.out.println(result.value());
+            System.out.println(result.bestMove());
+            System.out.println(result.bestPath());
+//            assertEquals(new Move(4, 84, Piece.KING), result.bestMove());
+//            assertEquals(0, result.value());
+            finished = true;
+        } catch (SearchStoppedException ignored) {
+        }
+        assertTrue(finished);
+
+    }
+
+    @Test
+    public void testBoard_KingNotWronglyChecked(){
+        String fen = "9/4b4/9/2w1Kb2b/bb3w1bb/4wb2b/9/4b4/3bb4 b 0";
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+
+        boolean finished = false;
+        try {
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 4, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
+
+            System.out.println(result.value());
+            System.out.println(result.bestMove());
+            System.out.println(result.bestPath());
+//            assertEquals(new Move(4, 84, Piece.KING), result.bestMove());
+//            assertEquals(0, result.value());
+            testBoard.makeMove(result.bestMove());
+            testBoard.printBoard();
+            assertFalse(testBoard.hasBlackWon());
+
+            finished = true;
+        } catch (SearchStoppedException ignored) {
+        }
+
+
+        assertTrue(finished);
+
+    }
+
 }
