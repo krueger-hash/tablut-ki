@@ -81,9 +81,9 @@ public final class BoardEvaluator {
         score += MATERIAL_WEIGHT * (blackCount - 2 * whiteCount);
 
         // * Mobility - Black wants many options and wants to restrict white.
-        int blackMoves = Board.generateLegalMoves(board, Player.BLACK).size();
-        int whiteMoves = Board.generateLegalMoves(board, Player.WHITE).size();
-        score += MOBILITY_WEIGHT * (blackMoves - whiteMoves);
+//        int blackMoves = Board.generateLegalMoves(board, Player.BLACK).size();
+//        int whiteMoves = Board.generateLegalMoves(board, Player.WHITE).size();
+//        score += MOBILITY_WEIGHT * (blackMoves - whiteMoves);
 
 
         /////////////////////////////////////////////////////7
