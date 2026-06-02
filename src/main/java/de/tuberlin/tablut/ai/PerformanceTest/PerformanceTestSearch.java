@@ -30,9 +30,10 @@ public class PerformanceTestSearch {
 //        }
         Board board = Board.fenToBoard(defaultPositions.get(0));
         int time = 10_000;
-//        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, time, PerformanceTestSearch::alphaBetaSearch));
+        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, time, PerformanceTestSearch::alphaBetaSearch));
         printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, time, AlphaBetaTransposition::search));
-        printTimedResult(defaultPositions.get(0), BestMoveInTime.searchInTime(board, time, BestMoveInTime::negamaxSearch));
+        printTimedResult("Negamax PVS TT", BestMoveInTime.searchInTime(board, time, BestMoveInTime::negamaxSearch));
+        printExperiment2(defaultPositions.getFirst());
     }
 
     // Experiment 1:
@@ -54,9 +55,10 @@ public class PerformanceTestSearch {
         System.out.println();
         System.out.println("Experiment 2 - depth 4, max 2min");
         System.out.println("Position: " + fen);
-        printDepthResult("Minimax", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, Minimax::minimaxSearch));
+//        printDepthResult("Minimax", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, Minimax::minimaxSearch));
         printDepthResult("Alpha-Beta", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
         printDepthResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, AlphaBetaTransposition::search));
+        printDepthResult("Negamax PVS TT", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, BestMoveInTime::negamaxSearch));
     }
 
     // Experiment 3:

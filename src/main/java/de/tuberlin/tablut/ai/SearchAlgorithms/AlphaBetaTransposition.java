@@ -104,7 +104,7 @@ public class AlphaBetaTransposition extends AlphaBeta{
                 if (score > alpha) {
                     alpha = score;
                     bestPath = new ArrayList<Move>(child.trace != null ? child.trace : List.of());
-                    bestPath.add(move);
+                    bestPath.addFirst(move);
                 }
             } else {
                 // move too bad for maximizing player that he'd never allow it. Store upper bound (true value <= alpha
@@ -116,7 +116,7 @@ public class AlphaBetaTransposition extends AlphaBeta{
                 if (score < beta) {
                     beta = score;
                     bestPath = new ArrayList<Move>(child.trace != null ? child.trace : List.of());
-                    bestPath.add(move);
+                    bestPath.addFirst(move);
                 }
             }
         }

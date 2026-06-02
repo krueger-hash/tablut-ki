@@ -127,7 +127,7 @@ public class AlphaBeta {
                 if (score > alpha) {
                     alpha = score;
                     bestPath = new ArrayList<Move>(child.trace);
-                    bestPath.add(move);
+                    bestPath.addFirst(move);
                 }
             } else {
                 if (score <= alpha) {
@@ -136,7 +136,7 @@ public class AlphaBeta {
                 if (score < beta) {
                     beta = score;
                     bestPath = new ArrayList<Move>(child.trace);
-                    bestPath.add(move);
+                    bestPath.addFirst(move);
                 }
             }
         }
