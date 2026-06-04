@@ -123,7 +123,7 @@ public class Negamax {
                     context.incrementHistoryHeuristic(move, depth);
                 }
                 if (SearchControlParameters.TRANSPOSITION_TABLE_ACTIVE) {
-                    transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, beta, Bound.LOWER, null));
+                    transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, beta, Bound.LOWER, bestPath));
                 }
 //                System.out.println("Beta-Cutoff");
                 return new SearchResult(bestScore, new ArrayList<>());
