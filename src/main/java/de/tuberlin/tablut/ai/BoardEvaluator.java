@@ -12,7 +12,7 @@ public final class BoardEvaluator {
     private static final int KING_DANGER_WEIGHT = 1500;
     private static final int MOBILITY_WEIGHT = 4;
     private static final int TWO_OPEN_CORNERS_FOR_KING = 10_000;
-    public static final int HISTORY_HEURISTIC_WEIGHT = 1000;
+    public static final int HISTORY_HEURISTIC_WEIGHT = 100;
 
     /*
     Aktuell ist Wertebereich für Score ohne Victory [-4676,4364];
