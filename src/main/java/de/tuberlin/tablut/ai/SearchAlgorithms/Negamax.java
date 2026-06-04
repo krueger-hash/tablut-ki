@@ -123,7 +123,7 @@ public class Negamax {
                     context.incrementHistoryHeuristic(move, depth);
                 }
                 if (SearchControlParameters.TRANSPOSITION_TABLE_ACTIVE) {
-                    transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, beta, Bound.LOWER, null));
+                    transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, beta, Bound.LOWER, bestPath));
                 }
 //                System.out.println("Beta-Cutoff");
                 return new SearchResult(bestScore, new ArrayList<>());
@@ -155,22 +155,48 @@ public class Negamax {
         if (SearchControlParameters.HISTORY_HEURISTICS_ACTIVE) {
             result += context.getHistoryHeuristicScore(move);
         }
+//        TranspositionEntry cached = context.getTranspositionTable().get(state);
+//        if (cached != null) {
+//            if(!cached.getTrace().isEmpty()){
+//                result += cached.getTrace().getFirst() == move ? 30_000 : 0;
+//            }
+//        }
 //        System.out.println("Move:"+move+" - Result:" +result);
 //        System.out.println("Moves without Capture: " + state.movesWithoutCapture);
         return result;
     }
 
     static void sortMoves(Board state, ArrayList<Move> moves, SearchContext context) {
-        Map<Move, Integer> scores = new HashMap<>();
-        for (Move move : moves) {
-            scores.put(move, evalMove(move, state, context));
+        int n = moves.size();
+        if (n < 2) return;
+
+        // Höherer Score zuerst (absteigend). Vorzeichen für sideToMove einmalig einfalten,
+        // damit der Vergleich ein reiner int-Vergleich ohne HashMap-Lookup/Boxing ist.
+        int sign = (MIN_PLAYER == state.sideToMove) ? -1 : 1;
+
+        Move[] moveArr = moves.toArray(new Move[0]);
+        int[] keys = new int[n];
+        for (int i = 0; i < n; i++) {
+            keys[i] = sign * evalMove(moveArr[i], state, context);
         }
 
-        //Zugsortierung absteigend
-        moves.sort(
-                Comparator.comparingInt(
-                        ((Move move) -> MIN_PLAYER == state.sideToMove ? -scores.get(move) : scores.get(move))
-                ).reversed()
-        );
+        // Insertion-Sort absteigend nach key: stabil, allokationsfrei und schnell für
+        // die kleinen Zuglisten (Move Ordering in Schach-Engines macht das genauso).
+        for (int i = 1; i < n; i++) {
+            Move m = moveArr[i];
+            int k = keys[i];
+            int j = i - 1;
+            while (j >= 0 && keys[j] < k) {
+                moveArr[j + 1] = moveArr[j];
+                keys[j + 1] = keys[j];
+                j--;
+            }
+            moveArr[j + 1] = m;
+            keys[j + 1] = k;
+        }
+
+        for (int i = 0; i < n; i++) {
+            moves.set(i, moveArr[i]);
+        }
     }
 }
