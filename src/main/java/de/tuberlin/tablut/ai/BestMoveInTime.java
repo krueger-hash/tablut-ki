@@ -15,9 +15,16 @@ public class BestMoveInTime {
     @Getter
     private SearchReport finalReport;
 
+    private SearchFunction searchFunction;
+
     public BestMoveInTime(Board originalState, int msTime) {
+        this(originalState, msTime, BestMoveInTime::negamaxSearch);
+    }
+
+    public BestMoveInTime(Board originalState, int msTime, SearchFunction search) {
         this.originalState = Board.deepCopy(originalState);
         this.msTime = msTime;
+        this.searchFunction = search;
     }
 
     // TODO: getter methods for other search algorithms e.g. minimax
@@ -26,7 +33,7 @@ public class BestMoveInTime {
         finalReport = searchInTime(
                 originalState,
                 msTime,
-                BestMoveInTime::negamaxSearch
+                searchFunction
         );
         return finalReport.bestMove();
     }
