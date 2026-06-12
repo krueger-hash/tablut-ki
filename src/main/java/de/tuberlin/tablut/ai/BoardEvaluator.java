@@ -59,9 +59,9 @@ public final class BoardEvaluator {
         /// Terminale Scores (Material, Mobility)
         //////////////////////////////////////////////////////
         // Stalemate ist terminal, da die KI sich das trotzdem erarbeiten muss
-        if(board.isStalemate()){
-            return 0;
-        }
+//        if(board.isStalemate()){
+//            return 0;
+//        }
         // Siegbedingungen additiv, damit die KI bei erkannter Niederlage trotzdem weiterhin die besten Züge probiert
         if(board.hasBlackWon()){
             score += WIN_SCORE;

@@ -32,6 +32,7 @@ public class PerformanceTestSearchByConfiguration {
         System.out.println("\nNegamax mit Zugsortierung (Ohne History-Heuristics)");
         performanceTestByConfiguration(true, false, true, false, false);
 
+
 //        3) Negamax mit PVS
         System.out.println("\nNegamx mit PVS");
         performanceTestByConfiguration(false, false, true, false, true);
@@ -47,7 +48,7 @@ public class PerformanceTestSearchByConfiguration {
 //        6) Negamax mit PVS und Zugsortierung (mit History-Heuristik)
         System.out.println("\nNegamax mit PVS und Zugsortierung (mit History-Heuristik)");
         performanceTestByConfiguration(true, true, true, false, true);
-
+//
 //        7) Negamax mit TT
         System.out.println("\nNegamax mit TT");
         performanceTestByConfiguration(false, false, true, true, false);
@@ -56,10 +57,19 @@ public class PerformanceTestSearchByConfiguration {
         System.out.println("\nNegamax mit TT und Zugsortierung");
         performanceTestByConfiguration(true, true, true, true, false);
 
-//        9) Negamax mit PVS und TT und Zugsortierung
-        System.out.println("\nNegamax mit PVS und TT und Zugsortierung");
+//        9) Negamax mit PVS und TT und Value-Sortierung mit History Heuristic
+        System.out.println("\nNegamax mit PVS und TT und Value-Sortierung mit History Heuristic");
         performanceTestByConfiguration(true, true, true, true, true);
+
+        // Negamax mit PVS und TT ohne Value-Sortierung mit History Heuristic
+        System.out.println("\nNegamax mit PVS und TT ohne Value-Sortierung mit History Heuristic");
+        performanceTestByConfiguration(true, true, false, true, true);
+
+        // Negamax mit PVS und TT und Value-Sortierung ohne History Heuristic
+        System.out.println("\nNegamax mit PVS und TT und Value-Sortierung ohne History Heuristic");
+        performanceTestByConfiguration(true, false, true, true, true);
     }
+
 
     private static void performanceTestByConfiguration(boolean sortMovesActive, boolean historyHeuristicsActive, boolean sortMovesByValue, boolean transpositionTableActive, boolean pvsActive) {
         performanceTestByConfiguration(BestMoveInTime::negamaxSearch, sortMovesActive, historyHeuristicsActive, sortMovesByValue, transpositionTableActive, pvsActive);
@@ -70,12 +80,12 @@ public class PerformanceTestSearchByConfiguration {
         for (String position : positions) {
             Board board = Board.fenToBoard(position);
             // Experiment 1: 1 second limit
-            System.out.println("Experiment 1: 1 second limit");
-            printResult(position, BestMoveInTime.searchInTime(board, ONE_SECOND_MS, search));
-
-            // Experiment 2:, depth 4, 2 minutes limit
-            System.out.println("Experiment 2: depth 4, 2 minutes limit");
-            printResult(position, BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, search));
+//            System.out.println("Experiment 1: 1 second limit");
+//            printResult(position, BestMoveInTime.searchInTime(board, ONE_SECOND_MS, search));
+//
+//            // Experiment 2:, depth 4, 2 minutes limit
+//            System.out.println("Experiment 2: depth 4, 2 minutes limit");
+//            printResult(position, BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, search));
 
             // Experiment 3: 2 minutes limit
 //            System.out.println("Experiment 3: 2 minutes limit");
