@@ -106,7 +106,7 @@ public class AlphaBeta {
         //*Erzeuge alle möglichen Züge
         ArrayList<Move> moves = Board.generateLegalMoves(state, state.sideToMove);
         //Zugsortierung
-        sortMoves(state, moves);
+//        sortMoves(state, moves);
 
         // * Schleife über Kinder
         for (Move move : moves) {

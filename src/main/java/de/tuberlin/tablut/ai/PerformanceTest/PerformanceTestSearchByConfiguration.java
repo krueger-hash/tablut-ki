@@ -20,54 +20,60 @@ public class PerformanceTestSearchByConfiguration {
     private static final int DEPTH_FOUR = 4;
 
     public static void main(String[] args) {
-//        1) AB pur
-        System.out.println("\nAB pur");
-        performanceTestByConfiguration(BestMoveInTime::alphaBetaSearch, false, false, false, false, false);
+//        1) AB pur // sortMoves rauskommentiert ..., sonst ValueSort
+//        System.out.println("\nAB pur");
+//        performanceTestByConfiguration(BestMoveInTime::alphaBetaSearch, false, false, false, false, false);
 
 //        2) Negamax pur
-        System.out.println("\nNegamax pur");
-        performanceTestByConfiguration(false, false, true, false, false);
-
-        // Negamax mit Zugsortierung (Ohne History-Heuristics)
-        System.out.println("\nNegamax mit Zugsortierung (Ohne History-Heuristics)");
-        performanceTestByConfiguration(true, false, true, false, false);
-
-
+        System.out.println("\n2) Negamax pur");
+        performanceTestByConfiguration(false, false, false, false, false);
 //        3) Negamax mit PVS
-        System.out.println("\nNegamx mit PVS");
-        performanceTestByConfiguration(false, false, true, false, true);
-
-//        4) Negamax mit PVS und Transposition Table
-        System.out.println("\nNegamax mit PVS und Transposition Tables");
-        performanceTestByConfiguration(false, false, true, true, true);
-
-//        5) Negamax mit PVS und Zugsortierung (ohne History-Heuristik)
-        System.out.println("\nNegamax mit PVS und Zugsortierung (ohne History-Heuristik)");
+        System.out.println("\n3) Negamax mit PVS");
+        performanceTestByConfiguration(false, false, false, false, true);
+//        4) Negamax mit TT
+        System.out.println("\n4) Negamax mit TT");
+        performanceTestByConfiguration(false, false, false, true, false);
+//        5) Negamax mit ValueSort
+        System.out.println("\n5) Negamax mit ValueSort");
+        performanceTestByConfiguration(true, false, true, false, false);
+//        6) Negamax mit History-Heuristic
+        System.out.println("\n6) Negamax mit History-Heuristic");
+        performanceTestByConfiguration(true, true, false, false, false);
+//        7) Negamax mit PVS + TT
+        System.out.println("\n7) Negamax mit PVS + TT");
+        performanceTestByConfiguration(false, false, false, true, true);
+//        8) Negamax mit PVS + VS
+        System.out.println("\n8) Negamax mit PVS + VS");
         performanceTestByConfiguration(true, false, true, false, true);
-
-//        6) Negamax mit PVS und Zugsortierung (mit History-Heuristik)
-        System.out.println("\nNegamax mit PVS und Zugsortierung (mit History-Heuristik)");
+//        9) Negamax mit PVS + HH
+        System.out.println("\n9) Negamax mit PVS + HH");
+        performanceTestByConfiguration(true, true, false, false, true);
+//        10) Negamax mit TT + VS
+        System.out.println("\n10) Negamax mit TT + VS");
+        performanceTestByConfiguration(true, false, true, true, false);
+//        11) Negamax mit TT + HH
+        System.out.println("\n11) Negamax mit TT + HH");
+        performanceTestByConfiguration(true, true, false, true, false);
+//        12) Negamax mit VS + HH
+        System.out.println("\n12) Negamax mit VS + HH");
+        performanceTestByConfiguration(true, true, true, false, false);
+//        13) Negamax mit PVS + TT + VS
+        System.out.println("\n13) Negamax mit PVS + TT + VS");
+        performanceTestByConfiguration(true, false, true, true, true);
+//        14) Negamax mit PVS + TT + HH
+        System.out.println("\n14) Negamax mit PVS + TT + HH");
+        performanceTestByConfiguration(true, true, false, true, true);
+//        15) Negamax mit PVS + VS + HH
+        System.out.println("\n15) Negamax mit PVS + VS + HH");
         performanceTestByConfiguration(true, true, true, false, true);
-//
-//        7) Negamax mit TT
-        System.out.println("\nNegamax mit TT");
-        performanceTestByConfiguration(false, false, true, true, false);
-
-//        8) Negamax mit TT und Zugsortierung
-        System.out.println("\nNegamax mit TT und Zugsortierung");
+//        16) Negamax mit TT + VS + HH
+        System.out.println("\n16) Negamax mit TT + VS + HH");
         performanceTestByConfiguration(true, true, true, true, false);
-
-//        9) Negamax mit PVS und TT und Value-Sortierung mit History Heuristic
-        System.out.println("\nNegamax mit PVS und TT und Value-Sortierung mit History Heuristic");
+//        17) Negamax mit PVS + TT + VS + HH
+        System.out.println("\n17) Negamax mit PVS + TT + VS + HH");
         performanceTestByConfiguration(true, true, true, true, true);
 
-        // Negamax mit PVS und TT ohne Value-Sortierung mit History Heuristic
-        System.out.println("\nNegamax mit PVS und TT ohne Value-Sortierung mit History Heuristic");
-        performanceTestByConfiguration(true, true, false, true, true);
 
-        // Negamax mit PVS und TT und Value-Sortierung ohne History Heuristic
-        System.out.println("\nNegamax mit PVS und TT und Value-Sortierung ohne History Heuristic");
-        performanceTestByConfiguration(true, false, true, true, true);
     }
 
 

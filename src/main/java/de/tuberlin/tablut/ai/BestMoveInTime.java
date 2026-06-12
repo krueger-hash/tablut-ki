@@ -31,9 +31,9 @@ public class BestMoveInTime {
     PrincipalVariation search = new PrincipalVariation(3);
     public Move getMove() {
         finalReport = searchInTime(
-                originalState,
-                msTime,
-                searchFunction
+                this.originalState,
+                this.msTime,
+                this.searchFunction
         );
         return finalReport.bestMove();
     }
@@ -66,7 +66,7 @@ public class BestMoveInTime {
             if (originalState.sideToMove == BoardEvaluator.MAX_PLAYER && lastCompleted.value() > BoardEvaluator.ASSUME_BLACK_VICTORY_SCORE){ break;}
             if (originalState.sideToMove == BoardEvaluator.MIN_PLAYER && lastCompleted.value() < BoardEvaluator.ASSUME_WHITE_VICTORY_SCORE){ break;}
 
-            // Nicht mehr genug Zeit für weitere Tiefen -
+            // Nicht mehr genug Zeit für weitere Tiefen -> Stop der Suche
             // TODO: besserer Check
             long iterationTime = System.currentTimeMillis() - iterationStart;
             long remainingTime = context.getEndTime() - System.currentTimeMillis();
@@ -74,7 +74,7 @@ public class BestMoveInTime {
                 break;
             }
         }
-//        System.out.println("Runtime: "+(System.currentTimeMillis()-start));
+        System.out.println("Runtime: "+(System.currentTimeMillis()-start));
 
         return lastCompleted;
     }
