@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static de.tuberlin.tablut.ai.Board.fenToBoard;
 import static de.tuberlin.tablut.ai.Board.generateLegalMoves;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -215,6 +216,7 @@ public class BoardTest {
                 (1L << 33) | (1L << 35) | (1L << 24), 0,
                 0, 1L << 16
         );
+        board.printBoard();
 
         Move move = new Move(43, 33, Piece.BLACK);
         List<Hit> hits = board.checkHit(move);
@@ -227,6 +229,42 @@ public class BoardTest {
         }
 
         assertTrue(containsKing);
+    }
+    @Test
+    public void testKingCapturedAdjacentToThrone_N() {
+        Board board = fenToBoard("9/9/4b4/4Kb3/3b5/9/9/9/9 b 0");
+//        board.printBoard();
+
+        Move move = new Move(43, 33, Piece.BLACK);
+        board.makeMove(move);
+        assertEquals(0,board.whiteKing.bitCount());
+    }
+    @Test
+    public void testKingCapturedAdjacentToThrone_W() {
+        Board board = fenToBoard("9/9/9/3b5/b2K5/3b5/9/9/9 b 0");
+//        board.printBoard();
+
+        Move move = new Move(40, 42, Piece.BLACK);
+        board.makeMove(move);
+        assertEquals(0,board.whiteKing.bitCount());
+    }
+    @Test
+    public void testKingCapturedAdjacentToThrone_E() {
+        Board board = fenToBoard("9/9/9/5b3/5K2b/5b3/9/9/9 b 0");
+//        board.printBoard();
+
+        Move move = new Move(48, 46, Piece.BLACK);
+        board.makeMove(move);
+        assertEquals(0,board.whiteKing.bitCount());
+    }
+    @Test
+    public void testKingCapturedAdjacentToThrone_S() {
+        Board board = fenToBoard("9/9/9/9/9/3bKb3/b/9/9 b 0");
+//        board.printBoard();
+
+        Move move = new Move(60, 64, Piece.BLACK);
+        board.makeMove(move);
+        assertEquals(0,board.whiteKing.bitCount());
     }
 
     @Test
@@ -820,6 +858,20 @@ public class BoardTest {
         assertEquals(start, b.movesWithoutCapture);
         assertEquals(Piece.WHITE, b.getPieceAt(40));
         assertEquals(Piece.EMPTY, b.getPieceAt(41));
+    }
+
+
+    @Test
+    public void testKingCheckOnThrone(){
+        String fen = "9/9/9/9/b3Kb3/9/9/9/9 b 0";
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+
+        Move testMove = new Move(40,43,Piece.BLACK);
+        testBoard.makeMove(testMove);
+        testBoard.printBoard();
+        assertEquals(1,testBoard.whiteKing.bitCount());
+
     }
 
 }

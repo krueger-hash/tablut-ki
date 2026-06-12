@@ -119,7 +119,7 @@ public final class BoardEvaluator {
     }
 
     //Gibt Index der Position des Königs aus Spanne 0-89
-    private static int findKingPosition(Board board) {
+    public static int findKingPosition(Board board) {
         if (board.whiteKing.low != 0) {
             return Long.numberOfTrailingZeros(board.whiteKing.low);
         }
