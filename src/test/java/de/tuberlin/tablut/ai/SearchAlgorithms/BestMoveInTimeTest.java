@@ -382,4 +382,24 @@ public class BestMoveInTimeTest {
 
     }
 
+    @Test
+    public void testBestMoveInTimeReport_noAssertion(){
+        Board testBoard = Board.fenToBoard("3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0");
+        SearchControlParameters.updateSearchControlParameters(true, true, false, true, true);
+        SearchReport report = BestMoveInTime.searchInTime(testBoard,10_000,BestMoveInTime::negamaxSearch);
+        testBoard.printBoard();
+        System.out.println("Path: "+ report.bestPath());
+        System.out.println("Move: "+ report.bestMove());
+        System.out.println("Depth: "+ report.depth());
+        System.out.println("Value: "+ report.value());
+        System.out.println("Time: "+ report.seconds());
+        for(Move move : report.bestPath()){
+            testBoard.applyMove(move);
+            testBoard.printBoard();
+        }
+        System.out.println(BoardEvaluator.evaluate(testBoard));
+
+
+    }
+
 }
