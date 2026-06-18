@@ -821,6 +821,10 @@ public class Board {
         return new Board(white, whiteKing, black, sideToMove);
     }
 
+    //Ohne Argument wird Startzustand generiert
+    public static Board fenToBoard(){
+        return fenToBoard("3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0");
+    }
     public static Board fenToBoard(String fen){
         String[] parts = fen.split(" "); // verschiedene Informationstypen in FEN durch Leerzeichen getrennt (Boardpositionen, wer am Zug ist, 50-Züge Regel)
         if (parts.length < 2) {throw new IllegalArgumentException("FEN unvollständig. Startspieler angegeben?");}
