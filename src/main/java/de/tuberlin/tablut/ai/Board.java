@@ -679,7 +679,7 @@ public class Board {
         else {return false;}
     }
 
-     boolean hasWhiteWon(){
+     public boolean hasWhiteWon(){
         //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. es existiert ein gesetztes Bit
         int bitCount = Bitboard90.and(whiteKing, BLOCKED_PIECES).bitCount();
         if (bitCount == 1) {
@@ -691,7 +691,7 @@ public class Board {
     }
 
     // Repetion and 50-move Rule probably should be counted by the main loop, not within the board class
-    boolean isStalemate() {
+    public boolean isStalemate() {
         if (hasBlackWon() || hasWhiteWon()) {
             return false;
         }
@@ -699,7 +699,7 @@ public class Board {
 //        ensureStalemateTrackingInitialized(); // welchen Sinn hat das hier?; wenn erst hier sichergegangen wird, dass Tracking stattfindet, ist es zu spät, da ggf. der ursprungszug fehlt
 
         // *50 Zuege (bzw. 100 Halbzüge) ohne geschlagene Figur;
-        if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
+            if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
 //            System.out.println("Stalemate durch 50 Züge Regel");
             return true;
         }
@@ -891,8 +891,7 @@ public class Board {
     //Funktion gibt ein das Board zurück, das nach einem Move entsteht. ZugSpieler werden durch Auslesen der Klassenattribute geupdatet.
     public static Board boardAfterMove(Board board, Move move){
         Board newBoard = deepCopy(board);
-        newBoard.applyMove(move);
-        newBoard.sideToMove = Board.oppositeSide(board.sideToMove);
+        newBoard.makeMove(move);
         return newBoard;
     }
 
