@@ -16,6 +16,8 @@ public class PerformanceTestSearch {
     private static final int DEPTH_FOUR = 4;
     private static final int PRACTICAL_MAX_DEPTH = 1_000;
 
+    //
+
     public static void main(String[] args) {
         List<String> defaultPositions = List.of(
                 "3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0 1",

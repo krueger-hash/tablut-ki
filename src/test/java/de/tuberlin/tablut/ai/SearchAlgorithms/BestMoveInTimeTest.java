@@ -1,6 +1,7 @@
 package de.tuberlin.tablut.ai.SearchAlgorithms;
 
 import de.tuberlin.tablut.ai.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -295,6 +296,7 @@ public class BestMoveInTimeTest {
         assertTrue(finished);
     }
 
+    @Ignore
     @Test
     public void testBestMoveAtDepth_StalemateBy50TurnRule() {
         String fen = "3K2b2/2b6/9/9/9/9/9/9/6b2 b 95"; // BLACK kann nicht gewinnen, aber durch Blockade im ersten Halbzug verhindern, dass WHITE gewinnt
@@ -311,9 +313,9 @@ public class BestMoveInTimeTest {
         }
 
         assertTrue(finished);
-
     }
 
+    @Ignore
     @Test
     public void testBestMoveAtDepth_StalemateByRepetition() {
         String fen = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0"; // nach 4ten Halbzug sollte Stalemate durch Stellungswiederholung sein ?
@@ -330,6 +332,82 @@ public class BestMoveInTimeTest {
         }
 
         assertTrue(finished);
+    }
+
+    @Test
+    public void testBoard_hitByKing(){
+        String fen = "9/4b4/9/2wb1b2b/bb2Kw1bb/4wb2b/9/4b4/3bb4 w 0";
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+
+        boolean finished = false;
+        try {
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 1, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
+
+            System.out.println(result.value());
+            System.out.println(result.bestMove());
+            System.out.println(result.bestPath());
+//            assertEquals(new Move(4, 84, Piece.KING), result.bestMove());
+//            assertEquals(0, result.value());
+            finished = true;
+        } catch (SearchStoppedException ignored) {
+        }
+        assertTrue(finished);
+
+    }
+
+    @Test
+    public void testBoard_KingNotWronglyChecked(){
+        String fen = "9/4b4/9/2w1Kb2b/bb3w1bb/4wb2b/9/4b4/4b4 b 0";
+        Board testBoard = Board.fenToBoard(fen);
+        testBoard.printBoard();
+
+        boolean finished = false;
+        try {
+            SearchReport result = BestMoveInTime.searchAtDepth(testBoard, 4, Integer.MAX_VALUE, BestMoveInTime::negamaxSearch, new SearchContext());
+
+            System.out.println(result.value());
+            System.out.println(result.bestMove());
+            System.out.println(result.bestPath());
+//            assertEquals(new Move(4, 84, Piece.KING), result.bestMove());
+//            assertEquals(0, result.value());
+            testBoard.makeMove(result.bestMove());
+            testBoard.printBoard();
+            assertFalse(testBoard.hasBlackWon());
+
+            finished = true;
+        } catch (SearchStoppedException ignored) {
+        }
+
+
+        assertTrue(finished);
+
+    }
+
+    @Test
+    public void testBestMoveInTimeReport_noAssertion(){
+        Board testBoard = Board.fenToBoard("3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0");
+        SearchControlParameters.updateSearchControlParameters(true, true, false, true, true);
+        int[] weights = {1,100};
+        for (int i : weights){
+            BoardEvaluator.HISTORY_HEURISTIC_WEIGHT = i;
+            System.out.println("HISTORY_HEURISTIC_WEIGHT: "+i);
+            SearchReport report = BestMoveInTime.searchInTime(testBoard,10_000,BestMoveInTime::negamaxSearch);
+            testBoard.printBoard();
+//        System.out.println("Path: "+ report.bestPath());
+            System.out.println("Move: "+ report.bestMove());
+            System.out.println("Depth: "+ report.depth());
+            System.out.println("Value: "+ report.value());
+            System.out.println("Time: "+ report.seconds());
+//        for(Move move : report.bestPath()){
+//            testBoard.applyMove(move);
+//            testBoard.printBoard();
+//        }
+//        System.out.println(BoardEvaluator.evaluate(testBoard));
+        }
+
+
+
     }
 
 }

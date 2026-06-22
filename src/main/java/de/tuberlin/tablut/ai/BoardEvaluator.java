@@ -12,7 +12,7 @@ public final class BoardEvaluator {
     private static final int KING_DANGER_WEIGHT = 1500;
     private static final int MOBILITY_WEIGHT = 4;
     private static final int TWO_OPEN_CORNERS_FOR_KING = 10_000;
-    public static final int HISTORY_HEURISTIC_WEIGHT = 1000;
+    public static int HISTORY_HEURISTIC_WEIGHT = 1;
 
     /*
     Aktuell ist Wertebereich für Score ohne Victory [-4676,4364];
@@ -59,9 +59,9 @@ public final class BoardEvaluator {
         /// Terminale Scores (Material, Mobility)
         //////////////////////////////////////////////////////
         // Stalemate ist terminal, da die KI sich das trotzdem erarbeiten muss
-        if(board.isStalemate()){
-            return 0;
-        }
+//        if(board.isStalemate()){
+//            return 0;
+//        }
         // Siegbedingungen additiv, damit die KI bei erkannter Niederlage trotzdem weiterhin die besten Züge probiert
         if(board.hasBlackWon()){
             score += WIN_SCORE;
@@ -119,7 +119,7 @@ public final class BoardEvaluator {
     }
 
     //Gibt Index der Position des Königs aus Spanne 0-89
-    private static int findKingPosition(Board board) {
+    public static int findKingPosition(Board board) {
         if (board.whiteKing.low != 0) {
             return Long.numberOfTrailingZeros(board.whiteKing.low);
         }
