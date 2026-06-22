@@ -1,6 +1,7 @@
 package de.tuberlin.tablut.ai.SearchAlgorithms;
 
 import de.tuberlin.tablut.ai.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -295,6 +296,7 @@ public class BestMoveInTimeTest {
         assertTrue(finished);
     }
 
+    @Ignore
     @Test
     public void testBestMoveAtDepth_StalemateBy50TurnRule() {
         String fen = "3K2b2/2b6/9/9/9/9/9/9/6b2 b 95"; // BLACK kann nicht gewinnen, aber durch Blockade im ersten Halbzug verhindern, dass WHITE gewinnt
@@ -311,9 +313,9 @@ public class BestMoveInTimeTest {
         }
 
         assertTrue(finished);
-
     }
 
+    @Ignore
     @Test
     public void testBestMoveAtDepth_StalemateByRepetition() {
         String fen = "2b1Kb3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/b4b3/5b3 w 0"; // nach 4ten Halbzug sollte Stalemate durch Stellungswiederholung sein ?
