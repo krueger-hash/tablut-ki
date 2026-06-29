@@ -10,6 +10,7 @@ public class MCTS_search {
 
     MCTS_node root;
     Board rootBoard;
+    MAST mast = new MAST();
 
     /// Für Weiterverwendung des Baums sinnvoll?
     ArrayList<MCTS_node> visitedStates; // Besser als Zobrist-List? /Nutzen, um Knoten mit Rollout zu tracken?
@@ -17,7 +18,7 @@ public class MCTS_search {
     MCTS_search(Board state){
         Board copy = Board.deepCopy(state);
         this.rootBoard = copy;
-        this.root = new MCTS_node(null,null, copy);
+        this.root = new MCTS_node(null,null, copy, mast);
     }
 
 
@@ -69,7 +70,7 @@ public class MCTS_search {
             //Board manuell updaten, wenn es nicht schon im Baum ist
             rootBoard.makeMove(myMove);
             rootBoard.makeMove(opponentMove);
-            this.root = new MCTS_node(null,null, rootBoard);
+            this.root = new MCTS_node(null,null, rootBoard, this.mast);
         }
     }
 
