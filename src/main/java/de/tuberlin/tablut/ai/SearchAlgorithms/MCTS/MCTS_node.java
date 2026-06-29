@@ -20,7 +20,8 @@ public class MCTS_node {
     int timesVisited;
     boolean isTerminal; // Knoten ohne Expansion sind terminal => initialisiert mit true; nach Aufruf von 'expand' -> false
     Move moveToThis;
-
+    int progressiveBiasHeuristic;
+    MAST mast;
 
 
     //Baumstruktur
@@ -30,14 +31,17 @@ public class MCTS_node {
     ArrayList<MCTS_node> children;
     List<Move> movesForExpansion;
 
-    MCTS_node(MCTS_node parent, Move moveToThis, Board gameState) {
+    MCTS_node(MCTS_node parent, Move moveToThis, Board gameState, MAST mast) {
         this.parent = parent;
         this.moveToThis = moveToThis;
         this.score = 0;
         this.timesVisited = 0;
         this.isTerminal = true;
+        this.mast = mast;
 
         this.children = new ArrayList<MCTS_node>();
+
+        this.progressiveBiasHeuristic = MCTS_Evaluator.boardScore(gameState);
 
         if (gameState.gameIsEnd()) {
             movesForExpansion = new ArrayList<>();
@@ -45,6 +49,7 @@ public class MCTS_node {
             movesForExpansion = Board.generateLegalMoves(gameState, gameState.sideToMove);
         }
     }
+
     // a -> b -> c ->
     // generierung
     // zufälliger zug
@@ -55,7 +60,7 @@ public class MCTS_node {
         if (this.score != 0 || this.timesVisited != 0) {
             throw new RuntimeException("Rollout for Node that was already rolled out!");
         }
-        int newScore = SimulateNode.randomMoves(gameState); // BoardEvaluator.evaluate(gameState);
+        int newScore = SimulateNode.simulateMAST(gameState, this.mast); // BoardEvaluator.evaluate(gameState);
         this.backprop(newScore);
         return;
     }
@@ -64,6 +69,7 @@ public class MCTS_node {
         this.score += score;
         this.timesVisited += 1;
         if (this.parent != null) {
+            mast.update(this.moveToThis, score);
             this.parent.backprop(score);
         }
         return;
@@ -98,6 +104,8 @@ public class MCTS_node {
         double bestUCT;
         try {
             bestUCT = bestChild.calcUCT(isMax);
+            bestUCT += calcProgressiveBias();
+
         } catch (NodeNotRolledOutException e) {
             return bestChild;
         }
@@ -107,6 +115,7 @@ public class MCTS_node {
             double uct;
             try {
                 uct = node.calcUCT(isMax);
+                uct += calcProgressiveBias();
             } catch (NodeNotRolledOutException e) {
                 return node;
             }
@@ -118,14 +127,22 @@ public class MCTS_node {
         return bestChild;
     }
 
+    int calcProgressiveBias() {
+        if (MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE) {
+            return this.progressiveBiasHeuristic / (this.timesVisited + 1);
+        } else {
+            return 0;
+        }
+    }
+
     void expand(Board gameState) {
         Move move = this.movesForExpansion.removeFirst();
         gameState.makeMove(move);
         this.children.add(
                 //BoardAfterMove arbeitet mit Kopien!
-                new MCTS_node(this, move, gameState)
+                new MCTS_node(this, move, gameState, this.mast)
         );
-        if(movesForExpansion.isEmpty()){
+        if (movesForExpansion.isEmpty()) {
             this.isTerminal = false;
         }
     }
