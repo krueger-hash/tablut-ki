@@ -10,14 +10,41 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
 
+import de.tuberlin.tablut.ai.SearchAlgorithms.MCTS.MCTS_search;
+
 public class TablutRandomGameLoop {
     private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_PORT = 5000;
     private static final String DEFAULT_LOBBY = "game1";
+    private static final SearchType DEFAULT_SEARCH = SearchType.NEGAMAX;
     private static final Random RANDOM = new Random();
+
+    // Which search algorithm this client uses to pick its moves
+    public enum SearchType {
+        NEGAMAX,
+        MCTS;
+
+        static SearchType fromString(String value) {
+            if (value == null) {
+                return DEFAULT_SEARCH;
+            }
+            return switch (value.trim().toLowerCase(Locale.ROOT)) {
+                case "mcts" -> MCTS;
+                case "negamax" -> NEGAMAX;
+                default -> throw new IllegalArgumentException("Unknown search algorithm: " + value
+                        + " (expected 'negamax' or 'mcts')");
+            };
+        }
+    }
 
     private Board board = new Board();
     private Player localPlayer = Player.BLACK;
+    private SearchType searchType = DEFAULT_SEARCH;
+
+    // Persistent MCTS tree so we can reuse the subtree across moves (updateRoot)
+    private MCTS_search mcts;
+    private Move lastOwnMove;          // our previous move (one ply down in the MCTS tree)
+    private Move lastOpponentMove;     // opponent's most recent move (set in playGame)
 
 
     private static final int EXPECTED_MOVES = 60; // Total expected moves by current player in the entire game
@@ -40,6 +67,8 @@ public class TablutRandomGameLoop {
     }
 
     public void connectAndPlay(ClientOptions options) throws IOException, InterruptedException {
+        this.searchType = options.searchType;
+        System.out.println("Using search algorithm: " + this.searchType);
         try (Socket socket = new Socket(options.host, options.port);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
@@ -195,6 +224,8 @@ public class TablutRandomGameLoop {
                 );
                 // apply opponent move
                 board.makeMove(opponentMove);
+                // remember it so MCTS can advance its tree root before the next search
+                lastOpponentMove = opponentMove;
                 System.out.println("Opponent Player");
                 board.printBoard();
                 System.out.println("Opponent played " + line.substring("move ".length()));
@@ -226,7 +257,7 @@ public class TablutRandomGameLoop {
 
     private void playMove(BufferedWriter out, BufferedReader in, Board board) throws IOException{
         long moveBudgetMs = calculateMoveBudgetMs();
-        Move move = new BestMoveInTime(Board.deepCopy(board), (int)moveBudgetMs).getMove();
+        Move move = computeMove(board, moveBudgetMs);
 
         System.out.println("Our Calculated Best Move: "+ move);
         int[] indices = Move.moveToIndizes(move);
@@ -241,8 +272,11 @@ public class TablutRandomGameLoop {
             throw new IOException("Server rejected generated move " + moveMessage + ": " + response);
         }
         // parse the new time
-        parseConfigLine(response);
-
+//        parseConfigLine(response);
+        String[] parts = response.split(" ");
+        if (parts.length >= 2 && "time".equals(parts[0])) {
+            remainingMs = (long) (Double.parseDouble(parts[1]) * 1000);
+        }
         System.out.println("New Time Account: " + remainingMs + " ms");
 //        expectCommand(response, "time");
 
@@ -250,6 +284,31 @@ public class TablutRandomGameLoop {
 
         System.out.println("New Board After Our Move");
         board.printBoard();
+    }
+
+    // Compute the move with the configured search algorithm
+    private Move computeMove(Board board, long moveBudgetMs) {
+        return switch (searchType) {
+            case MCTS -> computeMctsMove(board, moveBudgetMs);
+            case NEGAMAX -> new BestMoveInTime(Board.deepCopy(board), (int) moveBudgetMs).getMove();
+        };
+    }
+
+    // Reuse the MCTS tree between moves: advance the root by (our last move, opponent's reply)
+    // before searching, instead of rebuilding the tree from scratch every turn.
+    private Move computeMctsMove(Board board, long moveBudgetMs) {
+        if (mcts == null) {
+            // First own move: build the tree from the current position.
+            mcts = new MCTS_search(Board.deepCopy(board));
+        } else {
+            // We have searched before; the tree root is the position before our last move.
+            // Descend our last move and the opponent's reply to reach the current position.
+            mcts.updateRoot(lastOwnMove, lastOpponentMove);
+        }
+
+        Move move = mcts.search(moveBudgetMs);
+        lastOwnMove = move;
+        return move;
     }
 
     private void makeRandomMove(BufferedReader in, BufferedWriter out) throws IOException {
@@ -350,13 +409,15 @@ public class TablutRandomGameLoop {
         final String lobbyName;
         final boolean createLobby;
         final String token;
+        final SearchType searchType;
 
-        private ClientOptions(String host, int port, String lobbyName, boolean createLobby, String token) {
+        private ClientOptions(String host, int port, String lobbyName, boolean createLobby, String token, SearchType searchType) {
             this.host = host;
             this.port = port;
             this.lobbyName = lobbyName;
             this.createLobby = createLobby;
             this.token = token;
+            this.searchType = searchType;
         }
 
         static ClientOptions fromArgs(String[] args) {
@@ -365,6 +426,7 @@ public class TablutRandomGameLoop {
             String lobby = DEFAULT_LOBBY;
             boolean create = true;
             String token = null;
+            SearchType search = DEFAULT_SEARCH;
 
             for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
@@ -375,6 +437,7 @@ public class TablutRandomGameLoop {
                     case "--create" -> create = true;
                     case "--join" -> create = false;
                     case "--token" -> token = args[++i];
+                    case "--search" -> search = SearchType.fromString(args[++i]);
                     default -> {
                         if (i == 0) {
                             host = arg;
@@ -391,7 +454,7 @@ public class TablutRandomGameLoop {
                 }
             }
 
-            return new ClientOptions(host, port, lobby, create, token);
+            return new ClientOptions(host, port, lobby, create, token, search);
         }
     }
 }

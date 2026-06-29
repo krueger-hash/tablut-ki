@@ -15,7 +15,7 @@ public final class MCTS_Evaluator {
     private static final int[] ESCAPE_SQUARES = {0, 8, 80, 88};
     private static final int[] DIRECTIONS = {-Bitboard90.cols, Bitboard90.cols, -1, 1};
 
-    public static int boardScore(Board board) {
+    public static double boardScore(Board board) {
         int score = 0;
 
         /////////////////////////////////////////////////////7
@@ -59,7 +59,7 @@ public final class MCTS_Evaluator {
 
         // max interval border: [0, 16680]
         // 3_200 + 480 + 10_000 + 3_000 = 16_680
-        return score/16680;
+        return score/16680.00;
     }
 
     private static int materialDifferenceScore(Board board) {

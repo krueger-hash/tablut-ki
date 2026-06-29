@@ -20,7 +20,7 @@ public class MCTS_node {
     int timesVisited;
     boolean isTerminal; // Knoten ohne Expansion sind terminal => initialisiert mit true; nach Aufruf von 'expand' -> false
     Move moveToThis;
-    int progressiveBiasHeuristic;
+    double progressiveBiasHeuristic;
     MAST mast;
 
 
@@ -60,7 +60,12 @@ public class MCTS_node {
         if (this.score != 0 || this.timesVisited != 0) {
             throw new RuntimeException("Rollout for Node that was already rolled out!");
         }
-        int newScore = SimulateNode.simulateMAST(gameState, this.mast); // BoardEvaluator.evaluate(gameState);
+        int newScore;
+        if (MCTS_Control_Parameters.MAST_ACTIVE) {
+            newScore = SimulateNode.simulateMAST(gameState, this.mast);
+        } else {
+            newScore = SimulateNode.randomMoves(gameState);
+        }
         this.backprop(newScore);
         return;
     }
@@ -104,7 +109,7 @@ public class MCTS_node {
         double bestUCT;
         try {
             bestUCT = bestChild.calcUCT(isMax);
-            bestUCT += calcProgressiveBias();
+            bestUCT += calcProgressiveBias(isMax);
 
         } catch (NodeNotRolledOutException e) {
             return bestChild;
@@ -115,7 +120,7 @@ public class MCTS_node {
             double uct;
             try {
                 uct = node.calcUCT(isMax);
-                uct += calcProgressiveBias();
+                uct += calcProgressiveBias(isMax);
             } catch (NodeNotRolledOutException e) {
                 return node;
             }
@@ -127,9 +132,53 @@ public class MCTS_node {
         return bestChild;
     }
 
-    int calcProgressiveBias() {
+    MCTS_node getBestChild(Board gameState) {
+
+        MCTS_node best = this.children.getFirst();
+        double weighted_best = best.normalizeScore();
+        for (MCTS_node node : this.children) {
+            double weighted_node = node.normalizeScore();
+            if (gameState.sideToMove == Player.BLACK) {
+                if (weighted_node > weighted_best) {
+                    best = node;
+                    weighted_best = weighted_node;
+                }
+            } else {
+                if (weighted_node < weighted_best) {
+                    best = node;
+                    weighted_best = weighted_node;
+                }
+            }
+        }
+        return best;
+    }
+
+    public void aboveAverageChildren() {
+        double meanVisited = ((double) this.timesVisited) / this.children.size();
+        System.out.println("###### "+this.nodeToString()+" #######");
+        for (MCTS_node child : this.children) {
+            if (child.timesVisited > meanVisited) {
+                System.out.println(" - "+child.nodeToString());
+            }
+        }
+    }
+
+    double normalizeScore() {
+        double SCORE_BIAS = ((double) this.parent.timesVisited) / this.parent.children.size();
+        double score = this.score * ((double) this.timesVisited) / (this.timesVisited + SCORE_BIAS);
+        return score;
+    }
+
+    double calcProgressiveBias(boolean isMax) {
+        double bias;
+        // interval is currently [0,1] - needs adjustment for min player resulting in [-1, 0]
+        if (isMax) {
+            bias = this.progressiveBiasHeuristic;
+        } else {
+            bias = this.progressiveBiasHeuristic - 1;
+        }
         if (MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE) {
-            return this.progressiveBiasHeuristic / (this.timesVisited + 1);
+            return bias / (this.timesVisited + 1);
         } else {
             return 0;
         }
@@ -154,6 +203,15 @@ public class MCTS_node {
             }
         }
         throw new ChildNotFoundException("No fitting Child found");
+    }
+
+    public String nodeToString() {
+        String out = "[ " +
+                "w = " + this.score +
+                ", n = " + this.timesVisited +
+                ", moveToThis = " + this.moveToThis +
+                " ]";
+        return out;
     }
 
     @Override

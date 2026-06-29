@@ -68,6 +68,29 @@ If you already have a server token, pass it with `--token`:
 mvn exec:java "-Dexec.mainClass=de.tuberlin.tablut.ai.Main" "-Dexec.args=--host 127.0.0.1 --port 5000 --lobby game1 --join --token YOUR_TOKEN"
 ```
 
+## Choose The Search Algorithm (MCTS vs. Negamax)
+
+Each client picks its move with a configurable search algorithm via the `--search` flag:
+
+- `--search negamax` — alpha-beta / negamax with iterative deepening (default)
+- `--search mcts` — Monte Carlo Tree Search
+
+To play **MCTS against Negamax**, start the server, then launch two clients in the same lobby.
+
+Client 1 (creates the lobby, plays with MCTS):
+
+```powershell
+mvn exec:java "-Dexec.mainClass=de.tuberlin.tablut.ai.Main" "-Dexec.args=--lobby game1 --create --search mcts"
+```
+
+Client 2 (joins the lobby, plays with Negamax):
+
+```powershell
+mvn exec:java "-Dexec.mainClass=de.tuberlin.tablut.ai.Main" "-Dexec.args=--lobby game1 --join --search negamax"
+```
+
+If `--search` is omitted, the client defaults to `negamax`.
+
 ## Project Structure
 
 - `src/main/java/de.tuberlin.tablut.ai`: application source code
