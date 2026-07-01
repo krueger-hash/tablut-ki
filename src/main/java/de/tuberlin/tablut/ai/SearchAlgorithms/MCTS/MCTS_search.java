@@ -52,10 +52,10 @@ public class MCTS_search {
                 if (current.movesForExpansion.isEmpty()) {
                     // genuine terminal node (game over): nothing to expand,
                     // just re-evaluate and backprop its deterministic result
-                    current.backprop(SimulateNode.simulateMAST(searchBoard, current.mast));
+                    // In den SimulateNode-Methoden wird als Erstes auf Spielende geprüft. Somit wird direkt das Ergebnis hochpropagiert, ohne an dieser Stelle Code duplizieren zu müssen
+                    current.backprop(SimulateNode.randomMoves(searchBoard));
                 } else {
                     current.expand(searchBoard);
-                    current.children.getLast().rollout(searchBoard);
                 }
             }
         }
@@ -74,8 +74,10 @@ public class MCTS_search {
         try {
             //entsprechenden Knoten für resultierendes Board im nächsten Zug finden
             this.root = this.root.findChildWithMove(myMove).findChildWithMove(opponentMove);
-            // verworfenen Teilbaum abtrennen, damit backprop/UCT lokal bleiben
+
+            // verworfenen Teilbaum abtrennen, damit keine unnötige Backprop durchgeführt wird
             this.root.parent = null;
+
         } catch(ChildNotFoundException e){
             //Stellung war noch nicht im Baum -> neue Wurzel aus dem fortgeschrittenen Board
             this.root = new MCTS_node(null,null, rootBoard, this.mast);
@@ -88,8 +90,8 @@ public class MCTS_search {
 
         //MCTS-Baum für Schwarz
         MCTS_search mcts_BLACK = new MCTS_search(board);
-//        mcts_BLACK.root.gameState.printBoard();
-        Move bMove = mcts_BLACK.search(20_000);
+        mcts_BLACK.rootBoard.printBoard();
+        Move bMove = mcts_BLACK.search(1_000);
 //        mcts_BLACK.root.printTree();
         mcts_BLACK.root.aboveAverageChildren();
         System.out.println("### Best Move: "+bMove);

@@ -50,12 +50,6 @@ public class MCTS_node {
         }
     }
 
-    // a -> b -> c ->
-    // generierung
-    // zufälliger zug
-    // anwenden
-    // wechsel seite
-    // weiderholung bis end
     void rollout(Board gameState) {
         if (this.score != 0 || this.timesVisited != 0) {
             throw new RuntimeException("Rollout for Node that was already rolled out!");
@@ -184,16 +178,19 @@ public class MCTS_node {
         }
     }
 
+    /* Expansion eines Knotens:
+        der erste unexplorierte Move wird aus Liste entfernt und simuliert
+        Falls Liste unexplorierte Moves leer ist, verliert der Knoten Terminal-Status
+     */
     void expand(Board gameState) {
         Move move = this.movesForExpansion.removeFirst();
         gameState.makeMove(move);
-        this.children.add(
-                //BoardAfterMove arbeitet mit Kopien!
-                new MCTS_node(this, move, gameState, this.mast)
-        );
+        MCTS_node newChild = new MCTS_node(this, move, gameState, this.mast);
+        this.children.add(newChild);
         if (movesForExpansion.isEmpty()) {
             this.isTerminal = false;
         }
+        newChild.rollout(gameState);
     }
 
     MCTS_node findChildWithMove(Move move) throws ChildNotFoundException {
