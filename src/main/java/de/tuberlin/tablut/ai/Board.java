@@ -596,10 +596,10 @@ public class Board {
         int[] pieceList;
         if(player == Player.WHITE){
             Bitboard90 whitePieces = Bitboard90.or(board.white,board.whiteKing);
-            pieceList = Bitboard90.BitboardToIndexList(whitePieces);
+            pieceList = Bitboard90.bitboardToIndexList(whitePieces);
         }
         else {
-            pieceList = Bitboard90.BitboardToIndexList(board.black);
+            pieceList = Bitboard90.bitboardToIndexList(board.black);
         }
         for (int from : pieceList) {
             // Get the piece type of current position: BLACK; WHITE; WHITE_KING

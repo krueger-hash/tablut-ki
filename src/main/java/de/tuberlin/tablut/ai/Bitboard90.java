@@ -1,7 +1,6 @@
 package de.tuberlin.tablut.ai;
 
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -302,7 +301,7 @@ Grundsätzliche Ideen im Code:
         return row*cols+col;
     }
 
-    static int[] BitboardToIndexList(Bitboard90 board){
+    static int[] bitboardToIndexList(Bitboard90 board){
         int[] indexList = new int[board.bitCount()];
         long lows = board.low;
         int i = 0;
