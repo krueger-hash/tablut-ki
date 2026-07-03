@@ -109,7 +109,7 @@ public class MCTS_node {
         double bestUCT;
         try {
             bestUCT = bestChild.calcUCT(isMax);
-            bestUCT += calcProgressiveBias(isMax);
+            bestUCT += bestChild.calcProgressiveBias(isMax);
 
         } catch (NodeNotRolledOutException e) {
             return bestChild;
@@ -120,7 +120,7 @@ public class MCTS_node {
             double uct;
             try {
                 uct = node.calcUCT(isMax);
-                uct += calcProgressiveBias(isMax);
+                uct += node.calcProgressiveBias(isMax);
             } catch (NodeNotRolledOutException e) {
                 return node;
             }

@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 public class MAST_ENTRY {
     Move action;
-    int mean_reward;
+    double mean_reward;
     int n_played;
 
     public MAST_ENTRY(Move action, int reward) {

@@ -12,7 +12,7 @@ public class MAST {
         return mast.get(move);
     }
 
-    public int getScore(Move move){
+    public double getScore(Move move){
         if(mast.containsKey(move)){
             return mast.get(move).mean_reward;
         }else{
@@ -21,8 +21,9 @@ public class MAST {
     }
 
     public void update(Move move, int reward){
-        if(mast.containsKey(move)){
-            mast.get(move).update(reward);
+        MAST_ENTRY entry = mast.get(move);
+        if(entry != null){
+            entry.update(reward);
         }else{
             mast.put(move, new MAST_ENTRY(move, reward));
         }

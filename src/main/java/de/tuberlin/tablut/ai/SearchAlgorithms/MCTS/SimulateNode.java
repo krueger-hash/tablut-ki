@@ -39,20 +39,45 @@ public class SimulateNode {
             // generiere zug für derzeitigen spieler
             List<Move> moves = Board.generateLegalMoves(board, board.sideToMove);
 
-            double randomNum = Math.random();
-            double[] distribution = gibbsDistribution(moves, mast, board.sideToMove);
-
-            Move currentMove = moves.getFirst();
-
-            for (int i = 0; i < moves.size(); i++) {
-                if (randomNum <= distribution[i]) {
-                    currentMove = moves.get(i);
-                    break;
-                }
-            }
-
+//            double randomNum = Math.random();
+//            double[] distribution = gibbsDistribution(moves, mast, board.sideToMove);
+//
+//            Move currentMove = moves.getFirst();
+//
+//            for (int i = 0; i < moves.size(); i++) {
+//                if (randomNum <= distribution[i]) {
+//                    currentMove = moves.get(i);
+//                    break;
+//                }
+//            }
+//
+//            board.makeMove(currentMove);
+            Move currentMove = sampleMove(moves, mast, board.sideToMove);
             board.makeMove(currentMove);
         }
+    }
+
+    private static final double TAU = 0.5;
+    private static Move sampleMove(List<Move> moves, MAST mast, Player player){
+        int n = moves.size();
+        double sign = (player == Player.WHITE) ? -1 : 1;
+        double total = 0.0;
+        double[] weights = new double[n];
+        // pass 1: exp-weight each move once, accumulate the partition sum
+        for(int i = 0; i < n; i++){
+            double w = Math.exp(sign * mast.getScore(moves.get(i))/TAU);
+            weights[i] = w;
+            total += w;
+        }
+        // pass 2: weighted sample on the unnormalized weights (no cumulative array)
+        double r = Math.random() * total;
+        for (int i = 0; i < n; i++) {
+            r -= weights[i];
+            if (r <= 0) {
+                return moves.get(i);
+            }
+        }
+        return moves.get(n - 1); // guard against float rounding
     }
 
     // [50, 20, 10, 5, 1]
