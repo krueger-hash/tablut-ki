@@ -4,6 +4,7 @@ import de.tuberlin.tablut.ai.Board;
 import de.tuberlin.tablut.ai.Move;
 import de.tuberlin.tablut.ai.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SimulateNode {
@@ -26,38 +27,34 @@ public class SimulateNode {
     }
 
     public static int simulateMAST(Board board, MAST mast) {
+        List<Move> playedMoves = new ArrayList<>();
+        int result;
         while (true) {
             // Terminal Check
             if (board.hasWhiteWon()) {
-                return -1;
+                result = -1;
+                break;
             } else if (board.hasBlackWon()) {
-                return 1;
+                result = 1;
+                break;
             } else if (board.isStalemate()) {
-                return 0;
+                result = 0;
+                break;
             }
 
             // generiere zug für derzeitigen spieler
             List<Move> moves = Board.generateLegalMoves(board, board.sideToMove);
-
-//            double randomNum = Math.random();
-//            double[] distribution = gibbsDistribution(moves, mast, board.sideToMove);
-//
-//            Move currentMove = moves.getFirst();
-//
-//            for (int i = 0; i < moves.size(); i++) {
-//                if (randomNum <= distribution[i]) {
-//                    currentMove = moves.get(i);
-//                    break;
-//                }
-//            }
-//
-//            board.makeMove(currentMove);
             Move currentMove = sampleMove(moves, mast, board.sideToMove);
+            playedMoves.add(currentMove);
             board.makeMove(currentMove);
         }
+        for (Move move : playedMoves) {
+            mast.update(move, result);
+        }
+        return result;
     }
 
-    private static final double TAU = 0.5;
+    private static final double TAU = 0.4;
     private static Move sampleMove(List<Move> moves, MAST mast, Player player){
         int n = moves.size();
         double sign = (player == Player.WHITE) ? -1 : 1;
