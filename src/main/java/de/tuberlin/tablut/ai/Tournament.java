@@ -54,8 +54,8 @@ public class Tournament {
     // --- configuration (overridable via args) ---
     private String host = "127.0.0.1";
     private int port = 5000;
-    private int games = 20;
-    private int timeAccount = 60;
+    private int games = 30;
+    private int timeAccount = 20;
     private int concurrency = 6;
     private String phase = "all";       // all | rr | vs
     private String forcedBest = "";     // skip phase 1 and use this variant for phase 2
