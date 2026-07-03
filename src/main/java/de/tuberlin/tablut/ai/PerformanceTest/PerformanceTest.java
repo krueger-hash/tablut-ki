@@ -47,7 +47,7 @@ public class PerformanceTest {
             Board copy = Board.deepCopy(board);
             copy.makeMove(move);
             // call perft recursively
-            nodes += perft(copy, depth - 1, copy.sideToMove);
+            nodes += perftWithDeepCopy(copy, depth - 1, copy.sideToMove);
         }
         return nodes;
 
