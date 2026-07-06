@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 /**
  * Self-contained tournament orchestrator that runs entirely through the real game server and the
- * existing {@link TablutRandomGameLoop} client.
+ * existing {@link TablutGameLoop} client.
  *
  * <p>Prerequisite: start the game server once and leave it running, e.g.
  * <pre>cd ../Gameserver25 &amp;&amp; uv run python -m gameserver</pre>

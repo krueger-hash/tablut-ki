@@ -13,7 +13,10 @@ import java.util.Random;
 import de.tuberlin.tablut.ai.SearchAlgorithms.MCTS.MCTS_search;
 import de.tuberlin.tablut.ai.SearchAlgorithms.MCTS.MCTS_Control_Parameters;
 
-public class TablutRandomGameLoop {
+/**
+ * Tablut Game Loop to Connect to the Tablut Game Server
+ */
+public class TablutGameLoop {
     private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_PORT = 5000;
     private static final String DEFAULT_LOBBY = "game1";
@@ -71,7 +74,7 @@ public class TablutRandomGameLoop {
         ClientOptions options = ClientOptions.fromArgs(args);
         applyMctsVariant(options.mctsVariant);
         try {
-            new TablutRandomGameLoop().connectAndPlay(options);
+            new TablutGameLoop().connectAndPlay(options);
         } catch (InterruptedException e) {
             e.printStackTrace();
             Thread.currentThread().interrupt();
@@ -112,6 +115,7 @@ public class TablutRandomGameLoop {
                 + ", mast=" + MCTS_Control_Parameters.MAST_ACTIVE + ")");
     }
 
+    // Connects to the server and start the game
     public void connectAndPlay(ClientOptions options) throws IOException, InterruptedException {
         this.searchType = options.searchType;
         this.label = options.label;
@@ -136,6 +140,7 @@ public class TablutRandomGameLoop {
         }
     }
 
+    // authenticate a user
     private void authenticate(BufferedReader in, BufferedWriter out, String token) throws IOException {
         send(out, "gspy");
         expectCommand(read(in), "ok");
@@ -236,14 +241,13 @@ public class TablutRandomGameLoop {
         }
     }
 
-    // main game-loop
+    // Wrapper for main game loop
     private void playGame(BufferedReader in, BufferedWriter out) throws IOException {
         String state = read(in);
         // If server sends start, we are playing BLACK. If server sends wait, we are playing WHITE.
         if ("start".equals(state)) {
             localPlayer = Player.BLACK;
             System.out.println("Playing BLACK and moving first");
-//            makeRandomMove(in, out);
             board.sideToMove = localPlayer;
             playMove(out, in, board);
         } else if ("wait".equals(state)) {
@@ -299,6 +303,7 @@ public class TablutRandomGameLoop {
         }
     }
 
+    // Time management
     public long calculateMoveBudgetMs(){
         int expectedMovesLeft = Math.max(MIN_EXPECTED_MOVES, EXPECTED_MOVES - moveNumber);
         // Reserve a global tail so we never spend the account down to zero on the last move.
@@ -339,13 +344,11 @@ public class TablutRandomGameLoop {
             return;
         }
         // parse the new time
-//        parseConfigLine(response);
         String[] parts = response.split(" ");
         if (parts.length >= 2 && "time".equals(parts[0])) {
             remainingMs = (long) (Double.parseDouble(parts[1]) * 1000);
         }
         System.out.println("New Time Account: " + remainingMs + " ms");
-//        expectCommand(response, "time");
 
         board.makeMove(move);
 
@@ -428,6 +431,7 @@ public class TablutRandomGameLoop {
         return move;
     }
 
+    @Deprecated
     private void makeRandomMove(BufferedReader in, BufferedWriter out) throws IOException {
         ArrayList<Move> moves = Board.generateLegalMoves(board, localPlayer);
         if (moves.isEmpty()) {
@@ -465,7 +469,6 @@ public class TablutRandomGameLoop {
             << set start_pos
             << ok
          */
-        // TODO: also parse other fields later
         String[] parts = line.split(" ", 3);
         if (parts.length < 3) {
             return;

@@ -7,6 +7,9 @@ import de.tuberlin.tablut.ai.Player;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Simulate a node in the MCTS tree
+ */
 public class SimulateNode {
     public static int randomMoves(Board board) {
         while (true) {
@@ -60,13 +63,15 @@ public class SimulateNode {
         double sign = (player == Player.WHITE) ? -1 : 1;
         double total = 0.0;
         double[] weights = new double[n];
-        // pass 1: exp-weight each move once, accumulate the partition sum
+        // Calculate probability weights for each move by using gibbs distribution
         for(int i = 0; i < n; i++){
+            // Calculate gibbs distribution value
             double w = Math.exp(sign * mast.getScore(moves.get(i))/TAU);
             weights[i] = w;
             total += w;
         }
-        // pass 2: weighted sample on the unnormalized weights (no cumulative array)
+        // Make a random roll on weights
+        // Choose a random point within the weight total and find out which partition it was
         double r = Math.random() * total;
         for (int i = 0; i < n; i++) {
             r -= weights[i];
@@ -74,10 +79,12 @@ public class SimulateNode {
                 return moves.get(i);
             }
         }
-        return moves.get(n - 1); // guard against float rounding
+        // fallback if previous loop didn't find a result (rounding errors)
+        return moves.get(n - 1);
     }
 
     // [50, 20, 10, 5, 1]
+    @Deprecated
     private static double[] gibbsDistribution(List<Move> moves, MAST mast, Player player) {
         double tau = 0.5;
         double[] distribution = new double[moves.size()];

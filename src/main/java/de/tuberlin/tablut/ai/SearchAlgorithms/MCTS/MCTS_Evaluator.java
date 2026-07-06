@@ -4,6 +4,10 @@ import de.tuberlin.tablut.ai.Bitboard90;
 import de.tuberlin.tablut.ai.Board;
 import de.tuberlin.tablut.ai.Piece;
 
+/**
+ * Board evaluator for mcts search - copied from base evaluator
+ * A few changes were made - normalize scores with interval [0,1]
+ */
 public final class MCTS_Evaluator {
     private static final int MATERIAL_WEIGHT = 100;
     private static final int KING_DISTANCE_WEIGHT = 30;
@@ -15,11 +19,12 @@ public final class MCTS_Evaluator {
     private static final int[] ESCAPE_SQUARES = {0, 8, 80, 88};
     private static final int[] DIRECTIONS = {-Bitboard90.cols, Bitboard90.cols, -1, 1};
 
+    // Returns normalized board score in interval [0,1]
     public static double boardScore(Board board) {
         int score = 0;
 
         /////////////////////////////////////////////////////7
-        /// Allgemeine Scores (Material, Mobility)
+        /// Allgemeine Scores (Material)
         //////////////////////////////////////////////////////
         score += materialDifferenceScore(board);
 

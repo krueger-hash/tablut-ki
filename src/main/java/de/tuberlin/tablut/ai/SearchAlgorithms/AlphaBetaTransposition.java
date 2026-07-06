@@ -11,6 +11,10 @@ import de.tuberlin.tablut.ai.SearchAlgorithms.TranspositionTable.TranspositionTa
 
 import java.util.*;
 
+/**
+ * @deprecated Now contained in negamax search and further developed
+ */
+@Deprecated
 public class AlphaBetaTransposition extends AlphaBeta{
 
     private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;

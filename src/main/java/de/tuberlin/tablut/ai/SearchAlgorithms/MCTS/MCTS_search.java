@@ -6,14 +6,17 @@ import de.tuberlin.tablut.ai.Piece;
 
 import java.util.ArrayList;
 
+/**
+ * MCTS Search Algorithm
+ */
 public class MCTS_search {
 
+    // Root node of the search tree
     MCTS_node root;
+    // Board of the root node
     Board rootBoard;
+    // Mast heuristics shared by all nodes for the entire search
     MAST mast = new MAST();
-
-    /// Für Weiterverwendung des Baums sinnvoll?
-    ArrayList<MCTS_node> visitedStates; // Besser als Zobrist-List? /Nutzen, um Knoten mit Rollout zu tracken?
 
     public MCTS_search(Board state){
         Board copy = Board.deepCopy(state);
@@ -21,15 +24,12 @@ public class MCTS_search {
         this.root = new MCTS_node(null,null, copy, mast);
     }
 
-
-    /// Wie sorgt man dafür, dass Baum wiederverwendbar bleibt?
     // Ursprungsboard als Parameter, damit für verschiedene Stellungen gesucht werden kann
     public Move search(long timeLimit_ms){
 
         // Zeitbegrenzung für Suche
         long stopTime = System.currentTimeMillis() + timeLimit_ms;
 
-        //Wurzel initialisieren => jetzt im Konstruktor und als Instanzvariable für Wiederverwendbarkeit
 
         //Schleife über Suchbaum mit UCT
         while(System.currentTimeMillis() < stopTime){
@@ -61,7 +61,6 @@ public class MCTS_search {
         }
 
         //Rückgabe bei Zeitablauf
-//        return this.root.getChildBestUCT(rootBoard).moveToThis;
         return this.root.getBestChild(rootBoard).moveToThis;
     }
 

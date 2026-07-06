@@ -8,6 +8,10 @@ import de.tuberlin.tablut.ai.Move;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Performance Test for Search Algorithms - Evaluates Performance with 3 experiments
+ * Milestone 2/3
+ */
 public class PerformanceTestSearch {
     private static final int ALPHA_INIT = -1_000_000;
     private static final int BETA_INIT = 1_000_000;
@@ -16,8 +20,6 @@ public class PerformanceTestSearch {
     private static final int DEPTH_FOUR = 4;
     private static final int PRACTICAL_MAX_DEPTH = 1_000;
 
-    //
-
     public static void main(String[] args) {
         List<String> defaultPositions = List.of(
                 "3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0 1",
@@ -25,15 +27,10 @@ public class PerformanceTestSearch {
                 "3K2b2/2b6/9/9/9/9/9/9/6b2 b 45"
         );
 
-//        for (String fen : defaultPositions) {
-//            printExperiment1(fen);
-//            printExperiment2(fen);
-//            printExperiment3(fen);
-//        }
         Board board = Board.fenToBoard(defaultPositions.get(0));
         int time = 10_000;
-        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, time, PerformanceTestSearch::alphaBetaSearch));
-        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, time, AlphaBetaTransposition::search));
+//        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, time, PerformanceTestSearch::alphaBetaSearch));
+//        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, time, AlphaBetaTransposition::search));
         printTimedResult("Negamax PVS TT", BestMoveInTime.searchInTime(board, time, BestMoveInTime::negamaxSearch));
         printExperiment2(defaultPositions.getFirst());
     }
@@ -45,9 +42,10 @@ public class PerformanceTestSearch {
         System.out.println();
         System.out.println("Experiment 1 - 1s search");
         System.out.println("Position: " + fen);
-        printTimedResult("Minimax", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, Minimax::minimaxSearch));
-        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, PerformanceTestSearch::alphaBetaSearch));
-        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, AlphaBetaTransposition::search));
+//        printTimedResult("Minimax", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, Minimax::minimaxSearch));
+//        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, PerformanceTestSearch::alphaBetaSearch));
+//        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, AlphaBetaTransposition::search));
+        printDepthResult("Negamax PVS TT", BestMoveInTime.searchInTime(board, ONE_SECOND_MS, BestMoveInTime::negamaxSearch));
     }
 
     // Experiment 2:
@@ -58,8 +56,8 @@ public class PerformanceTestSearch {
         System.out.println("Experiment 2 - depth 4, max 2min");
         System.out.println("Position: " + fen);
 //        printDepthResult("Minimax", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, Minimax::minimaxSearch));
-        printDepthResult("Alpha-Beta", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
-        printDepthResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, AlphaBetaTransposition::search));
+//        printDepthResult("Alpha-Beta", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
+//        printDepthResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, AlphaBetaTransposition::search));
         printDepthResult("Negamax PVS TT", BestMoveInTime.searchInTime(board, DEPTH_FOUR, TWO_MINUTES_MS, BestMoveInTime::negamaxSearch));
     }
 
@@ -70,9 +68,10 @@ public class PerformanceTestSearch {
         System.out.println();
         System.out.println("Experiment 3 - max 2min search");
         System.out.println("Position: " + fen);
-        printTimedResult("Minimax", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, Minimax::minimaxSearch));
-        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
-        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, AlphaBetaTransposition::search));
+//        printTimedResult("Minimax", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, Minimax::minimaxSearch));
+//        printTimedResult("Alpha-Beta", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, PerformanceTestSearch::alphaBetaSearch));
+//        printTimedResult("Alpha-Beta TT", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, AlphaBetaTransposition::search));
+        printDepthResult("Negamax PVS TT", BestMoveInTime.searchInTime(board, PRACTICAL_MAX_DEPTH, TWO_MINUTES_MS, BestMoveInTime::negamaxSearch));
     }
 
     private static void printTimedResult(String algorithm, SearchReport report) {
@@ -103,6 +102,7 @@ public class PerformanceTestSearch {
         return move == null ? "-" : move.toString();
     }
 
+    @Deprecated
     private static SearchResult alphaBetaSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
         return AlphaBeta.sortedAlphaBetaSearch(board, depth, ALPHA_INIT, BETA_INIT, context);
     }

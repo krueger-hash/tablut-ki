@@ -10,10 +10,11 @@ import java.util.Objects;
 
 @Getter
 @Setter
+/**
+ * Represents a move in the game from one position to another
+ */
 public class Move {
-
     //Das spielfeld wird einfach durchnummeriert, entsprechend den Bits, also von 0 bis 89 von oben links nach unten rechts
-
     int from;
     int to;
     Piece movedPiece;
@@ -31,8 +32,9 @@ public class Move {
         this. movedPiece = moved;
     }
 
-    static Move inputToMove(Board board,int fromCol,int fromRow, int toCol, int toRow){
 
+    // Returns Move-Object based on integer board position, determines moved piece automatically
+    static Move inputToMove(Board board,int fromCol,int fromRow, int toCol, int toRow){
         Piece moved;
         if(Bitboard90.getBitAsMatrix(board.white,fromRow,fromCol)){
             moved = Piece.WHITE;
@@ -46,7 +48,7 @@ public class Move {
         else {
             throw new IllegalArgumentException("No Piece at Position: col="+fromCol+" row="+fromRow);
         }
-        return new Move(fromCol,fromRow,toCol,toRow,moved); // hier ist der alternative Konstruktor genutzt
+        return new Move(fromCol,fromRow,toCol,toRow,moved);
     }
 
     // gibt Ursprung und Ziel des Moves als einen Int Array zur

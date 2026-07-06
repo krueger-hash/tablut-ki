@@ -6,15 +6,12 @@ import de.tuberlin.tablut.ai.BoardEvaluator;
 import java.util.ArrayList;
 import java.util.List;
 
-// Goal: Meassure time in seconds for 10_000 executions of evaluation function
+/**
+ * Meassure time in seconds for 10_000 executions of evaluation function
+ * Milestone 2
+ */
 public class PerformanceTestBoardEvaluator {
     public static void main(String[] args) {
-        // Base Positions:
-        /*
-            stellung 0: 3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0 1 // Startstellung
-            stellung 1: "2b6/9/b1K1b4/9/9/2b6/9/9/9 b 20"; // schwarz gewinnt sicher in 3 Halbzügen, muss aber den ersten Halbzug "korrekt" machen
-            stellung 2: "3K2b2/2b6/9/9/9/9/9/9/6b2 b 45"; //Schwarz kann Sieg von weiß verhindern indem es unentschieden durch Schlaglimit erzwingt.
-         */
 
         String[] positions = {
                 "3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0 1",

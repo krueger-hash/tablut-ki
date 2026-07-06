@@ -13,7 +13,9 @@ public class Board {
     public static final Bitboard90 BLOCKED_PIECES = new Bitboard90(BLOCKED_LOW, BLOCKED_HIGH);
     public static final  Bitboard90 THRONE = new Bitboard90(1L << 44, 0L);
 
+    // max played half-moves without captures
     private static final int STALEMATE_NO_CAPTURE_LIMIT = 100;
+    // repetition count, at which the game is over
     private static final int STALEMATE_REPETITION_LIMIT = 2;
 
     //////////////////////////////////////////////////
@@ -24,18 +26,16 @@ public class Board {
     public Bitboard90 black;
 
     // * Spieler, der am Zug ist
-    public Player sideToMove = Player.BLACK; // In Tablut black (attackers) starts.
+    public Player sideToMove; // In Tablut black (attackers) starts.
 
     // * Anzahl Züge ohne geschlagene Figur
-    public int movesWithoutCapture = 0;
+    public int movesWithoutCapture;
 
     //Stack der Änderungen am Board (insbesondere für Suche wichtig)
     public final Stack<BoardStateChange> boardStateChanges = new Stack<>();
 
-    // * Tracking der vergangenen BoardStates
-    private boolean stalemateTrackingInitialized = false;
-
     private final TablutZobristHasher zobristHasher;
+    // Stores all board positions during a game in a zobrist hash
     private final LongArrayList positionHistory = new LongArrayList();
 
     //Konstruktoren:
@@ -68,10 +68,6 @@ public class Board {
                  Player sideToMove) {
 
         this(white, whiteKing, black, sideToMove,0);
-
-        //default Werte // eigenltich redundant
-        this.movesWithoutCapture = 0;
-//        resetStalemateTracking(sideToMove);
     }
 
     public Board(Bitboard90 white,
@@ -95,21 +91,6 @@ public class Board {
 
         // Add base position to history of played positions
         this.positionHistory.add(positionHash);
-
-        this.stalemateTrackingInitialized = true; // Legacy?
-    }
-
-    void main() {
-        Bitboard90.printBBToConsole(white);
-        System.out.println();
-        Bitboard90.printBBToConsole(whiteKing);
-        System.out.println();
-        Bitboard90.printBBToConsole(black);
-        System.out.println();
-        Bitboard90.printBBToConsole(BLOCKED_PIECES);
-        System.out.println();
-        Bitboard90.printBBToConsole(THRONE);
-        printBoard();
     }
 
     // This method creates a new deep copy of a given board
@@ -121,7 +102,6 @@ public class Board {
                 board.sideToMove
         );
         copy.movesWithoutCapture = board.movesWithoutCapture;
-        copy.stalemateTrackingInitialized = board.stalemateTrackingInitialized;
         copy.positionHistory.clear();
         copy.positionHistory.addAll(board.positionHistory);
         copy.zobristHasher.hashPosition(copy);
@@ -141,9 +121,6 @@ public class Board {
         return Piece.EMPTY;
     }
 
-
-
-    // TODO: makeMove unmakeMove - check if there is another way to pass hits from makeMove to unmakeMove, then to return it from makeMove
     // führt einen kompletten zug aus
     // 1. applyMove
     //2. steine schlagen
@@ -184,24 +161,22 @@ public class Board {
         return;
     }
 
+    /**
+     * Take last move from BoardStateChange stack and undo all of its effects to restore previous state:
+     * - Remove move from zobrist history
+     * - Revert applied hits
+     * - Revert moved pieces
+     * - Restore 50-move rule
+     */
     public void unmakeMove (){
         BoardStateChange change = boardStateChanges.pop();
         List<Hit> hits = change.hits;
         Move move = change.move;
 
-        // Zug entfernen
-//        System.out.println(positionCounts.get(currentPositionKey()));
-//        positionCounts.merge(currentPositionKey(), -1, Integer::sum);
-
+        // Remove move from zobrist hashing history
         positionHistory.removeLong(positionHistory.size() - 1);
 
-
-//        PositionKey key = currentPositionKey();
-//        int newCount = positionCounts.getOrDefault(key, 0) - 1;
-//        if (newCount <= 0) positionCounts.remove(key);
-//        else positionCounts.put(key, newCount);
-//        System.out.println(positionCounts.get(currentPositionKey()));
-
+        // Revert hit pieces
         for (Hit h : hits) {
             switch(h.piece()){
                 case Piece.BLACK:
@@ -215,6 +190,7 @@ public class Board {
             }
         }
 
+        // Revert moved pieces
         switch(move.movedPiece){
             case Piece.BLACK:
                 Bitboard90.removeBit(black, move.to);
@@ -236,6 +212,7 @@ public class Board {
         //Spieler am Zug zurück wechseln
         this.sideToMove = Board.oppositeSide(this.sideToMove);
 
+        // Update hash position for current board state
         this.zobristHasher.updateHashPosition(move, hits);
     }
 
@@ -267,6 +244,7 @@ public class Board {
         }
     }
 
+    // Remove captured pieces
     public void applyHits(List<Hit> hits) {
         if (hits == null || hits.isEmpty()) return;
         for (Hit h : hits) {
@@ -292,14 +270,10 @@ public class Board {
         return hits;
     }
 
+    // Check for captured pieces after move
     public List<Hit> checkHit(Move move) {
-//        System.out.println("Check Hit called");
-
-
         int pos = move.to;
         Piece mover = move.movedPiece;
-
-//        ArrayList<Hit> hits = new ArrayList<>(4);
         List<Hit> hits = Collections.emptyList();
 
         // Vorbereitete Bitboards
@@ -363,7 +337,6 @@ public class Board {
                     if (Bitboard90.getBit(this.black, behind)
                             || Bitboard90.getBit(BLOCKED_PIECES, behind)
                             || (Bitboard90.getBit(THRONE, behind) && throneEmpty)){
-//                        System.out.println("White hit on:"+adj);
                         hits = addHit(hits, new Hit(Piece.WHITE, adj));
                     }
                 }
@@ -373,7 +346,6 @@ public class Board {
                     if(adj != 44 && adj != 34 && adj != 43 && adj != 45 && adj !=54){
                         if (Bitboard90.getBit(this.black, behind)
                                 || Bitboard90.getBit(BLOCKED_PIECES, behind)){
-//                            System.out.println("King hit on:"+adj);
                             hits = addHit(hits, new Hit(Piece.KING, adj));
                         }
                     }
@@ -395,14 +367,10 @@ public class Board {
 
     //pos ist das Zielfeld des Moves
     private ArrayList<Hit> checkKingSpecialCaptures(int pos) {
-//        System.out.println("CheckKingSpecial called");
-
         ArrayList<Hit> hits = new ArrayList<>(2);
 
         // König auf dem Thron (44)
         if (Bitboard90.getBit(whiteKing, 44)) {
-//            System.out.println("King on Throne");
-
             // oben (34)
             if (pos == 24
                     && Bitboard90.getBit(white, 34)
@@ -453,17 +421,13 @@ public class Board {
 
         //König neben dem Thron
         int kingPosition = BoardEvaluator.findKingPosition(this);
-//        System.out.println("Kingposition: "+kingPosition);
         //König oben vom Thron
         if (kingPosition == 34 && (pos == 24 || pos == 33 || pos == 35)){
-//            System.out.println("King über Throne");
-//            System.out.println(Bitboard90.getBit(black, 24)+" "+Bitboard90.getBit(black, 33)+""+Bitboard90.getBit(black, 35));
             if (
                 (Bitboard90.getBit(black, 24) || pos == 24)
                 && (Bitboard90.getBit(black, 33) || pos == 33)
                 && (Bitboard90.getBit(black, 35) || pos == 35)
             ){
-//                System.out.println("hit should be added");
                 hits.add(new Hit(Piece.KING, kingPosition));
             }
         }
@@ -498,33 +462,10 @@ public class Board {
             }
         }
 
-        // König wie normaler Stein (nicht am Thron) // Das war doch auch schon in der normalen Check-Hit drin?
-//        int[] DIR = {-1, +1, -10, +10};
-//        for (int d : DIR) {
-//            int adj = pos + d;
-//            int behind = pos + 2*d;
-//
-//            if (adj < 0 || adj >= 90) continue;
-//            if (behind < 0 || behind >= 90) continue;
-//            if ((adj % 10) == 9) continue;
-//            if ((behind % 10) == 9) continue;
-//
-//            if (!Bitboard90.getBit(whiteKing, adj)) continue;
-//
-//            // König darf NICHT an den 5 Thronfeldern normal geschlagen werden
-//            if (adj == 34 || adj == 43 || adj == 44 || adj == 45 || adj == 54) continue;
-//
-//            if (Bitboard90.getBit(black, behind)
-//                    || Bitboard90.getBit(BLOCKED_PIECES, behind)
-//                    || Bitboard90.getBit(THRONE, behind)) {
-//
-//                hits.add(new Hit(Piece.KING, adj));
-//            }
-//        }
-
         return hits;
     }
 
+    // Returns board state in string format
     @Override
     public String toString() {
         StringBuilder boardString = new StringBuilder();
@@ -585,14 +526,6 @@ public class Board {
         // one row up, one row down, one column left, one column right (n,s,w,e)
         int[] directions = {-Bitboard90.cols, Bitboard90.cols, -1, 1};
 
-//        for (int row = 0; row < Bitboard90.rows; row++) {
-//            for (int col = 0; col < Bitboard90.cols - 1; col++) {
-//                int from = row * Bitboard90.cols + col;
-//                // Select target bitboard based on player
-//                // If a piece from target player is found go further, otherwise continue to the next loop
-//                if (!belongsToPlayer(board, player, from)) {
-//                    continue;
-//                }
         int[] pieceList;
         if(player == Player.WHITE){
             Bitboard90 whitePieces = Bitboard90.or(board.white,board.whiteKing);
@@ -631,13 +564,7 @@ public class Board {
         return moves;
     }
 
-    private static boolean belongsToPlayer(Board board, Player player, int pos) {
-        if (player == Player.BLACK) {
-            return Bitboard90.getBit(board.black, pos);
-        }
-        return Bitboard90.getBit(board.white, pos) || Bitboard90.getBit(board.whiteKing, pos);
-    }
-
+    // Checks if a given move is legal
     private static boolean isLegalMoveTarget(int from, int to, int direction) {
         // Reject indices outside the 9x10 encoded board.
         if (to < 0 || to >= Bitboard90.rows * Bitboard90.cols) {
@@ -657,6 +584,7 @@ public class Board {
         return true;
     }
 
+    // Get piece type for a given position
     private static Piece resolveMovedPiece(Board board, Player player, int from) {
         if (player == Player.BLACK) {
             return Piece.BLACK;
@@ -667,9 +595,7 @@ public class Board {
         return Piece.WHITE;
     }
 
-    //TODO:
-    // Methode zum Überprüfen des Spielendes
-
+    // Checks if game is end
     public boolean gameIsEnd(){
         return (this.hasBlackWon() || this.hasWhiteWon() || this.isStalemate());
     }
@@ -683,8 +609,6 @@ public class Board {
         //Wenn König auf Eckfeld steht, ergibt die verANDung der beiden Bitboards ein nichtleeres Bitboard, d.h. es existiert ein gesetztes Bit
         int bitCount = Bitboard90.and(whiteKing, BLOCKED_PIECES).bitCount();
         if (bitCount == 1) {
-//            System.out.println("White has won.");
-//            this.printBoard();
             return true;
         }
         else {return false;}
@@ -696,28 +620,24 @@ public class Board {
             return false;
         }
 
-//        ensureStalemateTrackingInitialized(); // welchen Sinn hat das hier?; wenn erst hier sichergegangen wird, dass Tracking stattfindet, ist es zu spät, da ggf. der ursprungszug fehlt
-
         // *50 Zuege (bzw. 100 Halbzüge) ohne geschlagene Figur;
             if (movesWithoutCapture >= STALEMATE_NO_CAPTURE_LIMIT) {
-//            System.out.println("Stalemate durch 50 Züge Regel");
             return true;
         }
 
         // *wiederholte Stellung (Zyklenfreiheit),
         if (hasRepeatedCurrentPosition()) {
-//            System.out.println("Stalemate durch wiederholte Stellung");
             return true;
         }
 
         // *kein Zug moeglich
         if (hasNoLegalMovesForSideToMove()){
-//            System.out.println("Stalemate durch 'keine möglichen Züge'");
             return true;
         }
         return false;
     }
 
+    // Checks if a position has occurred in the zobrist history already
     private boolean hasRepeatedCurrentPosition() {
         long currentHash = zobristHasher.getCurrentHash();
         int repetitions = 1;
@@ -734,40 +654,11 @@ public class Board {
         return false;
     }
 
-//    public void resetStalemateTracking(Player sideToMove) {
-//        this.sideToMove = sideToMove;
-//        this.movesWithoutCapture = 0;
-//        this.stalemateTrackingInitialized = false;
-//        this.positionCounts.clear();
-//    }
-
-//    private void ensureStalemateTrackingInitialized() {
-//        if (stalemateTrackingInitialized) {
-//            return;
-//        }
-//        positionCounts.put(this.currentPositionKey(), 1);
-//        stalemateTrackingInitialized = true;
-//    }
-
-//    private void registerMoveForStalemate(Move move, List<Piece> hitPieces) {
-//        if (move == null) {
-//            return;
-//        }
-//
-//        ensureStalemateTrackingInitialized();
-//
-//        boolean captureOccurred = hitPieces != null && !hitPieces.isEmpty();
-//        movesWithoutCapture = captureOccurred ? 0 : movesWithoutCapture + 1;
-//        sideToMove = oppositeSide(move.movedPiece==Piece.BLACK?Player.BLACK:Player.WHITE);
-//
-//        positionCounts.merge(currentPositionKey(), 1, Integer::sum);
-//    }
-
+    // Checks if a player has still legal moves left
     private boolean hasNoLegalMovesForSideToMove() {
         if (sideToMove == Player.BLACK) {
             return generateLegalMoves(this, Player.BLACK).isEmpty();
         }
-//        Bitboard90 whiteSide = Bitboard90.or(white, whiteKing);
         return generateLegalMoves(this, Player.WHITE).isEmpty();
     }
 
@@ -775,10 +666,7 @@ public class Board {
         return side == Player.BLACK ? Player.WHITE : Player.BLACK;
     }
 
-    static Board transformPointString(String pointString) {
-        return transformPointString(pointString, Player.BLACK);
-    }
-
+    @Deprecated
     static Board transformPointString(String pointString, Player sideToMove) {
         if (pointString == null) {
             throw new IllegalArgumentException("pointString must not be null");
@@ -882,25 +770,17 @@ public class Board {
 
         //Return, falls nur sideToMove und Stellung angegeben sind
         return new Board(white, whiteKing, black, sideToMove);
-
-
-
-
     }
 
     //Funktion gibt ein das Board zurück, das nach einem Move entsteht. ZugSpieler werden durch Auslesen der Klassenattribute geupdatet.
+    @Deprecated
     public static Board boardAfterMove(Board board, Move move){
         Board newBoard = deepCopy(board);
         newBoard.makeMove(move);
         return newBoard;
     }
 
-    public boolean isStalemateTrackingInitialized() {
-        return stalemateTrackingInitialized;
-    }
-
     public long getCurrentHash() {
         return zobristHasher.getCurrentHash();
     }
 }
-

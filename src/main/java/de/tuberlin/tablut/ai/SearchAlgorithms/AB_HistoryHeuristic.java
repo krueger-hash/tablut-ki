@@ -7,8 +7,11 @@ import de.tuberlin.tablut.ai.Player;
 
 import java.util.*;
 
+/**
+ * @deprecated Now contained in negamax search and further developed
+ */
+@Deprecated
 public class AB_HistoryHeuristic {
-
     private static final Player maxPlayer = BoardEvaluator.MAX_PLAYER;
     private static final Player minPlayer = BoardEvaluator.MIN_PLAYER;
 

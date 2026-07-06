@@ -6,10 +6,12 @@ import de.tuberlin.tablut.ai.Player;
 
 import java.util.ArrayList;
 
+/**
+ * Performance Test for GenerateLogalMoves - using old deepCopy method and new makeMove/unmakeMove logic
+ * Benchmark for Milestone 1
+ */
 public class PerformanceTest {
     public static void main(String[] args) {
-//        Board base = new Board();
-//        System.out.println(perft(base, 1, Player.BLACK));
         boolean includeOld = false;
         benchmark(includeOld);
     }
@@ -35,6 +37,7 @@ public class PerformanceTest {
     }
 
     // Without piece hit
+    @Deprecated
     public static int perftWithDeepCopy(Board board, int depth, Player player) {
         if (depth == 0) return 1;
 
@@ -50,7 +53,6 @@ public class PerformanceTest {
             nodes += perftWithDeepCopy(copy, depth - 1, copy.sideToMove);
         }
         return nodes;
-
     }
 
 
@@ -101,17 +103,7 @@ public class PerformanceTest {
         }
         long tEnd = System.currentTimeMillis();
         long duration = tEnd - tStart;
-
-//        String output = String.format("perft(%d) - time: %d ms - leafs: %d", depth, duration, leafs);
         String output = String.format("%-10s %-15s%-10s",depth, duration, leafs);
-//                "///////////////////////////////////////////\n"
-//                + "Results:\n"
-//                + "inital Board: "+ fen +"\n"
-//                + "depth: " + depth + "\n"
-//                + "Leafs found: " + leafs +"\n"
-//                + "repetitions: " + repetitions+"\n"
-//                + "time elapsed: " + duration + " ms\n"
-//                + "///////////////////////////////////////////\n";
         return output;
     }
 }

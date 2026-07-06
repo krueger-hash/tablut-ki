@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Transposition table - stores key informations about nodes for the whole search
+ */
 public class TranspositionTable {
 
     @Getter
@@ -15,10 +18,6 @@ public class TranspositionTable {
 
     public TranspositionEntry get(Board board) {
         return transpositionTable.get(key(board));
-    }
-
-    void put(Board board, int depth, int value, Bound bound, List<Move> trace) {
-        transpositionTable.put(key(board), new TranspositionEntry(depth, value, bound, trace));
     }
 
     public TranspositionKey key(Board board) {

@@ -167,7 +167,6 @@ public class BestMoveInTimeTest {
         Board og = Board.fenToBoard(fen);
 
         assertEquals(t.movesWithoutCapture, og.movesWithoutCapture);
-        assertEquals(t.isStalemateTrackingInitialized(), og.isStalemateTrackingInitialized());
         assertEquals(t.white, og.white);
         assertEquals(t.whiteKing, og.whiteKing);
         assertEquals(t.black, og.black);

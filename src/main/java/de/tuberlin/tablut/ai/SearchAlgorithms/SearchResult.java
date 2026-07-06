@@ -5,6 +5,10 @@ import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * Return value of search algorithm
+ * - value and trace for the current node
+ */
 public class SearchResult {
     @Getter
     int value;

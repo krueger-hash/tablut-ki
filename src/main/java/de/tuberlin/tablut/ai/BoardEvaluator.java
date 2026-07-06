@@ -1,5 +1,8 @@
 package de.tuberlin.tablut.ai;
 
+/**
+ * Evaluates board state
+ */
 public final class BoardEvaluator {
     public static final Player MAX_PLAYER = Player.BLACK;
     public static final Player MIN_PLAYER = Player.WHITE;
@@ -8,9 +11,7 @@ public final class BoardEvaluator {
     private static final int MATERIAL_WEIGHT = 100;
     private static final int KING_DISTANCE_WEIGHT = 30;
     private static final int KING_OPEN_ESCAPE_WEIGHT = 2_500;
-    private static final int KING_PRESSURE_WEIGHT = 600;
     private static final int KING_DANGER_WEIGHT = 1500;
-    private static final int MOBILITY_WEIGHT = 4;
     private static final int TWO_OPEN_CORNERS_FOR_KING = 10_000;
     public static int HISTORY_HEURISTIC_WEIGHT = 1;
 
@@ -29,39 +30,16 @@ public final class BoardEvaluator {
     private static final int[] DIRECTIONS = {-Bitboard90.cols, Bitboard90.cols, -1, 1};
 
     // Max_player maximizes the value, Min player minimizes the value
-    public static int evaluate(Board board){
-
+    public static int evaluate(Board board) {
         if (board == null) {
             throw new IllegalArgumentException("board must not be null");
         }
-//        /////////////////////////////////////////////////////7
-//        /// Terminale Scores (Material, Mobility)
-//        //////////////////////////////////////////////////////
-//        // Stalemate ist terminal, da die KI sich das trotzdem erarbeiten muss
-//        if(board.isStalemate()){
-//            return 0;
-//        }
-//        // Siegbedingungen additiv, damit die KI bei erkannter Niederlage trotzdem weiterhin die besten Züge probiert
-//        if(board.hasBlackWon()){
-//            return WIN_SCORE;
-//        }
-//        if(board.hasWhiteWon()){
-//            return -WIN_SCORE;
-//        }
 
-        // Returns the overall score of the current board. Max player maximizes, min player minimizes
-        return boardScore(board);
-    }
-
-    private static int boardScore(Board board) {
         int score = 0;
         /////////////////////////////////////////////////////7
-        /// Terminale Scores (Material, Mobility)
+        /// Spielende Scores
         //////////////////////////////////////////////////////
-        // Stalemate ist terminal, da die KI sich das trotzdem erarbeiten muss
-//        if(board.isStalemate()){
-//            return 0;
-//        }
+        // Stalemate is nicht bewertet - Stalemate ist terminal, da die KI sich das trotzdem erarbeiten muss - Da der AB-Algorithmus versuchen soll das bestmßgliche Stalemate zu erreichen
         // Siegbedingungen additiv, damit die KI bei erkannter Niederlage trotzdem weiterhin die besten Züge probiert
         if(board.hasBlackWon()){
             score += WIN_SCORE;
@@ -70,20 +48,13 @@ public final class BoardEvaluator {
             score -= WIN_SCORE;
         }
 
-
-
         /////////////////////////////////////////////////////7
-        /// Allgemeine Scores (Material, Mobility)
+        /// Allgemeine Scores (Material)
         //////////////////////////////////////////////////////
         // * Material - White pieces are weighted higher because there are fewer defenders.
         int blackCount = board.black.bitCount(); // 0 - 16
         int whiteCount = board.white.bitCount(); // 0 - 8
         score += MATERIAL_WEIGHT * (blackCount - 2 * whiteCount);
-
-        // * Mobility - Black wants many options and wants to restrict white.
-//        int blackMoves = Board.generateLegalMoves(board, Player.BLACK).size();
-//        int whiteMoves = Board.generateLegalMoves(board, Player.WHITE).size();
-//        score += MOBILITY_WEIGHT * (blackMoves - whiteMoves);
 
 
         /////////////////////////////////////////////////////7
@@ -212,20 +183,6 @@ public final class BoardEvaluator {
             }
         }
         return hostileSides;
-    }
-
-    // Returns true if king is in immediate danger (potentially one move before game-over)
-    private static boolean isKingInImmediateDanger(int kingPosition, int hostileSides) {
-        // If king is on the throne, he is in danger if surrounded by 3 or more hostile squares
-        if (kingPosition == 44) {
-            return hostileSides >= 3;
-        }
-        // If kind is next to the throne, he is in danger if surrounded by 2 or more hostile squares
-        if (kingPosition == 34 || kingPosition == 43 || kingPosition == 45 || kingPosition == 54) {
-            return hostileSides >= 2;
-        }
-        // Otherwise, king is in danger if surrounded by 1 or more hostile squares
-        return hostileSides >= 1;
     }
 
     // Returns true if position is hostile to the king, e.g. Back, Blocked, Throne

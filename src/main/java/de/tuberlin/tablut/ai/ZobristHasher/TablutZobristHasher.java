@@ -10,6 +10,7 @@ import lombok.Getter;
 import java.util.List;
 import java.util.Random;
 
+// Zobrist Hasher - hashes a board state and update a board hash
 public class TablutZobristHasher {
     private static final int BOARD_SIZE = 9;
 
@@ -23,10 +24,6 @@ public class TablutZobristHasher {
     private long currentHash;
 
     private static final long DEFAULT_SEED = 123456789L;
-
-    /* TODO's:
-        - should cache be managed by callers? e.g. 50-move rule and 1-move repetition limit
-     */
 
     // Default constructor, initializes a new tablut zobrist hasher with default seed
     public TablutZobristHasher(){
@@ -67,6 +64,7 @@ public class TablutZobristHasher {
                 }
             }
         }
+        // Changes the player
         if(board.sideToMove == Player.BLACK){
             hash ^= blackToMoveKey;
         }
@@ -77,14 +75,18 @@ public class TablutZobristHasher {
     public long updateHashPosition(Move move, List<Hit> hits){
         return updateHashPosition(this.currentHash, move, hits);
     }
+
     // Update hash position with move and hits - should be called after each move
     public long updateHashPosition(long currentHash, Move move, List<Hit> hits) {
         long hash = currentHash;
         Piece movedPiece = move.getMovedPiece();
 
+        // Toggles piece at "from"-position (hash value)
         hash ^= pieceSquareKeys[movedPiece.ordinal()][move.getFrom()];
+        // Toggles piece at "to"-position (hash value)
         hash ^= pieceSquareKeys[movedPiece.ordinal()][move.getTo()];
 
+        // Toggles captured piece from hash-value
         if (hits != null) {
             for (Hit hit : hits) {
                 Piece hitPiece = hit.piece();
@@ -93,6 +95,7 @@ public class TablutZobristHasher {
                 }
             }
         }
+        //Changes player
         hash ^= blackToMoveKey;
         this.currentHash = hash;
         return hash;
