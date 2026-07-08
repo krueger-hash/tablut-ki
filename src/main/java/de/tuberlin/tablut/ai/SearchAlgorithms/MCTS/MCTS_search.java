@@ -6,29 +6,30 @@ import de.tuberlin.tablut.ai.Piece;
 
 import java.util.ArrayList;
 
+/**
+ * MCTS Search Algorithm
+ */
 public class MCTS_search {
 
+    // Root node of the search tree
     MCTS_node root;
+    // Board of the root node
     Board rootBoard;
+    // Mast heuristics shared by all nodes for the entire search
+    MAST mast = new MAST();
 
-    /// Für Weiterverwendung des Baums sinnvoll?
-    ArrayList<MCTS_node> visitedStates; // Besser als Zobrist-List? /Nutzen, um Knoten mit Rollout zu tracken?
-
-    MCTS_search(Board state){
+    public MCTS_search(Board state){
         Board copy = Board.deepCopy(state);
         this.rootBoard = copy;
-        this.root = new MCTS_node(null,null, copy);
+        this.root = new MCTS_node(null,null, copy, mast);
     }
 
-
-    /// Wie sorgt man dafür, dass Baum wiederverwendbar bleibt?
     // Ursprungsboard als Parameter, damit für verschiedene Stellungen gesucht werden kann
-    Move search(long timeLimit_ms){
+    public Move search(long timeLimit_ms){
 
         // Zeitbegrenzung für Suche
         long stopTime = System.currentTimeMillis() + timeLimit_ms;
 
-        //Wurzel initialisieren => jetzt im Konstruktor und als Instanzvariable für Wiederverwendbarkeit
 
         //Schleife über Suchbaum mit UCT
         while(System.currentTimeMillis() < stopTime){
@@ -48,28 +49,35 @@ public class MCTS_search {
             }
             //Knoten mit Rollout => Expandieren
             else {
-                //Expandieren - aktuealisiert board auf das Board des expandierten Kindes
-                current.expand(searchBoard);
-                //Rollout eines der neuen Kindknoten (hier ggf. vorher noch eine Sortierung mittels Heuristik?)
-                current.children.getLast().rollout(searchBoard);
+                if (current.movesForExpansion.isEmpty()) {
+                    // genuine terminal node (game over): nothing to expand,
+                    // just re-evaluate and backprop its deterministic result
+                    current.backprop(SimulateNode.simulateMAST(searchBoard, current.mast));
+                } else {
+                    current.expand(searchBoard);
+                    current.children.getLast().rollout(searchBoard);
+                }
             }
         }
 
         //Rückgabe bei Zeitablauf
-        return this.root.getChildBestUCT(rootBoard).moveToThis;
+        return this.root.getBestChild(rootBoard).moveToThis;
     }
 
     //Update der Wurzel, um Teilbaum weiterverwenden zu können
-    void updateRoot(Move myMove, Move opponentMove){
+    public void updateRoot(Move myMove, Move opponentMove){
+        // rootBoard muss immer im Gleichschritt mit der Wurzel fortschreiten,
+        // sonst sucht search() auf einem veralteten Board
+        rootBoard.makeMove(myMove);
+        rootBoard.makeMove(opponentMove);
         try {
             //entsprechenden Knoten für resultierendes Board im nächsten Zug finden
             this.root = this.root.findChildWithMove(myMove).findChildWithMove(opponentMove);
+            // verworfenen Teilbaum abtrennen, damit backprop/UCT lokal bleiben
+            this.root.parent = null;
         } catch(ChildNotFoundException e){
-            e.printStackTrace();
-            //Board manuell updaten, wenn es nicht schon im Baum ist
-            rootBoard.makeMove(myMove);
-            rootBoard.makeMove(opponentMove);
-            this.root = new MCTS_node(null,null, rootBoard);
+            //Stellung war noch nicht im Baum -> neue Wurzel aus dem fortgeschrittenen Board
+            this.root = new MCTS_node(null,null, rootBoard, this.mast);
         }
     }
 
@@ -81,7 +89,11 @@ public class MCTS_search {
         MCTS_search mcts_BLACK = new MCTS_search(board);
 //        mcts_BLACK.root.gameState.printBoard();
         Move bMove = mcts_BLACK.search(20_000);
-        mcts_BLACK.root.printTree();
+//        mcts_BLACK.root.printTree();
+        mcts_BLACK.root.aboveAverageChildren();
+        System.out.println("### Best Move: "+bMove);
+
+
 
 
 //        board.makeMove(bMove);

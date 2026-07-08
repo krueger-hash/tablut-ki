@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+
 public class SearchControlParameters {
     // Sort moves configurations
     public static boolean SORT_MOVES_ACTIVE = true;

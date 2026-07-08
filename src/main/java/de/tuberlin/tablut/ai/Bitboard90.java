@@ -1,7 +1,4 @@
 package de.tuberlin.tablut.ai;
-
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -11,16 +8,16 @@ public class Bitboard90 {
     /////////////////////////////////////////////////////////////////////////////
     /// globale Variablen
     /////////////////////////////////////////////////////////////////////////////
-    static final int rows = 9;
-    static final int cols = 10;
+    public static final int rows = 9;
+    public static final int cols = 10;
+    @Deprecated
     static final Bitboard90 fieldMask = createBoardMask();
 
     /////////////////////////////////////////////////////////////////////////////
     /// lokale Variablen
     /////////////////////////////////////////////////////////////////////////////
-
-    long low; // erste 0-63 Bits
-    long high; // Bits 64-89; 90 bis 127 ungenutzt
+    public long low; // erste 0-63 Bits
+    public long high; // Bits 64-89; 90 bis 127 ungenutzt
 
 
     /////////////////////////////////////////////////////////////////////////////
@@ -35,6 +32,7 @@ public class Bitboard90 {
         this.high = 0;
     }
 
+    @Deprecated
     static Bitboard90 createBoardMask() {
         Bitboard90 mask = new Bitboard90();
         for (int row = 0; row < rows; row++){
@@ -46,6 +44,7 @@ public class Bitboard90 {
         return mask;
     }
 
+    // count bits on bit-board
     public int bitCount(){
         return Long.bitCount(this.low) + Long.bitCount(this.high);
     }
@@ -93,7 +92,6 @@ Grundsätzliche Ideen im Code:
             throw new IllegalArgumentException();
         }
         if (pos < 64){
-//          ist an Stelle pos eine 1, so bleibt ein Bit gesetzt und das Ergebnis ist !=0, alle anderen Stellen werden durch die Maske (1L<<Pos) ignoriert beim AND
             return (bb.low & (1L << pos)) != 0;
         }
         else{
@@ -149,6 +147,7 @@ Grundsätzliche Ideen im Code:
     /////////////////////////////////////////////////////////////////////////////
 
     // es gibt auch geschicktere Varianten, die ohne Branches auskommen, aber das vllt eher später...
+    @Deprecated
     static Bitboard90 shiftLeft(Bitboard90 bb, int nBits){
         if (nBits == 0){
             return bb;
@@ -167,6 +166,7 @@ Grundsätzliche Ideen im Code:
         }
 
     }
+    @Deprecated
     static Bitboard90 shiftRight(Bitboard90 bb, int nBits){
         if(nBits==0){
             return bb;
@@ -199,6 +199,7 @@ Grundsätzliche Ideen im Code:
     }
 
     //Grundlage für Positions-checking, ggf. so nicht notwendig, sondern nur NS bzw. EW-check nötig
+    @Deprecated
     static Bitboard90 dilation(Bitboard90 bb){
         Bitboard90 bbN = shiftN(bb);
         Bitboard90 bbE = shiftE(bb);
@@ -214,6 +215,7 @@ Grundsätzliche Ideen im Code:
                 )
         );
     }
+    @Deprecated
     static Bitboard90 erosion(Bitboard90 bb){
         Bitboard90 bbN = shiftN(bb);
         Bitboard90 bbE = shiftE(bb);
@@ -241,20 +243,24 @@ Grundsätzliche Ideen im Code:
         setBit(bb,col+row*cols);
     }
     //Prüfe Bits auf benachbarten Feldern: NESW, Ausgangsfeld als Matrix
+    @Deprecated
     static boolean getBitAsMatrix_N(Bitboard90 bb, int row, int col){
         // N is out of bounds
         if(row == 0) return false;
         return getBit(bb,col+row*cols - cols);
     }
+    @Deprecated
     static boolean getBitAsMatrix_E(Bitboard90 bb, int row, int col){
         if(row == 8 && col == 8) return false;
         return getBit(bb,col+row*cols + 1);
     }
+    @Deprecated
     static boolean getBitAsMatrix_S(Bitboard90 bb, int row, int col){
         // S out of bounds
         if(row == 8) return false;
         return getBit(bb,col+row*cols + cols);
     }
+    @Deprecated
     static boolean getBitAsMatrix_W(Bitboard90 bb, int row, int col){
         if(row == 0 && col == 0) return false;
         return getBit(bb,col+row*cols - 1);
@@ -298,10 +304,7 @@ Grundsätzliche Ideen im Code:
         return new int[]{row,col};
     }
 
-    static int matrixToBit(int row, int col){
-        return row*cols+col;
-    }
-
+    // Returns list of indices of all set bits
     static int[] BitboardToIndexList(Bitboard90 board){
         int[] indexList = new int[board.bitCount()];
         long lows = board.low;
@@ -317,110 +320,4 @@ Grundsätzliche Ideen im Code:
         }
         return indexList;
     }
-
-    /////////////////////////////////////////////////////////////////////////////
-    /// Testing mittels Main
-    /////////////////////////////////////////////////////////////////////////////
-    static void main() {
-
-        System.out.println(Arrays.toString(Bitboard90.bitToMatrix(88)));
-
-//        Bitboard90 testBB = new Bitboard90();
-//        Bitboard90.setBitAsMatrix(testBB,8,8);
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,10));
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,20));
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,30));
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,40));
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,50));
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,60));
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,70));
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,80));
-//        Bitboard90.printBBToConsole(Bitboard90.shiftRight(testBB,90));
-
-
-//        //Tests for Shift
-//        Bitboard90 z = new Bitboard90();
-//        setBitAsMatrix(z,0,2);
-//        setBitAsMatrix(z,1,5);
-//        setBitAsMatrix(z,3,0);
-//        setBitAsMatrix(z,6,8);
-//        setBitAsMatrix(z,8,3);
-//
-//        System.out.println("Ausgangsboard z");
-//        printBBToConsole(z);
-//
-//        System.out.println("shiftN");
-//        printBBToConsole(shiftN(z));
-//
-//        System.out.println("shiftS");
-//        printBBToConsole(shiftS(z));
-//
-//        System.out.println("shiftE");
-//        printBBToConsole(shiftE(z));
-//
-//        System.out.println("shiftW");
-//        printBBToConsole(shiftW(z));
-//
-//        System.out.println("dilation");
-//        printBBToConsole(dilation(z));
-//
-//        System.out.println("erosion-test");
-//        Bitboard90 et = new Bitboard90();
-//        for(int row = 0; row <5; row++){
-//            for(int col = 0; col <5; col++) {
-//                if (!(row == 2 && (col == 1 || col == 3))) {
-//                    setBitAsMatrix(et, row, col);
-//                }
-//            }
-//        }
-//        System.out.println("Ausgangs-BB et:");
-//        printBBToConsole(et);
-//        System.out.println("Erosion et:");
-//        printBBToConsole(erosion(et));
-
-
-        //Tests for Bit-Methods und Logische Operationen
-//        Bitboard90 x = new Bitboard90();
-//        setBitAsMatrix(x,0,1);
-//        setBitAsMatrix(x,1,5);
-//        setBitAsMatrix(x,0,8);
-//        setBitAsMatrix(x,8,8);
-//
-//        Bitboard90 y = new Bitboard90();
-//        setBitAsMatrix(y,0,0);
-//        setBitAsMatrix(y,1,0);
-//        setBitAsMatrix(y,8,8);
-//
-//        System.out.println("Ausgangs-BB x:");
-//        printBBToConsole(x);
-//        System.out.println();
-//
-//        System.out.println("Ausgangs-BB y:");
-//        printBBToConsole(y);
-//        System.out.println();
-//
-//        System.out.println("NOT-x:");
-//        printBBToConsole(not(x));
-//        System.out.println();
-//
-//        System.out.println("AND-x,y:");
-//        printBBToConsole(and(x,y));
-//        System.out.println();
-//
-//        System.out.println("OR-x,y:");
-//        printBBToConsole(or(x,y));
-//        System.out.println();
-//
-//        System.out.println("XOR-x:");
-//        printBBToConsole(xor(x,y));
-//        System.out.println();
-//
-//        System.out.print("getBitAsMatrix(x,8,8):");
-//        System.out.println(getBitAsMatrix(x,8,8));
-//        System.out.print("getBitAsMatrix(x,1,5):");
-//        System.out.println(getBitAsMatrix(x,1,5));
-
-    }
-
-
 }

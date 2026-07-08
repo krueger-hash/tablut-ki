@@ -7,6 +7,9 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Transposition table entry - stores key informations about a node
+ */
 @Getter
 public class TranspositionEntry {
     final int depth;

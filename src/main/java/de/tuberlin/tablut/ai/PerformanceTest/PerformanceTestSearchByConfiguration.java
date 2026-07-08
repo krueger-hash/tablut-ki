@@ -8,6 +8,10 @@ import de.tuberlin.tablut.ai.SearchAlgorithms.*;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Evaluates performance of different search configurations
+ * Milestone 3
+ */
 public class PerformanceTestSearchByConfiguration {
     static List<String> positions = List.of(
             "3rrr3/4r4/4R4/r3R3r/rrRRKRRrr/r3R3r/4R4/4r4/3rrr3 s 0"
@@ -16,11 +20,9 @@ public class PerformanceTestSearchByConfiguration {
     );
     private static final int ONE_SECOND_MS = 1_000;
     private static final int TEN_SECOND_MS = 10 * ONE_SECOND_MS;
-    private static final int TWO_MINUTES_MS = 2 * 60 * ONE_SECOND_MS;
-    private static final int DEPTH_FOUR = 4;
 
     public static void main(String[] args) {
-//        1) AB pur // sortMoves rauskommentiert ..., sonst ValueSort
+//        1) AB pur // sortMoves rauskommentiert ..., sonst ValueSort - sort moves commented out in alpha beta search
 //        System.out.println("\nAB pur");
 //        performanceTestByConfiguration(BestMoveInTime::alphaBetaSearch, false, false, false, false, false);
 

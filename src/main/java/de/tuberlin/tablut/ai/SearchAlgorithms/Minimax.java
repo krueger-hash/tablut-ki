@@ -6,6 +6,10 @@ import de.tuberlin.tablut.ai.Move;
 
 import java.util.ArrayList;
 
+/**
+ * @deprecated Now contained in negamax search and further developed
+ */
+@Deprecated
 public final class Minimax {
     private static final int ALPHA_INIT = BoardEvaluator.ALPHA_INIT;
     private static final int BETA_INIT = BoardEvaluator.BETA_INIT;

@@ -10,6 +10,10 @@ import java.util.List;
 import static de.tuberlin.tablut.ai.SearchAlgorithms.AlphaBeta.sortMoves;
 import static de.tuberlin.tablut.ai.BoardEvaluator.MIN_PLAYER;
 
+/**
+ * @deprecated Now contained in negamax search and further developed
+ */
+@Deprecated
 public class PrincipalVariation {
 
     //2D-Array

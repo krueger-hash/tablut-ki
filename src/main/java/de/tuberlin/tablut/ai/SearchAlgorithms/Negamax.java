@@ -14,9 +14,12 @@ import java.util.*;
 import static de.tuberlin.tablut.ai.BoardEvaluator.MAX_PLAYER;
 import static de.tuberlin.tablut.ai.BoardEvaluator.MIN_PLAYER;
 
+/**
+ * Final Version of Search Algorithm
+ * Incorporates transposition tables, PVS, move-ordering (with history heuristic and value sorting)
+ */
 public class Negamax {
-    private static final int INF = BoardEvaluator.BETA_INIT;
-
+    // Starts a new search by providing initial alpha/beta window and search depth
     public static SearchResult search(Board board, int depth, int alpha, int beta) {
         SearchContext context = new SearchContext();
 
@@ -28,12 +31,16 @@ public class Negamax {
         }
     }
 
+    // Starts a new search by providing initial alpha/beta window and search depth + an existing search context
     public static SearchResult search(Board board, int depth, int alpha, int beta,
                                       SearchContext context) throws SearchStoppedException {
 
+        // Increment counter of visited nodes
         context.incrementPositions();
+        // Check if search should be stopped (time limit exceeded)
         if (context.shouldStop()) throw new SearchStoppedException("Zeitlimit erreicht");
 
+        // Save original alpha value for cutoff labeling in tt
         int originalAlpha = alpha;
 
         // Terminal / Blatt
@@ -41,15 +48,16 @@ public class Negamax {
             context.incrementLeafs();
             int eval = BoardEvaluator.evaluate(board);
             if (board.sideToMove == MIN_PLAYER) eval = -eval;
-//            System.out.println("Eval: " + eval);
             return new SearchResult(eval, new ArrayList<>());
         }
 
-
+        // Retrieve transposition table
         TranspositionTable transpositionTable = context.getTranspositionTable();
+        // Generate key for current board state
         TranspositionKey key = transpositionTable.key(board);
+
+        // Check if transposition table entry exists - so tt value can be reused
         if (SearchControlParameters.TRANSPOSITION_TABLE_ACTIVE) {
-//            TranspositionKey key = transpositionTable.key(board);
             TranspositionEntry cached = transpositionTable.get(board);
             // depth >= depth is critical - cache result from depth-2 search is not trustworthy when doing a depth-5 search, didn't look far enough ahead
             if (cached != null && cached.getDepth() >= depth) {
@@ -73,22 +81,28 @@ public class Negamax {
         }
 
 
+        // For pvs - first move is treated differently than the following moves
         boolean firstMove = true;
-        int bestScore = alpha;
 
+        int bestScore = alpha;
+        // Stored path to best leaf
         List<Move> bestPath = new ArrayList<>();
 
 
+        // Generate legal moves and order by heuristics (if enabled)
         ArrayList<Move> moves = Board.generateLegalMoves(board, board.sideToMove);
         if (SearchControlParameters.SORT_MOVES_ACTIVE) {
             sortMoves(board, moves, context);
         }
 
+        // Main Search Loop for each node
         for (Move move : moves) {
-
+            // Enter child node
             board.makeMove(move);
             SearchResult child;
 
+            // Result for a child node is trace and value
+            // in pvs first move is explore fully - following moves are explored with reduced ab-window
             if (SearchControlParameters.PVS_ACTIVE) {
                 if (firstMove) {
                     child = search(board, depth - 1, -beta, -alpha, context);
@@ -104,6 +118,7 @@ public class Negamax {
                 child = search(board, depth - 1, -beta, -alpha, context);
             }
 
+            // Exit child node
             board.unmakeMove();
 
             int score = -child.value;
@@ -111,6 +126,7 @@ public class Negamax {
             if (score > bestScore) {
                 bestScore = score;
 
+                // Construct best path of current node
                 bestPath = new ArrayList<>();
                 bestPath.add(move);
                 bestPath.addAll(child.trace);
@@ -118,17 +134,17 @@ public class Negamax {
 
             if (bestScore > alpha) alpha = bestScore;
             if (alpha >= beta) {
-                // Beta-Cutoff
+                // Beta-Cutoff: Save in history heuristic and transposition table
                 if (SearchControlParameters.HISTORY_HEURISTICS_ACTIVE) {
                     context.incrementHistoryHeuristic(move, depth);
                 }
                 if (SearchControlParameters.TRANSPOSITION_TABLE_ACTIVE) {
                     transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, beta, Bound.LOWER, bestPath));
                 }
-//                System.out.println("Beta-Cutoff");
                 return new SearchResult(bestScore, new ArrayList<>());
             }
         }
+        // Save evaluation of the node in transposition table
         if (SearchControlParameters.TRANSPOSITION_TABLE_ACTIVE) {
             if (bestScore <= originalAlpha) {
                 transpositionTable.getTranspositionTable().put(key, new TranspositionEntry(depth, bestScore, Bound.UPPER, bestPath));
@@ -139,30 +155,22 @@ public class Negamax {
             }
         }
 
-//        System.out.println("Exact");
         return new SearchResult(bestScore, bestPath);
     }
 
     static int evalMove(Move move, Board state, SearchContext context) {
         int result = 0;
+        // Value sorting:
         if (SearchControlParameters.SORT_MOVES_BY_VALUE) {
             state.makeMove(move);
-            result = BoardEvaluator.evaluate(state);
+            result += BoardEvaluator.evaluate(state);
             state.unmakeMove();
         }
 
-        //HistoryHeuristik liefert Bonus-Score für Zugsortierung
+        // History heuristic
         if (SearchControlParameters.HISTORY_HEURISTICS_ACTIVE) {
             result += context.getHistoryHeuristicScore(move);
         }
-//        TranspositionEntry cached = context.getTranspositionTable().get(state);
-//        if (cached != null) {
-//            if(!cached.getTrace().isEmpty()){
-//                result += cached.getTrace().getFirst() == move ? 30_000 : 0;
-//            }
-//        }
-//        System.out.println("Move:"+move+" - Result:" +result);
-//        System.out.println("Moves without Capture: " + state.movesWithoutCapture);
         return result;
     }
 
@@ -170,8 +178,7 @@ public class Negamax {
         int n = moves.size();
         if (n < 2) return;
 
-        // Höherer Score zuerst (absteigend). Vorzeichen für sideToMove einmalig einfalten,
-        // damit der Vergleich ein reiner int-Vergleich ohne HashMap-Lookup/Boxing ist.
+        // save sign depending on player
         int sign = (MIN_PLAYER == state.sideToMove) ? -1 : 1;
 
         Move[] moveArr = moves.toArray(new Move[0]);
@@ -180,8 +187,7 @@ public class Negamax {
             keys[i] = sign * evalMove(moveArr[i], state, context);
         }
 
-        // Insertion-Sort absteigend nach key: stabil, allokationsfrei und schnell für
-        // die kleinen Zuglisten (Move Ordering in Schach-Engines macht das genauso).
+        // inserstion-sort
         for (int i = 1; i < n; i++) {
             Move m = moveArr[i];
             int k = keys[i];

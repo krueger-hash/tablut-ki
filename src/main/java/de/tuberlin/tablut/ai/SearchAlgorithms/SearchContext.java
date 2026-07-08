@@ -6,6 +6,13 @@ import de.tuberlin.tablut.ai.Piece;
 import de.tuberlin.tablut.ai.SearchAlgorithms.TranspositionTable.TranspositionTable;
 import lombok.Getter;
 
+/**
+ * Context for the search algorithm - contains context information over the whole iterative tree search
+ * endTime - time limit
+ * stopped - search has been stopped
+ * leafs - number of leaf nodes
+ * positions - number of positions evaluated
+ */
 public class SearchContext {
     private boolean stopped;
 
@@ -28,6 +35,7 @@ public class SearchContext {
         return transpositionTable;
     }
 
+    // If time limit is exceeded
     public boolean shouldStop() {
         if(stopped){
             return true;
@@ -38,10 +46,12 @@ public class SearchContext {
         }
         return false;
     }
+    // Default time limit of 1h for legacy test compatibility
     public SearchContext(){
         System.err.println("WARNING: Default time in SearchContext!");
         this(3600_000);
     }
+
     public SearchContext(int msTime){
         this.stopped = false;
         this.endTime = System.currentTimeMillis() + msTime;
@@ -66,6 +76,7 @@ public class SearchContext {
         this.positions++;
     }
 
+    // History Heuristic - saves the depth of the move in the history heuristic matrix as square - whenever a cutoff occurs
     public void incrementHistoryHeuristic(Move move, int depth){
         int to = move.getTo();
         int from = move.getFrom();
@@ -83,7 +94,7 @@ public class SearchContext {
     }
 
 
-
+    // Returns heuristics score for given move
     public int getHistoryHeuristicScore(Move move) {
         int to = move.getTo();
         int from = move.getFrom();
@@ -99,15 +110,11 @@ public class SearchContext {
         }
         else throw new RuntimeException("Undefined Piece for getting HistoryScore");
 
-        //TODO: Ist das min unnötig und ggf. nur ein Performance-Speedbump?
         int CAPPED_SCORE = 60_000;
         if(Piece.BLACK == piece){
             return Math.min(score * BoardEvaluator.HISTORY_HEURISTIC_WEIGHT,CAPPED_SCORE);
         }else{
             return Math.max(score * BoardEvaluator.HISTORY_HEURISTIC_WEIGHT,-CAPPED_SCORE);
         }
-
     }
-
-
 }

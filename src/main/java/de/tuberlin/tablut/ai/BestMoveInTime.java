@@ -3,6 +3,9 @@ package de.tuberlin.tablut.ai;
 import de.tuberlin.tablut.ai.SearchAlgorithms.*;
 import lombok.Getter;
 
+/**
+ * Iterative deepening for alpha beta / negamax search based on time-limit or depth
+ */
 public class BestMoveInTime {
 
 
@@ -10,6 +13,7 @@ public class BestMoveInTime {
     private static final int BETA_INIT = BoardEvaluator.BETA_INIT;
 
     private final Board originalState;
+    // Time-limit
     private final int msTime;
 
     @Getter
@@ -17,6 +21,7 @@ public class BestMoveInTime {
 
     private SearchFunction searchFunction;
 
+    // default search function: negamax
     public BestMoveInTime(Board originalState, int msTime) {
         this(originalState, msTime, BestMoveInTime::negamaxSearch);
     }
@@ -27,8 +32,8 @@ public class BestMoveInTime {
         this.searchFunction = search;
     }
 
-    // TODO: getter methods for other search algorithms e.g. minimax
-    PrincipalVariation search = new PrincipalVariation(3);
+    // returns best move for given best move in time object
+    @Deprecated
     public Move getMove() {
         finalReport = searchInTime(
                 this.originalState,
@@ -40,10 +45,10 @@ public class BestMoveInTime {
 
     // calls search algorithm with time limit and default max depth
     public static SearchReport searchInTime(Board originalState, int msTime, SearchFunction search) {
-
         return searchInTime(originalState, Integer.MAX_VALUE, msTime, search);
     }
 
+    // Returns best move with time limit as a static function without dependency on class instance
     public static SearchReport searchInTime(Board originalState, int maxDepth, int msTime, SearchFunction search) {
         long start = System.currentTimeMillis();
         SearchContext context = new SearchContext(msTime);
@@ -63,8 +68,12 @@ public class BestMoveInTime {
 
             // * weitere Abbruchbedingungen für Tiefensuche
             // Sieg erkannt
-            if (originalState.sideToMove == BoardEvaluator.MAX_PLAYER && lastCompleted.value() > BoardEvaluator.ASSUME_BLACK_VICTORY_SCORE){ break;}
-            if (originalState.sideToMove == BoardEvaluator.MIN_PLAYER && lastCompleted.value() < BoardEvaluator.ASSUME_WHITE_VICTORY_SCORE){ break;}
+            if (originalState.sideToMove == BoardEvaluator.MAX_PLAYER && lastCompleted.value() > BoardEvaluator.ASSUME_BLACK_VICTORY_SCORE) {
+                break;
+            }
+            if (originalState.sideToMove == BoardEvaluator.MIN_PLAYER && lastCompleted.value() < BoardEvaluator.ASSUME_WHITE_VICTORY_SCORE) {
+                break;
+            }
 
             // Nicht mehr genug Zeit für weitere Tiefen -> Stop der Suche
             // TODO: besserer Check
@@ -74,11 +83,12 @@ public class BestMoveInTime {
                 break;
             }
         }
-        System.out.println("Runtime: "+(System.currentTimeMillis()-start));
+        System.out.println("Runtime: " + (System.currentTimeMillis() - start));
 
         return lastCompleted;
     }
 
+    // Returns best move for depth-limit as a static function without dependency on class instance, usually called by searchInTime()
     public static SearchReport searchAtDepth(Board originalState, int depth, long startTime, SearchFunction search, SearchContext context) throws SearchStoppedException {
 //        long start = System.currentTimeMillis();
 //        SearchContext context = new SearchContext(msTime);
@@ -98,9 +108,12 @@ public class BestMoveInTime {
         );
     }
 
+    // helper function to call alpha beta search
     public static SearchResult alphaBetaSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
         return AlphaBeta.sortedAlphaBetaSearch(board, depth, ALPHA_INIT, BETA_INIT, context);
     }
+
+    // helper function to call negamax search
     public static SearchResult negamaxSearch(Board board, int depth, SearchContext context) throws SearchStoppedException {
         return Negamax.search(board, depth, ALPHA_INIT, BETA_INIT, context);
 

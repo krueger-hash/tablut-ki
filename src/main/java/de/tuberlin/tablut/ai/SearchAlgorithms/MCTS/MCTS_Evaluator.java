@@ -1,61 +1,32 @@
-package de.tuberlin.tablut.ai;
+package de.tuberlin.tablut.ai.SearchAlgorithms.MCTS;
+
+import de.tuberlin.tablut.ai.Bitboard90;
+import de.tuberlin.tablut.ai.Board;
+import de.tuberlin.tablut.ai.Piece;
 
 /**
- * Evaluates board state
+ * Board evaluator for mcts search - copied from base evaluator
+ * A few changes were made - normalize scores with interval [0,1]
  */
-public final class BoardEvaluator {
-    public static final Player MAX_PLAYER = Player.BLACK;
-    public static final Player MIN_PLAYER = Player.WHITE;
-
-    private static final int WIN_SCORE = 100_000;
+public final class MCTS_Evaluator {
     private static final int MATERIAL_WEIGHT = 100;
     private static final int KING_DISTANCE_WEIGHT = 30;
     private static final int KING_OPEN_ESCAPE_WEIGHT = 2_500;
+
     private static final int KING_DANGER_WEIGHT = 1500;
     private static final int TWO_OPEN_CORNERS_FOR_KING = 10_000;
-    public static int HISTORY_HEURISTIC_WEIGHT = 1;
-
-    /*
-    Aktuell ist Wertebereich für Score ohne Victory [-4676,4364];
-    ALPHA und BETA INIT müssen entsprechend angepasst werden, damit keine hohen Siege abgeschnitten werden;
-    Zahlen erstmal großzügig gewählt
-     */
-    public static final int ASSUME_BLACK_VICTORY_SCORE = 80_000;
-    public static final int ASSUME_WHITE_VICTORY_SCORE = -ASSUME_BLACK_VICTORY_SCORE;
-    public static final int ALPHA_INIT = -1_000_000;
-    public static final int BETA_INIT = 1_000_000;
-
 
     private static final int[] ESCAPE_SQUARES = {0, 8, 80, 88};
     private static final int[] DIRECTIONS = {-Bitboard90.cols, Bitboard90.cols, -1, 1};
 
-    // Max_player maximizes the value, Min player minimizes the value
-    public static int evaluate(Board board) {
-        if (board == null) {
-            throw new IllegalArgumentException("board must not be null");
-        }
-
+    // Returns normalized board score in interval [0,1]
+    public static double boardScore(Board board) {
         int score = 0;
-        /////////////////////////////////////////////////////7
-        /// Spielende Scores
-        //////////////////////////////////////////////////////
-        // Stalemate is nicht bewertet - Stalemate ist terminal, da die KI sich das trotzdem erarbeiten muss - Da der AB-Algorithmus versuchen soll das bestmßgliche Stalemate zu erreichen
-        // Siegbedingungen additiv, damit die KI bei erkannter Niederlage trotzdem weiterhin die besten Züge probiert
-        if(board.hasBlackWon()){
-            score += WIN_SCORE;
-        }
-        if(board.hasWhiteWon()){
-            score -= WIN_SCORE;
-        }
 
         /////////////////////////////////////////////////////7
         /// Allgemeine Scores (Material)
         //////////////////////////////////////////////////////
-        // * Material - White pieces are weighted higher because there are fewer defenders.
-        int blackCount = board.black.bitCount(); // 0 - 16
-        int whiteCount = board.white.bitCount(); // 0 - 8
-        score += MATERIAL_WEIGHT * (blackCount - 2 * whiteCount);
-
+        score += materialDifferenceScore(board);
 
         /////////////////////////////////////////////////////7
         /// Scores abhängig vom König
@@ -67,26 +38,43 @@ public final class BoardEvaluator {
             return score;
         }
 
-        // * King distance to escape squares. Larger distance is better for black.
+        // * King distance to escape squares. Larger distance is better for black. interval [0, 480]
         score += KING_DISTANCE_WEIGHT * minDistanceToEscape(kingPosition);
 
-        // * Free escape lines are very dangerous for black.
+        // * Free escape lines are very dangerous for black. interval [0,10_000]
         int openLines = countOpenEscapeLines(board, kingPosition);
-        if (openLines <= 1) {score -= KING_OPEN_ESCAPE_WEIGHT * openLines;}
-        else {score -= TWO_OPEN_CORNERS_FOR_KING;} // wenn es 2 offene Linien nach einem weißen Zug gibt, hat Weiß im Folgezug gewonnen, aber das Spiel ist nicht vorbei; WIN_SCORE/2 ist verhindert, dass Suche nicht bis Terminalknoten fortgesetzt wird, der relevante Zug, aber auf jeden Fall gewinnt
+        if (openLines <= 1) {
+            score -= KING_OPEN_ESCAPE_WEIGHT * openLines;
+        } else {
+            score -= TWO_OPEN_CORNERS_FOR_KING;
+        }
+        score+= TWO_OPEN_CORNERS_FOR_KING;
+        // wenn es 2 offene Linien nach einem weißen Zug gibt, hat Weiß im Folgezug gewonnen, aber das Spiel ist nicht vorbei; WIN_SCORE/2 ist verhindert, dass Suche nicht bis Terminalknoten fortgesetzt wird, der relevante Zug, aber auf jeden Fall gewinnt
 
-        // * Direct pressure around the king is valuable for black.
+        // * Direct pressure around the king is valuable for black. interval [0,3_000]
         // Bewertung so, dass bei maximaler Bedrohung (nur 1 Piece fehlt zum schlagen) die volle DANGER-WEIGHT angewendet wird; dazwischen gleichförmig
         int hostileSides = countHostileSidesAroundKing(board, kingPosition);
-        if(kingIsOnThrone(kingPosition)){
-            score += KING_DANGER_WEIGHT * hostileSides/3; //
+        if (kingIsOnThrone(kingPosition)) {
+            score += KING_DANGER_WEIGHT * hostileSides / 3; //
+        } else if (kingIsNextToThrone(kingPosition)) {
+            score += KING_DANGER_WEIGHT * hostileSides / 2;
+        } else {
+            score += hostileSides * KING_DANGER_WEIGHT;
         }
-        else if (kingIsNextToThrone(kingPosition)) {
-            score += KING_DANGER_WEIGHT * hostileSides/2;
-        }
-        else {score += hostileSides* KING_DANGER_WEIGHT;}
 
-        return score;
+        // max interval border: [0, 16680]
+        // 3_200 + 480 + 10_000 + 3_000 = 16_680
+        return score/16680.00;
+    }
+
+    private static int materialDifferenceScore(Board board) {
+        // * Material - White pieces are weighted higher because there are fewer defenders.
+        int blackCount = board.black.bitCount(); // 0 - 16
+        int whiteCount = board.white.bitCount(); // 0 - 8
+        int score = MATERIAL_WEIGHT * (blackCount - 2 * whiteCount);
+        // Max 2*8 = 16 pieces, interval [0, 3200]
+        int normed_score = score + (16*MATERIAL_WEIGHT);
+        return normed_score;
     }
 
     //Gibt Index der Position des Königs aus Spanne 0-89
@@ -160,10 +148,11 @@ public final class BoardEvaluator {
     }
 
     // Diese Implementierung sind sehr stark abhängig von der detaillierten Implementierung des Bitboards und des Boards, wenn bspw. die Zeilen/Spalten im Bitboard geändert werden, stimmt hier gar nichts mehr. darüber hinaus sehr anfällig für Flüchtigkeitsfehler bei den Zahlen
-    private static boolean kingIsOnThrone(int kingPosition){
+    private static boolean kingIsOnThrone(int kingPosition) {
         return kingPosition == 44;
     }
-    private static boolean kingIsNextToThrone(int kingPosition){
+
+    private static boolean kingIsNextToThrone(int kingPosition) {
         return (kingPosition == 43 || kingPosition == 45 || kingPosition == 34 || kingPosition == 54);
     }
 
@@ -198,3 +187,4 @@ public final class BoardEvaluator {
                 && position % Bitboard90.cols < Bitboard90.cols - 1;
     }
 }
+

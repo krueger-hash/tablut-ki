@@ -3,6 +3,12 @@ package de.tuberlin.tablut.ai;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stores information about the previous board
+ * - What pieces have been moved
+ * - Hit pieces
+ * - Former moves without hit counter
+ */
 public class BoardStateChange {
     public Move move;
     public List<Hit> hits;

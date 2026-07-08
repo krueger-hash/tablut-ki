@@ -10,27 +10,71 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
 
-public class TablutRandomGameLoop {
+import de.tuberlin.tablut.ai.SearchAlgorithms.MCTS.MCTS_search;
+import de.tuberlin.tablut.ai.SearchAlgorithms.MCTS.MCTS_Control_Parameters;
+
+/**
+ * Tablut Game Loop to Connect to the Tablut Game Server
+ */
+public class TablutGameLoop {
     private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_PORT = 5000;
     private static final String DEFAULT_LOBBY = "game1";
+    private static final SearchType DEFAULT_SEARCH = SearchType.NEGAMAX;
     private static final Random RANDOM = new Random();
+
+    // Which search algorithm this client uses to pick its moves
+    public enum SearchType {
+        NEGAMAX,
+        MCTS;
+
+        static SearchType fromString(String value) {
+            if (value == null) {
+                return DEFAULT_SEARCH;
+            }
+            return switch (value.trim().toLowerCase(Locale.ROOT)) {
+                case "mcts" -> MCTS;
+                case "negamax" -> NEGAMAX;
+                default -> throw new IllegalArgumentException("Unknown search algorithm: " + value
+                        + " (expected 'negamax' or 'mcts')");
+            };
+        }
+    }
 
     private Board board = new Board();
     private Player localPlayer = Player.BLACK;
+    private SearchType searchType = DEFAULT_SEARCH;
+
+    // Experiment metadata: label is an arbitrary tag for this client (e.g. the MCTS variant)
+    // that is echoed back in the GAME_RESULT line so an orchestrator can attribute results.
+    private String label = "";
+    // Time account (seconds) requested when this client creates the lobby.
+    private int timeAccountSeconds = 300;
+    // Scheduler the lobby creator requests. "round_robin" keeps the join order
+    // (creator plays BLACK), "random" shuffles colours.
+    private String scheduler = "random";
+    // Ensures exactly one GAME_RESULT line is emitted per game.
+    private boolean resultReported = false;
+
+    // Persistent MCTS tree so we can reuse the subtree across moves (updateRoot)
+    private MCTS_search mcts;
+    private Move lastOwnMove;          // our previous move (one ply down in the MCTS tree)
+    private Move lastOpponentMove;     // opponent's most recent move (set in playGame)
 
 
     private static final int EXPECTED_MOVES = 60; // Total expected moves by current player in the entire game
     private static final int MIN_EXPECTED_MOVES = 10; // Expect that the game has always at least 10 moves left
     private static final int MAX_SEARCH_DEPTH = 6; // Maximum search depth for alpha-beta search
-    private static final long SAFETY_BUFFER_MS = 500; // Used to calculate hard time limit for the alpha beta search (max time to use)
+    private static final long SAFETY_BUFFER_MS = 1000; // Global tail reserve so the account never hits zero on the final move
+    private static final long MOVE_OVERHEAD_MS = 250; // Per-move reserve for move I/O, network, server accounting and OS scheduling under load
     private long remainingMs = 300_000; // Remaining Ms for the entire game
     private int moveNumber = 0; // Number of moves made by the current player
 
     public static void run(String[] args) {
         ClientOptions options = ClientOptions.fromArgs(args);
+        applyMctsVariant(options.mctsVariant);
         try {
-            new TablutRandomGameLoop().connectAndPlay(options);
+            new TablutGameLoop().connectAndPlay(options);
         } catch (InterruptedException e) {
             e.printStackTrace();
             Thread.currentThread().interrupt();
@@ -39,7 +83,48 @@ public class TablutRandomGameLoop {
         }
     }
 
+    // Configure which MCTS enhancements are active for this JVM. Each client runs in its own
+    // process, so the static MCTS_Control_Parameters flags can differ between opponents.
+    // null/unspecified leaves the compiled defaults untouched.
+    private static void applyMctsVariant(String variant) {
+        if (variant == null) {
+            return;
+        }
+        switch (variant.trim().toLowerCase(Locale.ROOT)) {
+            case "base", "uct", "plain" -> {
+                MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE = false;
+                MCTS_Control_Parameters.MAST_ACTIVE = false;
+            }
+            case "bias" -> {
+                MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE = true;
+                MCTS_Control_Parameters.MAST_ACTIVE = false;
+            }
+            case "mast" -> {
+                MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE = false;
+                MCTS_Control_Parameters.MAST_ACTIVE = true;
+            }
+            case "bias_mast", "mast_bias", "all", "full" -> {
+                MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE = true;
+                MCTS_Control_Parameters.MAST_ACTIVE = true;
+            }
+            default -> throw new IllegalArgumentException("Unknown MCTS variant: " + variant
+                    + " (expected base | bias | mast | bias_mast)");
+        }
+        System.out.println("MCTS variant: " + variant
+                + " (bias=" + MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE
+                + ", mast=" + MCTS_Control_Parameters.MAST_ACTIVE + ")");
+    }
+
+    // Connects to the server and start the game
     public void connectAndPlay(ClientOptions options) throws IOException, InterruptedException {
+        this.searchType = options.searchType;
+        this.label = options.label;
+        this.timeAccountSeconds = options.timeAccountSeconds;
+        this.scheduler = options.scheduler;
+        // Seed our remaining-time estimate from the requested account so the first move's
+        // budget is sized correctly even before the server reports a time update.
+        this.remainingMs = this.timeAccountSeconds * 1000L;
+        System.out.println("Using search algorithm: " + this.searchType);
         try (Socket socket = new Socket(options.host, options.port);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
@@ -55,6 +140,7 @@ public class TablutRandomGameLoop {
         }
     }
 
+    // authenticate a user
     private void authenticate(BufferedReader in, BufferedWriter out, String token) throws IOException {
         send(out, "gspy");
         expectCommand(read(in), "ok");
@@ -99,10 +185,10 @@ public class TablutRandomGameLoop {
 
     private void configureLobby(BufferedReader in, BufferedWriter out) throws IOException {
         sendAndExpectOk(in, out, "set game.type tablut");
-        sendAndExpectOk(in, out, "set scheduler random");
+        sendAndExpectOk(in, out, "set scheduler " + scheduler);
         sendAndExpectOk(in, out, "set min_players 2");
         sendAndExpectOk(in, out, "set max_players 2");
-        sendAndExpectOk(in, out, "set game.time_account 300");
+        sendAndExpectOk(in, out, "set game.time_account " + timeAccountSeconds);
     }
 
     // Start a game, or retry to start it, until second player is ready
@@ -155,14 +241,13 @@ public class TablutRandomGameLoop {
         }
     }
 
-    // main game-loop
+    // Wrapper for main game loop
     private void playGame(BufferedReader in, BufferedWriter out) throws IOException {
         String state = read(in);
         // If server sends start, we are playing BLACK. If server sends wait, we are playing WHITE.
         if ("start".equals(state)) {
             localPlayer = Player.BLACK;
             System.out.println("Playing BLACK and moving first");
-//            makeRandomMove(in, out);
             board.sideToMove = localPlayer;
             playMove(out, in, board);
         } else if ("wait".equals(state)) {
@@ -178,6 +263,7 @@ public class TablutRandomGameLoop {
             // Check for end of game
             if (line == null || "over".equals(line)) {
                 System.out.println("Game over");
+                reportResult(null);
                 return;
             }
             // Opponent move
@@ -195,12 +281,17 @@ public class TablutRandomGameLoop {
                 );
                 // apply opponent move
                 board.makeMove(opponentMove);
+                // remember it so MCTS can advance its tree root before the next search
+                lastOpponentMove = opponentMove;
                 System.out.println("Opponent Player");
                 board.printBoard();
                 System.out.println("Opponent played " + line.substring("move ".length()));
-                // TODO: currently respond with random move - later -> respond with calculated move
-//                makeRandomMove(in, out);
-                // TODO: evaluate strucutre and time management?
+                // The opponent's move may have ended the game (king captured/escaped or stalemate).
+                // Don't run a search on a terminal position; just wait for the server's "over".
+                if (board.gameIsEnd()) {
+                    System.out.println("Opponent's move ended the game; awaiting 'over'");
+                    continue;
+                }
                 board.sideToMove = localPlayer;
                 playMove(out, in, board);
                 continue;
@@ -212,21 +303,27 @@ public class TablutRandomGameLoop {
         }
     }
 
+    // Time management
     public long calculateMoveBudgetMs(){
         int expectedMovesLeft = Math.max(MIN_EXPECTED_MOVES, EXPECTED_MOVES - moveNumber);
-        // Distribute time equally between expected moves in the game
-        long budget = remainingMs / expectedMovesLeft;
-        // Never use full time, due to uncertainty (Network effects, Java overhead, Server-Communication)
-        long hardLimit = remainingMs - SAFETY_BUFFER_MS;
-
-        // TODO: check whether this is needed
-        // 10 ms to ensure methode never results in to low ms (for bestMovesInTime logic)
-        return Math.max(10, Math.min(budget, hardLimit));
+        // Reserve a global tail so we never spend the account down to zero on the last move.
+        long usable = Math.max(0, remainingMs - SAFETY_BUFFER_MS);
+        // Distribute the usable time equally over the moves we still expect to make.
+        long slice = usable / expectedMovesLeft;
+        // Spend strictly less than our slice: the server charges wall-clock time from when it sent
+        // the opponent's move until it receives ours, which includes I/O, network, its own
+        // accounting and (under parallel games) OS scheduling. Reserving per-move overhead keeps
+        // the measured thinking time inside the budget and prevents losing on time.
+        long budget = slice - MOVE_OVERHEAD_MS;
+        // 10 ms floor so the search always has some time (BestMoveInTime needs a positive limit).
+        return Math.max(10, Math.min(budget, usable));
     }
 
     private void playMove(BufferedWriter out, BufferedReader in, Board board) throws IOException{
         long moveBudgetMs = calculateMoveBudgetMs();
-        Move move = new BestMoveInTime(Board.deepCopy(board), (int)moveBudgetMs).getMove();
+        // Count this as one of our moves so the budget ramps up as the game progresses.
+        moveNumber++;
+        Move move = computeMove(board, moveBudgetMs);
 
         System.out.println("Our Calculated Best Move: "+ move);
         int[] indices = Move.moveToIndizes(move);
@@ -238,13 +335,20 @@ public class TablutRandomGameLoop {
             throw new IOException("Connection closed after move " + moveMessage);
         }
         if (response.startsWith("err")) {
-            throw new IOException("Server rejected generated move " + moveMessage + ": " + response);
+            // Most commonly the server rejects our move because we exceeded the time account,
+            // which means we lose this game and the opponent wins. Report it and let the main
+            // loop drain the subsequent "over" message.
+            System.out.println("Server rejected our move (" + response + "); treating as a loss");
+            Player opponent = (localPlayer == Player.BLACK) ? Player.WHITE : Player.BLACK;
+            reportResult(opponent);
+            return;
         }
         // parse the new time
-        parseConfigLine(response);
-
+        String[] parts = response.split(" ");
+        if (parts.length >= 2 && "time".equals(parts[0])) {
+            remainingMs = (long) (Double.parseDouble(parts[1]) * 1000);
+        }
         System.out.println("New Time Account: " + remainingMs + " ms");
-//        expectCommand(response, "time");
 
         board.makeMove(move);
 
@@ -252,6 +356,82 @@ public class TablutRandomGameLoop {
         board.printBoard();
     }
 
+    // Emit a single machine-parseable result line so an external orchestrator can tally games.
+    // Both clients apply the full move history, so they independently agree on the winner colour.
+    // forcedWinner is set only for terminations not reflected on the board (e.g. a time loss).
+    private void reportResult(Player forcedWinner) {
+        if (resultReported) {
+            return;
+        }
+        resultReported = true;
+
+        String winnerColor;
+        String reason;
+        if (forcedWinner != null) {
+            winnerColor = forcedWinner.toString();
+            reason = "timeloss";
+        } else if (board.hasBlackWon()) {
+            winnerColor = "BLACK";
+            reason = "normal";
+        } else if (board.hasWhiteWon()) {
+            winnerColor = "WHITE";
+            reason = "normal";
+        } else if (board.isStalemate()) {
+            winnerColor = "DRAW";
+            reason = "stalemate";
+        } else {
+            // We received "over" cleanly (we did not lose on time ourselves, or that path would
+            // have reported already) yet the board is neither a win/loss nor a stalemate. The only
+            // remaining cause is that the opponent forfeited: disconnect, crash, or server timeout.
+            // In every such case the server awards the game to the surviving player, i.e. us.
+            winnerColor = localPlayer.toString();
+            reason = "opponent_forfeit";
+        }
+
+        String outcome;
+        if ("DRAW".equals(winnerColor)) {
+            outcome = "DRAW";
+        } else if ("UNKNOWN".equals(winnerColor)) {
+            outcome = "UNKNOWN";
+        } else {
+            outcome = winnerColor.equals(localPlayer.toString()) ? "WIN" : "LOSS";
+        }
+
+        System.out.println("GAME_RESULT"
+                + " label=" + ((label == null || label.isBlank()) ? "-" : label)
+                + " search=" + searchType
+                + " player=" + localPlayer
+                + " winnerColor=" + winnerColor
+                + " outcome=" + outcome
+                + " reason=" + reason);
+    }
+
+    // Compute the move with the configured search algorithm
+    private Move computeMove(Board board, long moveBudgetMs) {
+        return switch (searchType) {
+            case MCTS -> computeMctsMove(board, moveBudgetMs);
+            case NEGAMAX -> new BestMoveInTime(Board.deepCopy(board), (int) moveBudgetMs).getMove();
+        };
+    }
+
+    // Reuse the MCTS tree between moves: advance the root by (our last move, opponent's reply)
+    // before searching, instead of rebuilding the tree from scratch every turn.
+    private Move computeMctsMove(Board board, long moveBudgetMs) {
+        if (mcts == null) {
+            // First own move: build the tree from the current position.
+            mcts = new MCTS_search(Board.deepCopy(board));
+        } else {
+            // We have searched before; the tree root is the position before our last move.
+            // Descend our last move and the opponent's reply to reach the current position.
+            mcts.updateRoot(lastOwnMove, lastOpponentMove);
+        }
+
+        Move move = mcts.search(moveBudgetMs);
+        lastOwnMove = move;
+        return move;
+    }
+
+    @Deprecated
     private void makeRandomMove(BufferedReader in, BufferedWriter out) throws IOException {
         ArrayList<Move> moves = Board.generateLegalMoves(board, localPlayer);
         if (moves.isEmpty()) {
@@ -289,7 +469,6 @@ public class TablutRandomGameLoop {
             << set start_pos
             << ok
          */
-        // TODO: also parse other fields later
         String[] parts = line.split(" ", 3);
         if (parts.length < 3) {
             return;
@@ -300,7 +479,9 @@ public class TablutRandomGameLoop {
         if ("start_pos".equals(key) && !value.isBlank()) {
             board = Board.fenToBoard(String.join("", value.split("\\s+")));
         }
-        if ("time".equals(key) && !value.isBlank()) {
+        // The server announces the per-player time budget as "time_account"; keep our
+        // remaining-time estimate in sync so the first move's budget is sized correctly.
+        if (("time".equals(key) || "time_account".equals(key)) && !value.isBlank()) {
             remainingMs = (long) (Double.parseDouble(value) * 1000);
         }
 
@@ -350,13 +531,25 @@ public class TablutRandomGameLoop {
         final String lobbyName;
         final boolean createLobby;
         final String token;
+        final SearchType searchType;
+        final String mctsVariant;
+        final int timeAccountSeconds;
+        final String label;
+        final String scheduler;
 
-        private ClientOptions(String host, int port, String lobbyName, boolean createLobby, String token) {
+        private ClientOptions(String host, int port, String lobbyName, boolean createLobby, String token,
+                              SearchType searchType, String mctsVariant, int timeAccountSeconds, String label,
+                              String scheduler) {
             this.host = host;
             this.port = port;
             this.lobbyName = lobbyName;
             this.createLobby = createLobby;
             this.token = token;
+            this.searchType = searchType;
+            this.mctsVariant = mctsVariant;
+            this.timeAccountSeconds = timeAccountSeconds;
+            this.label = label;
+            this.scheduler = scheduler;
         }
 
         static ClientOptions fromArgs(String[] args) {
@@ -365,6 +558,11 @@ public class TablutRandomGameLoop {
             String lobby = DEFAULT_LOBBY;
             boolean create = true;
             String token = null;
+            SearchType search = DEFAULT_SEARCH;
+            String mctsVariant = null;
+            int timeAccountSeconds = 300;
+            String label = "";
+            String scheduler = "random";
 
             for (int i = 0; i < args.length; i++) {
                 String arg = args[i];
@@ -375,6 +573,11 @@ public class TablutRandomGameLoop {
                     case "--create" -> create = true;
                     case "--join" -> create = false;
                     case "--token" -> token = args[++i];
+                    case "--search" -> search = SearchType.fromString(args[++i]);
+                    case "--mcts-variant" -> mctsVariant = args[++i];
+                    case "--time-account" -> timeAccountSeconds = Integer.parseInt(args[++i]);
+                    case "--label" -> label = args[++i];
+                    case "--scheduler" -> scheduler = args[++i];
                     default -> {
                         if (i == 0) {
                             host = arg;
@@ -391,7 +594,7 @@ public class TablutRandomGameLoop {
                 }
             }
 
-            return new ClientOptions(host, port, lobby, create, token);
+            return new ClientOptions(host, port, lobby, create, token, search, mctsVariant, timeAccountSeconds, label, scheduler);
         }
     }
 }
