@@ -95,11 +95,13 @@ public class PerformanceTest {
 
         Board state = Board.fenToBoard(fen);
         long tStart = System.currentTimeMillis();
-        int leafs;
-        if(!testOld){
-            leafs = perft(state, depth, state.sideToMove);
-        }else{
-            leafs = perftWithDeepCopy(state, depth, state.sideToMove);
+        int leafs = 0;
+        for (int i = 0; i< repetitions; i++) {
+            if (!testOld) {
+                leafs = perft(state, depth, state.sideToMove);
+            } else {
+                leafs = perftWithDeepCopy(state, depth, state.sideToMove);
+            }
         }
         long tEnd = System.currentTimeMillis();
         long duration = tEnd - tStart;

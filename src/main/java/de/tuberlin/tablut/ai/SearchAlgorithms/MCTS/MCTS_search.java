@@ -2,9 +2,6 @@ package de.tuberlin.tablut.ai.SearchAlgorithms.MCTS;
 
 import de.tuberlin.tablut.ai.Board;
 import de.tuberlin.tablut.ai.Move;
-import de.tuberlin.tablut.ai.Piece;
-
-import java.util.ArrayList;
 
 /**
  * MCTS Search Algorithm
@@ -81,17 +78,53 @@ public class MCTS_search {
         }
     }
 
+
+    static void compareMCTS(int timeLimit_ms){
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j <2; j++) {
+                if (i==0){MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE = false;}
+                else {MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE = true; }
+                if (j==0){MCTS_Control_Parameters.MAST_ACTIVE=false;}
+                else {MCTS_Control_Parameters.MAST_ACTIVE=true;}
+
+                System.out.println("###########################");
+                System.out.println("ProgBias ="+MCTS_Control_Parameters.PROGRESSIVE_BIAS_ACTIVE);
+                System.out.println("MAST ="+MCTS_Control_Parameters.MAST_ACTIVE);
+                //Startstellung
+                Board board = Board.fenToBoard();
+                //MCTS-Baum für Schwarz
+                MCTS_search mcts_BLACK = new MCTS_search(board);
+                Move bMove = mcts_BLACK.search(timeLimit_ms);
+
+                mcts_BLACK.root.aboveAverageVisitedChildren();
+                System.out.println("### Best Move: "+bMove);
+
+            }
+        }
+    }
+
     //grobes Anwendungsbeispiel ~
     static void main() {
-        Board board = Board.fenToBoard();
 
+//        compareMCTS(1_000_000);
+
+
+
+        //### TESTlauf
+        Board board = Board.fenToBoard();
+//
         //MCTS-Baum für Schwarz
         MCTS_search mcts_BLACK = new MCTS_search(board);
-//        mcts_BLACK.root.gameState.printBoard();
-        Move bMove = mcts_BLACK.search(20_000);
-//        mcts_BLACK.root.printTree();
-        mcts_BLACK.root.aboveAverageChildren();
+
+        Move bMove = mcts_BLACK.search(10_000);
+        mcts_BLACK.root.aboveAverageVisitedChildren();
         System.out.println("### Best Move: "+bMove);
+        try{
+            MCTS_node bestChild = mcts_BLACK.root.findChildWithMove(bMove);
+            System.out.println(bestChild.nodeToString());
+        } catch (ChildNotFoundException e) {
+            e.printStackTrace();
+        }
 
 
 

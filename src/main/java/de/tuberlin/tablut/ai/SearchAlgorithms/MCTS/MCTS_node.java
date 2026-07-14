@@ -1,12 +1,9 @@
 package de.tuberlin.tablut.ai.SearchAlgorithms.MCTS;
 
 import de.tuberlin.tablut.ai.Board;
-import de.tuberlin.tablut.ai.BoardEvaluator;
 import de.tuberlin.tablut.ai.Move;
 import de.tuberlin.tablut.ai.Player;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -153,7 +150,7 @@ public class MCTS_node {
     }
 
     // Debugging helper function to get above average visited children
-    public void aboveAverageChildren() {
+    public void aboveAverageVisitedChildren() {
         double meanVisited = ((double) this.timesVisited) / this.children.size();
         System.out.println("###### "+this.nodeToString()+" #######");
         for (MCTS_node child : this.children) {
@@ -165,16 +162,23 @@ public class MCTS_node {
 
     // Score normalized by times visited
     double normalizeScore() {
-        // Calculate the average number of visits across this node's siblings.
-        // This value is used as a confidence bias for the score.
-        double SCORE_BIAS = ((double) this.parent.timesVisited) / this.parent.children.size();
 
-        // Reduce the raw score for nodes with few visits.
-        // As this node receives more visits, the multiplier approaches 1,
-        // making the normalized score closer to the original score.
-        // Score saturates and thus nodes with few visits are more preferred than nodes with many visits
-        double score = this.score * ((double) this.timesVisited) / (this.timesVisited + SCORE_BIAS);
-        return score;
+        double mean_score = ((double)this.score)/((double)this.timesVisited);
+//
+//        /*
+//        Calculate the average number of visits across this node's siblings.
+//        -> This value is used as a confidence bias for the score.
+//         */
+//        double mean_visits = ((double) this.parent.timesVisited) / this.parent.children.size();
+//        double bias = mean_visits/2;
+//
+//        /*
+//        Nonlinear reduction of the score of nodes with few visits. Nodes with fewer visits than "bias" are especially affected.
+//        As this node receives more visits, the multiplier approaches 1, making the normalized score closer to the original score.
+//         */
+//        double norm_score = this.score * ((double) this.timesVisited) / (this.timesVisited + SCORE_BIAS);
+
+        return mean_score;
     }
 
     // Calculates progressive bias based on min/max player
